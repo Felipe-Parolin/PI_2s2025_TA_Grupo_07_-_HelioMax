@@ -104,6 +104,8 @@ body {
     z-index: 1001;
     transition: left 0.3s ease;
     padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .mobile-menu.active {
@@ -125,6 +127,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    padding: 0;
 }
 
 .mobile-nav-links a {
@@ -137,7 +140,7 @@ body {
     transition: color 0.3s ease;
 }
 
-.mobile-nav-links a:hover {
+.mobile-nav-links a:hover, .mobile-nav-links a.active {
     color: #5DADE2;
 }
 
@@ -165,28 +168,18 @@ body {
     min-height: 100vh;
 }
 
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
 .hero-about {
     background: linear-gradient(135deg, #0D0D0D 0%, #1a3a52 100%);
     padding: 4rem 1rem;
     text-align: center;
     position: relative;
     overflow: hidden;
-}
-
-.hero-about::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(93,173,226,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-    animation: float 20s ease-in-out infinite;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(-20px) rotate(2deg); }
 }
 
 .hero-content {
@@ -216,8 +209,6 @@ body {
 /* About Section */
 .about-section {
     padding: 4rem 1rem;
-    max-width: 1200px;
-    margin: 0 auto;
 }
 
 .about-grid {
@@ -273,8 +264,6 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
 }
 
 .value-card {
@@ -304,6 +293,55 @@ body {
     color: rgba(255, 255, 255, 0.8);
     font-size: clamp(0.9rem, 2.5vw, 1rem);
     line-height: 1.6;
+}
+
+/* Team Section */
+.team-section {
+    padding: 4rem 1rem;
+}
+
+.team-section h2 {
+    text-align: center;
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+    font-weight: 800;
+    margin-bottom: 3rem;
+    background: linear-gradient(135deg, #5DADE2 0%, #48CAE4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.team-members {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.team-member {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid rgba(93, 173, 226, 0.1);
+    transition: all 0.3s ease;
+}
+
+.team-member:hover {
+    background: rgba(93, 173, 226, 0.1);
+    border-color: rgba(93, 173, 226, 0.3);
+    transform: translateY(-5px);
+}
+
+.member-name {
+    font-weight: 600;
+    color: #FFFFFF;
+    font-size: 1.1rem;
+    margin-bottom: 0.3rem;
+}
+
+.member-role {
+    color: #5DADE2;
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
 /* Footer */
@@ -369,4 +407,5 @@ body {
         padding: 1.5rem;
     }
 }
+
 
