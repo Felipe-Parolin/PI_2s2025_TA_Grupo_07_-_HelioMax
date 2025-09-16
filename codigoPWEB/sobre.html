@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="logo.PNG">
+    <title>Sobre - HelioMax</title>
+    <link rel="stylesheet" href="style_sobre.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="mobile-menu-close" id="mobileMenuClose">×</button>
+        <ul class="mobile-nav-links">
+            <li><a href="landpage.html">Início</a></li>
+            <li><a href="sobre.html" class="active">Sobre</a></li>
+            <li><a href="contato.html">Contato</a></li>
+            <li><a href="login.html">Login</a></li>
+        </ul>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <a href="landpage.html" class="logo">⚡ HelioMax</a>
+            <ul class="nav-links">
+                <li><a href="landpage.html">Início</a></li>
+                <li><a href="sobre.html" class="active">Sobre</a></li>
+                <li><a href="contato.html">Contato</a></li>
+            </ul>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <a href="login.html" class="cta-button">Login</a>
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <section class="hero-about">
+            <div class="hero-content">
+                <h1>Sobre a HelioMax</h1>
+                <p>Nossa missão é impulsionar a revolução dos veículos elétricos, oferecendo soluções inteligentes e sustentáveis para um futuro mais verde.</p>
+            </div>
+        </section>
+
+        <section class="about-section">
+            <div class="container">
+                <div class="about-grid">
+                    <div class="about-text">
+                        <h2>Nossa História</h2>
+                        <p>A HelioMax nasceu da paixão por tecnologia e sustentabilidade. Percebemos a crescente demanda por infraestrutura e gerenciamento eficiente para veículos elétricos e decidimos criar uma plataforma que simplificasse a vida dos motoristas e operadores de estações de carregamento.</p>
+                        <p>Desde nossa fundação em 2024, temos trabalhado incansavelmente para desenvolver soluções inovadoras que otimizam rotas, monitoram o desempenho da bateria e conectam usuários a uma rede abrangente de pontos de carregamento. Acreditamos que a transição para a mobilidade elétrica deve ser fácil, acessível e inteligente.</p>
+                    </div>
+                    <div class="about-image">
+                        <img src="helio.jpeg" alt="HelioMax Logo">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="values-section">
+            <div class="container">
+                <h2>Nossos Valores</h2>
+                <div class="values-grid">
+                    <div class="value-card">
+                        <h3>Inovação</h3>
+                        <p>Buscamos constantemente novas tecnologias para oferecer as melhores soluções.</p>
+                    </div>
+                    <div class="value-card">
+                        <h3>Sustentabilidade</h3>
+                        <p>Comprometidos com um futuro mais limpo e a redução da pegada de carbono.</p>
+                    </div>
+                    <div class="value-card">
+                        <h3>Excelência</h3>
+                        <p>Entregamos produtos e serviços de alta qualidade que superam as expectativas.</p>
+                    </div>
+                    <div class="value-card">
+                        <h3>Comunidade</h3>
+                        <p>Construímos uma rede de apoio para motoristas e parceiros de carregamento.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="logo" style="font-size: 1.8rem; margin-bottom: 1rem;">⚡ HelioMax</div>
+            <p>A solução completa para gerenciamento inteligente de veículos elétricos.</p>
+            <p>&copy; 2025 HelioMax. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener(\'DOMContentLoaded\', function() {
+            // Mobile Menu functionality
+            const mobileMenuToggle = document.getElementById(\'mobileMenuToggle\');
+            const mobileMenu = document.getElementById(\'mobileMenu\');
+            const mobileMenuClose = document.getElementById(\'mobileMenuClose\');
+            const mobileMenuOverlay = document.getElementById(\'mobileMenuOverlay\');
+
+            if (mobileMenuToggle) {
+                mobileMenuToggle.addEventListener(\'click\', () => {
+                    mobileMenu.classList.add(\'active\');
+                    mobileMenuOverlay.classList.add(\'active\');
+                });
+            }
+
+            if (mobileMenuClose) {
+                mobileMenuClose.addEventListener(\'click\', () => {
+                    mobileMenu.classList.remove(\'active\');
+                    mobileMenuOverlay.classList.remove(\'active\');
+                });
+            }
+
+            if (mobileMenuOverlay) {
+                mobileMenuOverlay.addEventListener(\'click\', () => {
+                    mobileMenu.classList.remove(\'active\');
+                    mobileMenuOverlay.classList.remove(\'active\');
+                });
+            }
+
+            // Header scroll effect
+            window.addEventListener(\'scroll\', () => {
+                const header = document.querySelector(\".header\");
+                if (header) {
+                    if (window.scrollY > 50) {
+                        header.style.background = \"rgba(13, 13, 13, 0.98)\";
+                        header.style.boxShadow = \"0 2px 20px rgba(93, 173, 226, 0.2)\";
+                    } else {
+                        header.style.background = \"rgba(13, 13, 13, 0.98)\";
+                        header.style.boxShadow = \"0 2px 20px rgba(93, 173, 226, 0.1)\";
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
