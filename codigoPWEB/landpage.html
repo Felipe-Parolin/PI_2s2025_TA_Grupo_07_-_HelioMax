@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="helio.jpeg">
-    <title>HelioMax - Gerenciamento Inteligente de Carros Elétricos</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <title>HelioMax</title>
     <link rel="stylesheet" href="style_landpage.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- Mobile Menu -->
@@ -18,7 +19,7 @@
             <li><a href="#funcionalidades">Funcionalidades</a></li>
             <li><a href="sobre.html">Sobre</a></li>
             <li><a href="contato.html">Contato</a></li>
-            <li><a href="login/login.html">Login</a></li>
+            <li><a href="login.html">Login</a></li>
         </ul>
     </div>
 
@@ -32,7 +33,7 @@
                 <li><a href="contato.html">Contato</a></li>
             </ul>
             <div style="display: flex; align-items: center; gap: 1rem;">
-                <a href="login/login.html" class="cta-button">Login</a>
+                <a href="login.html" class="cta-button">Login</a>
                 <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
             </div>
         </nav>
@@ -131,7 +132,6 @@
     </footer>
 
     <script>
-        // Aguardar DOM carregar completamente
         document.addEventListener('DOMContentLoaded', function() {
             // Smooth scroll para links internos
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -209,19 +209,6 @@
 
             document.querySelectorAll('.fade-in').forEach(el => {
                 observer.observe(el);
-            });
-
-            // Hover effects nos cards
-            document.querySelectorAll('.feature-card').forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-8px) scale(1.02)';
-                    this.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                });
-                
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0) scale(1)';
-                    this.style.transition = 'all 0.3s ease';
-                });
             });
 
             // Otimizar performance para dispositivos móveis
