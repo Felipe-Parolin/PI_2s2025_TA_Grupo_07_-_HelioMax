@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="logo.PNG">
-    <title>Contato - HelioMax</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <title>Contato</title>
     <link rel="stylesheet" href="style_contato.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <!-- Mobile Menu Overlay -->
@@ -50,58 +49,75 @@
         </section>
 
         <section class="contact-section">
-            <div class="contact-grid">
+            <div class="contact-wrapper">
                 <!-- Contact Form -->
-                <div class="contact-form">
-                    <h3>Envie sua Mensagem</h3>
+                <div class="contact-form-card">
+                    <div class="card-header">
+                        <div class="card-icon">✉️</div>
+                        <h3>Envie sua Mensagem</h3>
+                    </div>
                     <div class="success-message" id="successMessage">
-                        Mensagem enviada com sucesso! Entraremos em contato em breve.
+                        ✅ Mensagem enviada com sucesso! Entraremos em contato em breve.
                     </div>
                     <form id="contactForm">
                         <div class="form-group">
                             <label for="name">Nome Completo *</label>
-                            <input type="text" id="name" name="name" required>
+                            <input type="text" id="name" name="name" placeholder="Seu nome completo" required>
                         </div>
                         <div class="form-group">
                             <label for="email">E-mail *</label>
-                            <input type="email" id="email" name="email" required>
+                            <input type="email" id="email" name="email" placeholder="seu@email.com" required>
                         </div>
                         <div class="form-group">
                             <label for="phone">Telefone</label>
-                            <input type="tel" id="phone" name="phone">
+                            <input type="tel" id="phone" name="phone" placeholder="(11) 99999-9999">
                         </div>
                         <div class="form-group">
                             <label for="message">Mensagem *</label>
                             <textarea id="message" name="message" placeholder="Descreva sua dúvida, sugestão ou como podemos ajudar..." required></textarea>
                         </div>
-                        <button type="submit" class="form-submit">Enviar Mensagem ⚡</button>
+                        <button type="submit" class="form-submit">
+                            <span>Enviar Mensagem</span>
+                            <span class="button-icon">⚡</span>
+                        </button>
                     </form>
                 </div>
 
                 <!-- Contact Information -->
-                <div class="contact-info-card">
-                    <h3>Outras Formas de Contato</h3>
-                    <p>Escolha a melhor forma de falar conosco.</p>
-                    <div class="contact-details">
-                        <div class="contact-item">
-                            <div class="contact-item-icon">📧</div>
-                            <div>
-                                <h4>E-mail</h4>
-                                <p>contato@heliomax.com.br<br>suporte@heliomax.com.br</p>
-                            </div>
+                <div class="contact-info-wrapper">
+                    <div class="contact-info-card">
+                        <div class="card-header">
+                            <div class="card-icon">💬</div>
+                            <h3>Outras Formas de Contato</h3>
                         </div>
-                        <div class="contact-item">
-                            <div class="contact-item-icon">📱</div>
-                            <div>
-                                <h4>WhatsApp</h4>
-                                <p>(11) 99999-9999<br>Seg a Sex, 8h às 18h</p>
+                        <p class="info-subtitle">Escolha a melhor forma de falar conosco</p>
+                        
+                        <div class="contact-details">
+                            <div class="contact-item">
+                                <div class="contact-item-icon">📧</div>
+                                <div class="contact-item-content">
+                                    <h4>E-mail</h4>
+                                    <p>contato@heliomax.com.br</p>
+                                    <p>suporte@heliomax.com.br</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="contact-item">
-                            <div class="contact-item-icon">🌐</div>
-                            <div>
-                                <h4>Redes Sociais</h4>
-                                <p>@heliomax_oficial<br>LinkedIn | Instagram | Twitter</p>
+                            
+                            <div class="contact-item">
+                                <div class="contact-item-icon">📱</div>
+                                <div class="contact-item-content">
+                                    <h4>WhatsApp</h4>
+                                    <p>(11) 99999-9999</p>
+                                    <p class="hours">Seg a Sex, 8h às 18h</p>
+                                </div>
+                            </div>
+                            
+                            <div class="contact-item">
+                                <div class="contact-item-icon">🌐</div>
+                                <div class="contact-item-content">
+                                    <h4>Redes Sociais</h4>
+                                    <p>@heliomax_oficial</p>
+                                    <p class="social-links">LinkedIn • Instagram • Twitter</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -175,4 +191,3 @@
     </script>
 </body>
 </html>
-
