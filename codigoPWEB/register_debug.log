@@ -1,0 +1,551 @@
+2025-10-13 00:00:47 - Conexão estabelecida com sucesso
+2025-10-13 00:00:47 - Dados recebidos (raw) - "{\"name\":\"Matheus Henrique Araujo Silva\",\"cpf\":\"349.866.423-91\",\"email\":\"teste@teste.com\",\"password\":\"123456\",\"cep\":\"13607-070\",\"street\":\"Rua José Costa\",\"number\":\"163\",\"neighborhood\":\"Jardim Nossa Senhora de Fátima\",\"city\":\"Araras\",\"state\":\"SP\"}"
+2025-10-13 00:00:47 - Dados decodificados - {"name":"Matheus Henrique Araujo Silva","cpf":"349.866.423-91","email":"teste@teste.com","password":"123456","cep":"13607-070","street":"Rua José Costa","number":"163","neighborhood":"Jardim Nossa Senhora de Fátima","city":"Araras","state":"SP"}
+2025-10-13 00:00:47 - Variáveis processadas - {"name":"Matheus Henrique Araujo Silva","cpf":"34986642391","email":"teste@teste.com","cep":"13607070","city":"Araras","state":"SP"}
+2025-10-13 00:00:47 - Todas as validações passaram
+2025-10-13 00:00:47 - Iniciando transação
+2025-10-13 00:00:47 - Processando ESTADO
+2025-10-13 00:00:47 - upsert_and_get_id iniciado - {"table":"estado","data":{"uf":"SP"}}
+2025-10-13 00:00:47 - SQL gerado - {"sql":"INSERT INTO estado (uf) VALUES (?) \r\n            ON DUPLICATE KEY UPDATE uf = VALUES(uf)"}
+2025-10-13 00:00:47 - Bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:00:47 - Insert ID - {"insert_id":0,"table":"estado"}
+2025-10-13 00:00:47 - ID = 0, buscando registro existente - {"table":"estado"}
+2025-10-13 00:00:47 - SQL SELECT - {"sql":"SELECT id_estado FROM estado WHERE uf = ? LIMIT 1"}
+2025-10-13 00:00:47 - SELECT bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:00:47 - ID encontrado - {"id":1,"table":"estado"}
+2025-10-13 00:00:47 - upsert_and_get_id concluído - {"table":"estado","final_id":1}
+2025-10-13 00:00:47 - Estado inserido - {"id":1}
+2025-10-13 00:00:47 - Processando CIDADE
+2025-10-13 00:00:47 - upsert_and_get_id iniciado - {"table":"cidade","data":{"nome":"Araras","fk_estado":1}}
+2025-10-13 00:00:47 - SQL gerado - {"sql":"INSERT INTO cidade (nome, fk_estado) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_estado = VALUES(fk_estado)"}
+2025-10-13 00:00:47 - Bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:00:47 - Insert ID - {"insert_id":0,"table":"cidade"}
+2025-10-13 00:00:47 - ID = 0, buscando registro existente - {"table":"cidade"}
+2025-10-13 00:00:47 - SQL SELECT - {"sql":"SELECT id_cidade FROM cidade WHERE nome = ? AND fk_estado = ? LIMIT 1"}
+2025-10-13 00:00:47 - SELECT bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:00:47 - ID encontrado - {"id":1,"table":"cidade"}
+2025-10-13 00:00:47 - upsert_and_get_id concluído - {"table":"cidade","final_id":1}
+2025-10-13 00:00:47 - Cidade inserida - {"id":1}
+2025-10-13 00:00:47 - Processando BAIRRO
+2025-10-13 00:00:47 - upsert_and_get_id iniciado - {"table":"bairro","data":{"nome":"Jardim Nossa Senhora de Fátima","fk_cidade":1}}
+2025-10-13 00:00:47 - SQL gerado - {"sql":"INSERT INTO bairro (nome, fk_cidade) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_cidade = VALUES(fk_cidade)"}
+2025-10-13 00:00:47 - Bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:00:47 - Insert ID - {"insert_id":0,"table":"bairro"}
+2025-10-13 00:00:47 - ID = 0, buscando registro existente - {"table":"bairro"}
+2025-10-13 00:00:47 - SQL SELECT - {"sql":"SELECT id_bairro FROM bairro WHERE nome = ? AND fk_cidade = ? LIMIT 1"}
+2025-10-13 00:00:47 - SELECT bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:00:47 - ID encontrado - {"id":2,"table":"bairro"}
+2025-10-13 00:00:47 - upsert_and_get_id concluído - {"table":"bairro","final_id":2}
+2025-10-13 00:00:47 - Bairro inserido - {"id":2}
+2025-10-13 00:00:47 - Processando CEP
+2025-10-13 00:00:47 - upsert_and_get_id iniciado - {"table":"cep","data":{"numero_cep":"13607070","logradouro":"Rua José Costa","fk_bairro":2}}
+2025-10-13 00:00:47 - SQL gerado - {"sql":"INSERT INTO cep (numero_cep, logradouro, fk_bairro) VALUES (?, ?, ?) \r\n            ON DUPLICATE KEY UPDATE numero_cep = VALUES(numero_cep), logradouro = VALUES(logradouro), fk_bairro = VALUES(fk_bairro)"}
+2025-10-13 00:00:47 - Bind params - {"types":"sss","values":["13607070","Rua José Costa",2]}
+2025-10-13 00:00:47 - Insert ID - {"insert_id":0,"table":"cep"}
+2025-10-13 00:00:47 - ID = 0, buscando registro existente - {"table":"cep"}
+2025-10-13 00:00:47 - SQL SELECT - {"sql":"SELECT id_cep FROM cep WHERE numero_cep = ? AND fk_bairro = ? LIMIT 1"}
+2025-10-13 00:00:47 - SELECT bind params - {"types":"ss","values":["13607070",2]}
+2025-10-13 00:00:47 - ID encontrado - {"id":2,"table":"cep"}
+2025-10-13 00:00:47 - upsert_and_get_id concluído - {"table":"cep","final_id":2}
+2025-10-13 00:00:47 - CEP inserido - {"id":2}
+2025-10-13 00:00:47 - Processando USUÁRIO
+2025-10-13 00:00:48 - SQL Usuario - {"sql":"INSERT INTO usuario \r\n                 (nome, cpf, email, senha, tipo_usuario, numero_residencia, complemento_residencia, fk_id_cep) \r\n                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"}
+2025-10-13 00:00:48 - EXCEÇÃO capturada - {"message":"Unknown column 'complemento_residencia' in 'field list'"}
+2025-10-13 00:00:48 - Transação revertida (rollback)
+2025-10-13 00:00:48 - Resposta final - {"success":false,"message":"Unknown column 'complemento_residencia' in 'field list'"}
+2025-10-13 00:11:29 - Conexão estabelecida com sucesso
+2025-10-13 00:11:29 - Dados recebidos (raw) - "{\"name\":\"Matheus Henrique Araujo Silva\",\"cpf\":\"349.866.423-91\",\"email\":\"teste@teste.com\",\"password\":\"123456\",\"cep\":\"13607-070\",\"street\":\"Rua José Costa\",\"number\":\"163\",\"neighborhood\":\"Jardim Nossa Senhora de Fátima\",\"city\":\"Araras\",\"state\":\"SP\"}"
+2025-10-13 00:11:29 - Dados decodificados - {"name":"Matheus Henrique Araujo Silva","cpf":"349.866.423-91","email":"teste@teste.com","password":"123456","cep":"13607-070","street":"Rua José Costa","number":"163","neighborhood":"Jardim Nossa Senhora de Fátima","city":"Araras","state":"SP"}
+2025-10-13 00:11:29 - Variáveis processadas - {"name":"Matheus Henrique Araujo Silva","cpf":"34986642391","email":"teste@teste.com","cep":"13607070","city":"Araras","state":"SP"}
+2025-10-13 00:11:29 - Todas as validações passaram
+2025-10-13 00:11:29 - Iniciando transação
+2025-10-13 00:11:29 - Processando ESTADO
+2025-10-13 00:11:29 - upsert_and_get_id iniciado - {"table":"estado","data":{"uf":"SP"}}
+2025-10-13 00:11:29 - SQL gerado - {"sql":"INSERT INTO estado (uf) VALUES (?) \r\n            ON DUPLICATE KEY UPDATE uf = VALUES(uf)"}
+2025-10-13 00:11:29 - Bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:11:29 - Insert ID - {"insert_id":0,"table":"estado"}
+2025-10-13 00:11:29 - ID = 0, buscando registro existente - {"table":"estado"}
+2025-10-13 00:11:29 - SQL SELECT - {"sql":"SELECT id_estado FROM estado WHERE uf = ? LIMIT 1"}
+2025-10-13 00:11:29 - SELECT bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:11:29 - ID encontrado - {"id":1,"table":"estado"}
+2025-10-13 00:11:29 - upsert_and_get_id concluído - {"table":"estado","final_id":1}
+2025-10-13 00:11:29 - Estado inserido - {"id":1}
+2025-10-13 00:11:29 - Processando CIDADE
+2025-10-13 00:11:29 - upsert_and_get_id iniciado - {"table":"cidade","data":{"nome":"Araras","fk_estado":1}}
+2025-10-13 00:11:29 - SQL gerado - {"sql":"INSERT INTO cidade (nome, fk_estado) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_estado = VALUES(fk_estado)"}
+2025-10-13 00:11:29 - Bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:11:29 - Insert ID - {"insert_id":0,"table":"cidade"}
+2025-10-13 00:11:29 - ID = 0, buscando registro existente - {"table":"cidade"}
+2025-10-13 00:11:29 - SQL SELECT - {"sql":"SELECT id_cidade FROM cidade WHERE nome = ? AND fk_estado = ? LIMIT 1"}
+2025-10-13 00:11:29 - SELECT bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:11:29 - ID encontrado - {"id":1,"table":"cidade"}
+2025-10-13 00:11:29 - upsert_and_get_id concluído - {"table":"cidade","final_id":1}
+2025-10-13 00:11:29 - Cidade inserida - {"id":1}
+2025-10-13 00:11:29 - Processando BAIRRO
+2025-10-13 00:11:29 - upsert_and_get_id iniciado - {"table":"bairro","data":{"nome":"Jardim Nossa Senhora de Fátima","fk_cidade":1}}
+2025-10-13 00:11:29 - SQL gerado - {"sql":"INSERT INTO bairro (nome, fk_cidade) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_cidade = VALUES(fk_cidade)"}
+2025-10-13 00:11:29 - Bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:11:29 - Insert ID - {"insert_id":0,"table":"bairro"}
+2025-10-13 00:11:29 - ID = 0, buscando registro existente - {"table":"bairro"}
+2025-10-13 00:11:29 - SQL SELECT - {"sql":"SELECT id_bairro FROM bairro WHERE nome = ? AND fk_cidade = ? LIMIT 1"}
+2025-10-13 00:11:29 - SELECT bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:11:29 - ID encontrado - {"id":2,"table":"bairro"}
+2025-10-13 00:11:29 - upsert_and_get_id concluído - {"table":"bairro","final_id":2}
+2025-10-13 00:11:29 - Bairro inserido - {"id":2}
+2025-10-13 00:11:29 - Processando CEP
+2025-10-13 00:11:29 - upsert_and_get_id iniciado - {"table":"cep","data":{"numero_cep":"13607070","logradouro":"Rua José Costa","fk_bairro":2}}
+2025-10-13 00:11:29 - SQL gerado - {"sql":"INSERT INTO cep (numero_cep, logradouro, fk_bairro) VALUES (?, ?, ?) \r\n            ON DUPLICATE KEY UPDATE numero_cep = VALUES(numero_cep), logradouro = VALUES(logradouro), fk_bairro = VALUES(fk_bairro)"}
+2025-10-13 00:11:29 - Bind params - {"types":"sss","values":["13607070","Rua José Costa",2]}
+2025-10-13 00:11:29 - Insert ID - {"insert_id":0,"table":"cep"}
+2025-10-13 00:11:29 - ID = 0, buscando registro existente - {"table":"cep"}
+2025-10-13 00:11:29 - SQL SELECT - {"sql":"SELECT id_cep FROM cep WHERE numero_cep = ? AND fk_bairro = ? LIMIT 1"}
+2025-10-13 00:11:29 - SELECT bind params - {"types":"ss","values":["13607070",2]}
+2025-10-13 00:11:29 - ID encontrado - {"id":2,"table":"cep"}
+2025-10-13 00:11:29 - upsert_and_get_id concluído - {"table":"cep","final_id":2}
+2025-10-13 00:11:29 - CEP inserido - {"id":2}
+2025-10-13 00:11:29 - Processando USUÁRIO
+2025-10-13 00:11:29 - SQL Usuario - {"sql":"INSERT INTO usuario \r\n                 (nome, cpf, email, senha, tipo_usuario, numero_residencia, complemento_residencia, fk_id_cep) \r\n                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"}
+2025-10-13 00:11:29 - EXCEÇÃO capturada - {"message":"Unknown column 'complemento_residencia' in 'field list'"}
+2025-10-13 00:11:29 - Transação revertida (rollback)
+2025-10-13 00:11:29 - Resposta final - {"success":false,"message":"Unknown column 'complemento_residencia' in 'field list'"}
+2025-10-13 00:15:50 - Conexão estabelecida com sucesso
+2025-10-13 00:15:50 - Dados recebidos (raw) - "{\"name\":\"Matheus Henrique Araujo Silva\",\"cpf\":\"349.866.423-91\",\"email\":\"teste@teste.com\",\"password\":\"123456\",\"cep\":\"13607-070\",\"street\":\"Rua José Costa\",\"number\":\"163\",\"neighborhood\":\"Jardim Nossa Senhora de Fátima\",\"city\":\"Araras\",\"state\":\"SP\"}"
+2025-10-13 00:15:50 - Dados decodificados - {"name":"Matheus Henrique Araujo Silva","cpf":"349.866.423-91","email":"teste@teste.com","password":"123456","cep":"13607-070","street":"Rua José Costa","number":"163","neighborhood":"Jardim Nossa Senhora de Fátima","city":"Araras","state":"SP"}
+2025-10-13 00:15:50 - Variáveis processadas - {"name":"Matheus Henrique Araujo Silva","cpf":"34986642391","email":"teste@teste.com","cep":"13607070","city":"Araras","state":"SP"}
+2025-10-13 00:15:50 - Todas as validações passaram
+2025-10-13 00:15:50 - Iniciando transação
+2025-10-13 00:15:50 - Processando ESTADO
+2025-10-13 00:15:50 - upsert_and_get_id iniciado - {"table":"estado","data":{"uf":"SP"}}
+2025-10-13 00:15:50 - SQL gerado - {"sql":"INSERT INTO estado (uf) VALUES (?) \r\n            ON DUPLICATE KEY UPDATE uf = VALUES(uf)"}
+2025-10-13 00:15:50 - Bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:15:50 - Insert ID - {"insert_id":0,"table":"estado"}
+2025-10-13 00:15:50 - ID = 0, buscando registro existente - {"table":"estado"}
+2025-10-13 00:15:50 - SQL SELECT - {"sql":"SELECT id_estado FROM estado WHERE uf = ? LIMIT 1"}
+2025-10-13 00:15:50 - SELECT bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:15:50 - ID encontrado - {"id":1,"table":"estado"}
+2025-10-13 00:15:50 - upsert_and_get_id concluído - {"table":"estado","final_id":1}
+2025-10-13 00:15:50 - Estado inserido - {"id":1}
+2025-10-13 00:15:50 - Processando CIDADE
+2025-10-13 00:15:50 - upsert_and_get_id iniciado - {"table":"cidade","data":{"nome":"Araras","fk_estado":1}}
+2025-10-13 00:15:50 - SQL gerado - {"sql":"INSERT INTO cidade (nome, fk_estado) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_estado = VALUES(fk_estado)"}
+2025-10-13 00:15:50 - Bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:15:50 - Insert ID - {"insert_id":0,"table":"cidade"}
+2025-10-13 00:15:50 - ID = 0, buscando registro existente - {"table":"cidade"}
+2025-10-13 00:15:50 - SQL SELECT - {"sql":"SELECT id_cidade FROM cidade WHERE nome = ? AND fk_estado = ? LIMIT 1"}
+2025-10-13 00:15:50 - SELECT bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:15:50 - ID encontrado - {"id":1,"table":"cidade"}
+2025-10-13 00:15:50 - upsert_and_get_id concluído - {"table":"cidade","final_id":1}
+2025-10-13 00:15:50 - Cidade inserida - {"id":1}
+2025-10-13 00:15:50 - Processando BAIRRO
+2025-10-13 00:15:50 - upsert_and_get_id iniciado - {"table":"bairro","data":{"nome":"Jardim Nossa Senhora de Fátima","fk_cidade":1}}
+2025-10-13 00:15:50 - SQL gerado - {"sql":"INSERT INTO bairro (nome, fk_cidade) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_cidade = VALUES(fk_cidade)"}
+2025-10-13 00:15:50 - Bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:15:50 - Insert ID - {"insert_id":0,"table":"bairro"}
+2025-10-13 00:15:50 - ID = 0, buscando registro existente - {"table":"bairro"}
+2025-10-13 00:15:50 - SQL SELECT - {"sql":"SELECT id_bairro FROM bairro WHERE nome = ? AND fk_cidade = ? LIMIT 1"}
+2025-10-13 00:15:50 - SELECT bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:15:50 - ID encontrado - {"id":2,"table":"bairro"}
+2025-10-13 00:15:50 - upsert_and_get_id concluído - {"table":"bairro","final_id":2}
+2025-10-13 00:15:50 - Bairro inserido - {"id":2}
+2025-10-13 00:15:50 - Processando CEP
+2025-10-13 00:15:50 - upsert_and_get_id iniciado - {"table":"cep","data":{"numero_cep":"13607070","logradouro":"Rua José Costa","fk_bairro":2}}
+2025-10-13 00:15:50 - SQL gerado - {"sql":"INSERT INTO cep (numero_cep, logradouro, fk_bairro) VALUES (?, ?, ?) \r\n            ON DUPLICATE KEY UPDATE numero_cep = VALUES(numero_cep), logradouro = VALUES(logradouro), fk_bairro = VALUES(fk_bairro)"}
+2025-10-13 00:15:50 - Bind params - {"types":"sss","values":["13607070","Rua José Costa",2]}
+2025-10-13 00:15:50 - Insert ID - {"insert_id":0,"table":"cep"}
+2025-10-13 00:15:50 - ID = 0, buscando registro existente - {"table":"cep"}
+2025-10-13 00:15:50 - SQL SELECT - {"sql":"SELECT id_cep FROM cep WHERE numero_cep = ? AND fk_bairro = ? LIMIT 1"}
+2025-10-13 00:15:50 - SELECT bind params - {"types":"ss","values":["13607070",2]}
+2025-10-13 00:15:50 - ID encontrado - {"id":2,"table":"cep"}
+2025-10-13 00:15:50 - upsert_and_get_id concluído - {"table":"cep","final_id":2}
+2025-10-13 00:15:50 - CEP inserido - {"id":2}
+2025-10-13 00:15:50 - Processando USUÁRIO
+2025-10-13 00:15:51 - SQL Usuario - {"sql":"INSERT INTO usuario \r\n                 (nome, cpf, email, senha, tipo_usuario, numero_residencia, complemento_endereco, fk_id_cep) \r\n                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"}
+2025-10-13 00:15:51 - EXCEÇÃO capturada - {"message":"Unknown column 'complemento_endereco' in 'field list'"}
+2025-10-13 00:15:51 - Transação revertida (rollback)
+2025-10-13 00:15:51 - Resposta final - {"success":false,"message":"Unknown column 'complemento_endereco' in 'field list'"}
+2025-10-13 00:16:15 - Conexão estabelecida com sucesso
+2025-10-13 00:16:15 - Dados recebidos (raw) - "{\"name\":\"Matheus Henrique Araujo Silva\",\"cpf\":\"349.866.423-91\",\"email\":\"teste@teste.com\",\"password\":\"123456\",\"cep\":\"13607-070\",\"street\":\"Rua José Costa\",\"number\":\"163\",\"neighborhood\":\"Jardim Nossa Senhora de Fátima\",\"city\":\"Araras\",\"state\":\"SP\"}"
+2025-10-13 00:16:15 - Dados decodificados - {"name":"Matheus Henrique Araujo Silva","cpf":"349.866.423-91","email":"teste@teste.com","password":"123456","cep":"13607-070","street":"Rua José Costa","number":"163","neighborhood":"Jardim Nossa Senhora de Fátima","city":"Araras","state":"SP"}
+2025-10-13 00:16:15 - Variáveis processadas - {"name":"Matheus Henrique Araujo Silva","cpf":"34986642391","email":"teste@teste.com","cep":"13607070","city":"Araras","state":"SP"}
+2025-10-13 00:16:15 - Todas as validações passaram
+2025-10-13 00:16:15 - Iniciando transação
+2025-10-13 00:16:15 - Processando ESTADO
+2025-10-13 00:16:15 - upsert_and_get_id iniciado - {"table":"estado","data":{"uf":"SP"}}
+2025-10-13 00:16:15 - SQL gerado - {"sql":"INSERT INTO estado (uf) VALUES (?) \r\n            ON DUPLICATE KEY UPDATE uf = VALUES(uf)"}
+2025-10-13 00:16:15 - Bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:16:15 - Insert ID - {"insert_id":0,"table":"estado"}
+2025-10-13 00:16:15 - ID = 0, buscando registro existente - {"table":"estado"}
+2025-10-13 00:16:15 - SQL SELECT - {"sql":"SELECT id_estado FROM estado WHERE uf = ? LIMIT 1"}
+2025-10-13 00:16:15 - SELECT bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:16:15 - ID encontrado - {"id":1,"table":"estado"}
+2025-10-13 00:16:15 - upsert_and_get_id concluído - {"table":"estado","final_id":1}
+2025-10-13 00:16:15 - Estado inserido - {"id":1}
+2025-10-13 00:16:15 - Processando CIDADE
+2025-10-13 00:16:15 - upsert_and_get_id iniciado - {"table":"cidade","data":{"nome":"Araras","fk_estado":1}}
+2025-10-13 00:16:15 - SQL gerado - {"sql":"INSERT INTO cidade (nome, fk_estado) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_estado = VALUES(fk_estado)"}
+2025-10-13 00:16:15 - Bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:16:15 - Insert ID - {"insert_id":0,"table":"cidade"}
+2025-10-13 00:16:15 - ID = 0, buscando registro existente - {"table":"cidade"}
+2025-10-13 00:16:15 - SQL SELECT - {"sql":"SELECT id_cidade FROM cidade WHERE nome = ? AND fk_estado = ? LIMIT 1"}
+2025-10-13 00:16:15 - SELECT bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:16:15 - ID encontrado - {"id":1,"table":"cidade"}
+2025-10-13 00:16:15 - upsert_and_get_id concluído - {"table":"cidade","final_id":1}
+2025-10-13 00:16:15 - Cidade inserida - {"id":1}
+2025-10-13 00:16:15 - Processando BAIRRO
+2025-10-13 00:16:15 - upsert_and_get_id iniciado - {"table":"bairro","data":{"nome":"Jardim Nossa Senhora de Fátima","fk_cidade":1}}
+2025-10-13 00:16:15 - SQL gerado - {"sql":"INSERT INTO bairro (nome, fk_cidade) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_cidade = VALUES(fk_cidade)"}
+2025-10-13 00:16:15 - Bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:16:15 - Insert ID - {"insert_id":0,"table":"bairro"}
+2025-10-13 00:16:15 - ID = 0, buscando registro existente - {"table":"bairro"}
+2025-10-13 00:16:15 - SQL SELECT - {"sql":"SELECT id_bairro FROM bairro WHERE nome = ? AND fk_cidade = ? LIMIT 1"}
+2025-10-13 00:16:15 - SELECT bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:16:15 - ID encontrado - {"id":2,"table":"bairro"}
+2025-10-13 00:16:15 - upsert_and_get_id concluído - {"table":"bairro","final_id":2}
+2025-10-13 00:16:15 - Bairro inserido - {"id":2}
+2025-10-13 00:16:15 - Processando CEP
+2025-10-13 00:16:15 - upsert_and_get_id iniciado - {"table":"cep","data":{"numero_cep":"13607070","logradouro":"Rua José Costa","fk_bairro":2}}
+2025-10-13 00:16:15 - SQL gerado - {"sql":"INSERT INTO cep (numero_cep, logradouro, fk_bairro) VALUES (?, ?, ?) \r\n            ON DUPLICATE KEY UPDATE numero_cep = VALUES(numero_cep), logradouro = VALUES(logradouro), fk_bairro = VALUES(fk_bairro)"}
+2025-10-13 00:16:15 - Bind params - {"types":"sss","values":["13607070","Rua José Costa",2]}
+2025-10-13 00:16:15 - Insert ID - {"insert_id":0,"table":"cep"}
+2025-10-13 00:16:15 - ID = 0, buscando registro existente - {"table":"cep"}
+2025-10-13 00:16:15 - SQL SELECT - {"sql":"SELECT id_cep FROM cep WHERE numero_cep = ? AND fk_bairro = ? LIMIT 1"}
+2025-10-13 00:16:15 - SELECT bind params - {"types":"ss","values":["13607070",2]}
+2025-10-13 00:16:15 - ID encontrado - {"id":2,"table":"cep"}
+2025-10-13 00:16:15 - upsert_and_get_id concluído - {"table":"cep","final_id":2}
+2025-10-13 00:16:15 - CEP inserido - {"id":2}
+2025-10-13 00:16:15 - Processando USUÁRIO
+2025-10-13 00:16:15 - SQL Usuario - {"sql":"INSERT INTO usuario \r\n                 (nome, cpf, email, senha, tipo_usuario, numero_residencia, complemento_endereco, fk_id_cep) \r\n                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"}
+2025-10-13 00:16:15 - EXCEÇÃO capturada - {"message":"Unknown column 'complemento_endereco' in 'field list'"}
+2025-10-13 00:16:15 - Transação revertida (rollback)
+2025-10-13 00:16:15 - Resposta final - {"success":false,"message":"Unknown column 'complemento_endereco' in 'field list'"}
+2025-10-13 00:18:45 - Conexão estabelecida com sucesso
+2025-10-13 00:18:45 - Dados recebidos (raw) - "{\"name\":\"Matheus Henrique Araujo Silva\",\"cpf\":\"349.866.423-91\",\"email\":\"teste@teste.com\",\"password\":\"123456\",\"cep\":\"13607-070\",\"street\":\"Rua José Costa\",\"number\":\"163\",\"neighborhood\":\"Jardim Nossa Senhora de Fátima\",\"city\":\"Araras\",\"state\":\"SP\"}"
+2025-10-13 00:18:45 - Dados decodificados - {"name":"Matheus Henrique Araujo Silva","cpf":"349.866.423-91","email":"teste@teste.com","password":"123456","cep":"13607-070","street":"Rua José Costa","number":"163","neighborhood":"Jardim Nossa Senhora de Fátima","city":"Araras","state":"SP"}
+2025-10-13 00:18:45 - Variáveis processadas - {"name":"Matheus Henrique Araujo Silva","cpf":"34986642391","email":"teste@teste.com","cep":"13607070","city":"Araras","state":"SP"}
+2025-10-13 00:18:45 - Todas as validações passaram
+2025-10-13 00:18:45 - Iniciando transação
+2025-10-13 00:18:45 - Processando ESTADO
+2025-10-13 00:18:45 - upsert_and_get_id iniciado - {"table":"estado","data":{"uf":"SP"}}
+2025-10-13 00:18:45 - SQL gerado - {"sql":"INSERT INTO estado (uf) VALUES (?) \r\n            ON DUPLICATE KEY UPDATE uf = VALUES(uf)"}
+2025-10-13 00:18:45 - Bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:18:45 - Insert ID - {"insert_id":0,"table":"estado"}
+2025-10-13 00:18:45 - ID = 0, buscando registro existente - {"table":"estado"}
+2025-10-13 00:18:45 - SQL SELECT - {"sql":"SELECT id_estado FROM estado WHERE uf = ? LIMIT 1"}
+2025-10-13 00:18:45 - SELECT bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:18:45 - ID encontrado - {"id":1,"table":"estado"}
+2025-10-13 00:18:45 - upsert_and_get_id concluído - {"table":"estado","final_id":1}
+2025-10-13 00:18:45 - Estado inserido - {"id":1}
+2025-10-13 00:18:45 - Processando CIDADE
+2025-10-13 00:18:45 - upsert_and_get_id iniciado - {"table":"cidade","data":{"nome":"Araras","fk_estado":1}}
+2025-10-13 00:18:45 - SQL gerado - {"sql":"INSERT INTO cidade (nome, fk_estado) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_estado = VALUES(fk_estado)"}
+2025-10-13 00:18:45 - Bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:18:45 - Insert ID - {"insert_id":0,"table":"cidade"}
+2025-10-13 00:18:45 - ID = 0, buscando registro existente - {"table":"cidade"}
+2025-10-13 00:18:45 - SQL SELECT - {"sql":"SELECT id_cidade FROM cidade WHERE nome = ? AND fk_estado = ? LIMIT 1"}
+2025-10-13 00:18:45 - SELECT bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:18:45 - ID encontrado - {"id":1,"table":"cidade"}
+2025-10-13 00:18:45 - upsert_and_get_id concluído - {"table":"cidade","final_id":1}
+2025-10-13 00:18:45 - Cidade inserida - {"id":1}
+2025-10-13 00:18:45 - Processando BAIRRO
+2025-10-13 00:18:45 - upsert_and_get_id iniciado - {"table":"bairro","data":{"nome":"Jardim Nossa Senhora de Fátima","fk_cidade":1}}
+2025-10-13 00:18:45 - SQL gerado - {"sql":"INSERT INTO bairro (nome, fk_cidade) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_cidade = VALUES(fk_cidade)"}
+2025-10-13 00:18:45 - Bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:18:45 - Insert ID - {"insert_id":0,"table":"bairro"}
+2025-10-13 00:18:45 - ID = 0, buscando registro existente - {"table":"bairro"}
+2025-10-13 00:18:45 - SQL SELECT - {"sql":"SELECT id_bairro FROM bairro WHERE nome = ? AND fk_cidade = ? LIMIT 1"}
+2025-10-13 00:18:45 - SELECT bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:18:45 - ID encontrado - {"id":2,"table":"bairro"}
+2025-10-13 00:18:45 - upsert_and_get_id concluído - {"table":"bairro","final_id":2}
+2025-10-13 00:18:45 - Bairro inserido - {"id":2}
+2025-10-13 00:18:45 - Processando CEP
+2025-10-13 00:18:45 - upsert_and_get_id iniciado - {"table":"cep","data":{"numero_cep":"13607070","logradouro":"Rua José Costa","fk_bairro":2}}
+2025-10-13 00:18:45 - SQL gerado - {"sql":"INSERT INTO cep (numero_cep, logradouro, fk_bairro) VALUES (?, ?, ?) \r\n            ON DUPLICATE KEY UPDATE numero_cep = VALUES(numero_cep), logradouro = VALUES(logradouro), fk_bairro = VALUES(fk_bairro)"}
+2025-10-13 00:18:45 - Bind params - {"types":"sss","values":["13607070","Rua José Costa",2]}
+2025-10-13 00:18:45 - Insert ID - {"insert_id":0,"table":"cep"}
+2025-10-13 00:18:45 - ID = 0, buscando registro existente - {"table":"cep"}
+2025-10-13 00:18:45 - SQL SELECT - {"sql":"SELECT id_cep FROM cep WHERE numero_cep = ? AND fk_bairro = ? LIMIT 1"}
+2025-10-13 00:18:45 - SELECT bind params - {"types":"ss","values":["13607070",2]}
+2025-10-13 00:18:45 - ID encontrado - {"id":2,"table":"cep"}
+2025-10-13 00:18:45 - upsert_and_get_id concluído - {"table":"cep","final_id":2}
+2025-10-13 00:18:45 - CEP inserido - {"id":2}
+2025-10-13 00:18:45 - Processando USUÁRIO
+2025-10-13 00:18:46 - SQL Usuario - {"sql":"INSERT INTO usuario \r\n                 (nome, cpf, email, senha, tipo_usuario, numero_residencia, complemento_endereco, fk_id_cep) \r\n                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"}
+2025-10-13 00:18:46 - EXCEÇÃO capturada - {"message":"Unknown column 'complemento_endereco' in 'field list'"}
+2025-10-13 00:18:46 - Transação revertida (rollback)
+2025-10-13 00:18:46 - Resposta final - {"success":false,"message":"Unknown column 'complemento_endereco' in 'field list'"}
+2025-10-13 00:19:01 - Conexão estabelecida com sucesso
+2025-10-13 00:19:01 - Dados recebidos (raw) - "{\"name\":\"Matheus Henrique Araujo Silva\",\"cpf\":\"349.866.423-91\",\"email\":\"teste@teste.com\",\"password\":\"123456\",\"cep\":\"13607-070\",\"street\":\"Rua José Costa\",\"number\":\"163\",\"neighborhood\":\"Jardim Nossa Senhora de Fátima\",\"city\":\"Araras\",\"state\":\"SP\"}"
+2025-10-13 00:19:01 - Dados decodificados - {"name":"Matheus Henrique Araujo Silva","cpf":"349.866.423-91","email":"teste@teste.com","password":"123456","cep":"13607-070","street":"Rua José Costa","number":"163","neighborhood":"Jardim Nossa Senhora de Fátima","city":"Araras","state":"SP"}
+2025-10-13 00:19:01 - Variáveis processadas - {"name":"Matheus Henrique Araujo Silva","cpf":"34986642391","email":"teste@teste.com","cep":"13607070","city":"Araras","state":"SP"}
+2025-10-13 00:19:01 - Todas as validações passaram
+2025-10-13 00:19:01 - Iniciando transação
+2025-10-13 00:19:01 - Processando ESTADO
+2025-10-13 00:19:01 - upsert_and_get_id iniciado - {"table":"estado","data":{"uf":"SP"}}
+2025-10-13 00:19:01 - SQL gerado - {"sql":"INSERT INTO estado (uf) VALUES (?) \r\n            ON DUPLICATE KEY UPDATE uf = VALUES(uf)"}
+2025-10-13 00:19:01 - Bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:19:01 - Insert ID - {"insert_id":0,"table":"estado"}
+2025-10-13 00:19:01 - ID = 0, buscando registro existente - {"table":"estado"}
+2025-10-13 00:19:01 - SQL SELECT - {"sql":"SELECT id_estado FROM estado WHERE uf = ? LIMIT 1"}
+2025-10-13 00:19:01 - SELECT bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:19:01 - ID encontrado - {"id":1,"table":"estado"}
+2025-10-13 00:19:01 - upsert_and_get_id concluído - {"table":"estado","final_id":1}
+2025-10-13 00:19:01 - Estado inserido - {"id":1}
+2025-10-13 00:19:01 - Processando CIDADE
+2025-10-13 00:19:01 - upsert_and_get_id iniciado - {"table":"cidade","data":{"nome":"Araras","fk_estado":1}}
+2025-10-13 00:19:01 - SQL gerado - {"sql":"INSERT INTO cidade (nome, fk_estado) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_estado = VALUES(fk_estado)"}
+2025-10-13 00:19:01 - Bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:19:01 - Insert ID - {"insert_id":0,"table":"cidade"}
+2025-10-13 00:19:01 - ID = 0, buscando registro existente - {"table":"cidade"}
+2025-10-13 00:19:01 - SQL SELECT - {"sql":"SELECT id_cidade FROM cidade WHERE nome = ? AND fk_estado = ? LIMIT 1"}
+2025-10-13 00:19:01 - SELECT bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:19:01 - ID encontrado - {"id":1,"table":"cidade"}
+2025-10-13 00:19:01 - upsert_and_get_id concluído - {"table":"cidade","final_id":1}
+2025-10-13 00:19:01 - Cidade inserida - {"id":1}
+2025-10-13 00:19:01 - Processando BAIRRO
+2025-10-13 00:19:01 - upsert_and_get_id iniciado - {"table":"bairro","data":{"nome":"Jardim Nossa Senhora de Fátima","fk_cidade":1}}
+2025-10-13 00:19:01 - SQL gerado - {"sql":"INSERT INTO bairro (nome, fk_cidade) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_cidade = VALUES(fk_cidade)"}
+2025-10-13 00:19:01 - Bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:19:01 - Insert ID - {"insert_id":0,"table":"bairro"}
+2025-10-13 00:19:01 - ID = 0, buscando registro existente - {"table":"bairro"}
+2025-10-13 00:19:01 - SQL SELECT - {"sql":"SELECT id_bairro FROM bairro WHERE nome = ? AND fk_cidade = ? LIMIT 1"}
+2025-10-13 00:19:01 - SELECT bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:19:01 - ID encontrado - {"id":2,"table":"bairro"}
+2025-10-13 00:19:01 - upsert_and_get_id concluído - {"table":"bairro","final_id":2}
+2025-10-13 00:19:01 - Bairro inserido - {"id":2}
+2025-10-13 00:19:01 - Processando CEP
+2025-10-13 00:19:01 - upsert_and_get_id iniciado - {"table":"cep","data":{"numero_cep":"13607070","logradouro":"Rua José Costa","fk_bairro":2}}
+2025-10-13 00:19:01 - SQL gerado - {"sql":"INSERT INTO cep (numero_cep, logradouro, fk_bairro) VALUES (?, ?, ?) \r\n            ON DUPLICATE KEY UPDATE numero_cep = VALUES(numero_cep), logradouro = VALUES(logradouro), fk_bairro = VALUES(fk_bairro)"}
+2025-10-13 00:19:01 - Bind params - {"types":"sss","values":["13607070","Rua José Costa",2]}
+2025-10-13 00:19:01 - Insert ID - {"insert_id":0,"table":"cep"}
+2025-10-13 00:19:01 - ID = 0, buscando registro existente - {"table":"cep"}
+2025-10-13 00:19:01 - SQL SELECT - {"sql":"SELECT id_cep FROM cep WHERE numero_cep = ? AND fk_bairro = ? LIMIT 1"}
+2025-10-13 00:19:01 - SELECT bind params - {"types":"ss","values":["13607070",2]}
+2025-10-13 00:19:01 - ID encontrado - {"id":2,"table":"cep"}
+2025-10-13 00:19:01 - upsert_and_get_id concluído - {"table":"cep","final_id":2}
+2025-10-13 00:19:01 - CEP inserido - {"id":2}
+2025-10-13 00:19:01 - Processando USUÁRIO
+2025-10-13 00:19:01 - SQL Usuario - {"sql":"INSERT INTO usuario \r\n                 (nome, cpf, email, senha, tipo_usuario, numero_residencia, complemento_endereco, fk_id_cep) \r\n                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"}
+2025-10-13 00:19:01 - EXCEÇÃO capturada - {"message":"Unknown column 'complemento_endereco' in 'field list'"}
+2025-10-13 00:19:01 - Transação revertida (rollback)
+2025-10-13 00:19:01 - Resposta final - {"success":false,"message":"Unknown column 'complemento_endereco' in 'field list'"}
+2025-10-13 00:24:29 - Conexão estabelecida com sucesso
+2025-10-13 00:24:29 - Dados recebidos (raw) - "{\"name\":\"Matheus Henrique Araujo Silva\",\"cpf\":\"349.866.423-91\",\"email\":\"teste@teste.com\",\"password\":\"123456\",\"cep\":\"13607-070\",\"street\":\"Rua José Costa\",\"number\":\"163\",\"neighborhood\":\"Jardim Nossa Senhora de Fátima\",\"city\":\"Araras\",\"state\":\"SP\"}"
+2025-10-13 00:24:29 - Dados decodificados - {"name":"Matheus Henrique Araujo Silva","cpf":"349.866.423-91","email":"teste@teste.com","password":"123456","cep":"13607-070","street":"Rua José Costa","number":"163","neighborhood":"Jardim Nossa Senhora de Fátima","city":"Araras","state":"SP"}
+2025-10-13 00:24:29 - Variáveis processadas - {"name":"Matheus Henrique Araujo Silva","cpf":"34986642391","email":"teste@teste.com","cep":"13607070","city":"Araras","state":"SP"}
+2025-10-13 00:24:29 - Todas as validações passaram
+2025-10-13 00:24:29 - Iniciando transação
+2025-10-13 00:24:29 - Processando ESTADO
+2025-10-13 00:24:29 - upsert_and_get_id iniciado - {"table":"estado","data":{"uf":"SP"}}
+2025-10-13 00:24:29 - SQL gerado - {"sql":"INSERT INTO estado (uf) VALUES (?) \r\n            ON DUPLICATE KEY UPDATE uf = VALUES(uf)"}
+2025-10-13 00:24:29 - Bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:24:29 - Insert ID - {"insert_id":0,"table":"estado"}
+2025-10-13 00:24:29 - ID = 0, buscando registro existente - {"table":"estado"}
+2025-10-13 00:24:29 - SQL SELECT - {"sql":"SELECT id_estado FROM estado WHERE uf = ? LIMIT 1"}
+2025-10-13 00:24:29 - SELECT bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:24:29 - ID encontrado - {"id":1,"table":"estado"}
+2025-10-13 00:24:29 - upsert_and_get_id concluído - {"table":"estado","final_id":1}
+2025-10-13 00:24:29 - Estado inserido - {"id":1}
+2025-10-13 00:24:29 - Processando CIDADE
+2025-10-13 00:24:29 - upsert_and_get_id iniciado - {"table":"cidade","data":{"nome":"Araras","fk_estado":1}}
+2025-10-13 00:24:29 - SQL gerado - {"sql":"INSERT INTO cidade (nome, fk_estado) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_estado = VALUES(fk_estado)"}
+2025-10-13 00:24:29 - Bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:24:29 - Insert ID - {"insert_id":0,"table":"cidade"}
+2025-10-13 00:24:29 - ID = 0, buscando registro existente - {"table":"cidade"}
+2025-10-13 00:24:29 - SQL SELECT - {"sql":"SELECT id_cidade FROM cidade WHERE nome = ? AND fk_estado = ? LIMIT 1"}
+2025-10-13 00:24:29 - SELECT bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:24:29 - ID encontrado - {"id":1,"table":"cidade"}
+2025-10-13 00:24:29 - upsert_and_get_id concluído - {"table":"cidade","final_id":1}
+2025-10-13 00:24:29 - Cidade inserida - {"id":1}
+2025-10-13 00:24:29 - Processando BAIRRO
+2025-10-13 00:24:29 - upsert_and_get_id iniciado - {"table":"bairro","data":{"nome":"Jardim Nossa Senhora de Fátima","fk_cidade":1}}
+2025-10-13 00:24:29 - SQL gerado - {"sql":"INSERT INTO bairro (nome, fk_cidade) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_cidade = VALUES(fk_cidade)"}
+2025-10-13 00:24:29 - Bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:24:29 - Insert ID - {"insert_id":0,"table":"bairro"}
+2025-10-13 00:24:29 - ID = 0, buscando registro existente - {"table":"bairro"}
+2025-10-13 00:24:29 - SQL SELECT - {"sql":"SELECT id_bairro FROM bairro WHERE nome = ? AND fk_cidade = ? LIMIT 1"}
+2025-10-13 00:24:29 - SELECT bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:24:29 - ID encontrado - {"id":2,"table":"bairro"}
+2025-10-13 00:24:29 - upsert_and_get_id concluído - {"table":"bairro","final_id":2}
+2025-10-13 00:24:29 - Bairro inserido - {"id":2}
+2025-10-13 00:24:29 - Processando CEP
+2025-10-13 00:24:29 - upsert_and_get_id iniciado - {"table":"cep","data":{"numero_cep":"13607070","logradouro":"Rua José Costa","fk_bairro":2}}
+2025-10-13 00:24:29 - SQL gerado - {"sql":"INSERT INTO cep (numero_cep, logradouro, fk_bairro) VALUES (?, ?, ?) \r\n            ON DUPLICATE KEY UPDATE numero_cep = VALUES(numero_cep), logradouro = VALUES(logradouro), fk_bairro = VALUES(fk_bairro)"}
+2025-10-13 00:24:29 - Bind params - {"types":"sss","values":["13607070","Rua José Costa",2]}
+2025-10-13 00:24:29 - Insert ID - {"insert_id":0,"table":"cep"}
+2025-10-13 00:24:29 - ID = 0, buscando registro existente - {"table":"cep"}
+2025-10-13 00:24:29 - SQL SELECT - {"sql":"SELECT id_cep FROM cep WHERE numero_cep = ? AND fk_bairro = ? LIMIT 1"}
+2025-10-13 00:24:29 - SELECT bind params - {"types":"ss","values":["13607070",2]}
+2025-10-13 00:24:29 - ID encontrado - {"id":2,"table":"cep"}
+2025-10-13 00:24:29 - upsert_and_get_id concluído - {"table":"cep","final_id":2}
+2025-10-13 00:24:29 - CEP inserido - {"id":2}
+2025-10-13 00:24:29 - Processando USUÁRIO
+2025-10-13 00:24:29 - SQL Usuario - {"sql":"INSERT INTO usuario \r\n                 (nome, cpf, email, senha, tipo_usuario, numero_residencia, complemento_endereco, fk_id_cep) \r\n                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"}
+2025-10-13 00:24:29 - EXCEÇÃO capturada - {"message":"Unknown column 'complemento_endereco' in 'field list'"}
+2025-10-13 00:24:29 - Transação revertida (rollback)
+2025-10-13 00:24:29 - Resposta final - {"success":false,"message":"Unknown column 'complemento_endereco' in 'field list'"}
+2025-10-13 00:25:11 - Conexão estabelecida com sucesso
+2025-10-13 00:25:11 - Dados recebidos (raw) - "{\"name\":\"Matheus Henrique Araujo Silva\",\"cpf\":\"349.866.423-91\",\"email\":\"teste@teste.com\",\"password\":\"123456\",\"cep\":\"13607-070\",\"street\":\"Rua José Costa\",\"number\":\"163\",\"neighborhood\":\"Jardim Nossa Senhora de Fátima\",\"city\":\"Araras\",\"state\":\"SP\"}"
+2025-10-13 00:25:11 - Dados decodificados - {"name":"Matheus Henrique Araujo Silva","cpf":"349.866.423-91","email":"teste@teste.com","password":"123456","cep":"13607-070","street":"Rua José Costa","number":"163","neighborhood":"Jardim Nossa Senhora de Fátima","city":"Araras","state":"SP"}
+2025-10-13 00:25:11 - Variáveis processadas - {"name":"Matheus Henrique Araujo Silva","cpf":"34986642391","email":"teste@teste.com","cep":"13607070","city":"Araras","state":"SP"}
+2025-10-13 00:25:11 - Todas as validações passaram
+2025-10-13 00:25:11 - Iniciando transação
+2025-10-13 00:25:11 - Processando ESTADO
+2025-10-13 00:25:11 - upsert_and_get_id iniciado - {"table":"estado","data":{"uf":"SP"}}
+2025-10-13 00:25:11 - SQL gerado - {"sql":"INSERT INTO estado (uf) VALUES (?) \r\n            ON DUPLICATE KEY UPDATE uf = VALUES(uf)"}
+2025-10-13 00:25:11 - Bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:25:11 - Insert ID - {"insert_id":0,"table":"estado"}
+2025-10-13 00:25:11 - ID = 0, buscando registro existente - {"table":"estado"}
+2025-10-13 00:25:11 - SQL SELECT - {"sql":"SELECT id_estado FROM estado WHERE uf = ? LIMIT 1"}
+2025-10-13 00:25:11 - SELECT bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:25:11 - ID encontrado - {"id":1,"table":"estado"}
+2025-10-13 00:25:11 - upsert_and_get_id concluído - {"table":"estado","final_id":1}
+2025-10-13 00:25:11 - Estado inserido - {"id":1}
+2025-10-13 00:25:11 - Processando CIDADE
+2025-10-13 00:25:11 - upsert_and_get_id iniciado - {"table":"cidade","data":{"nome":"Araras","fk_estado":1}}
+2025-10-13 00:25:11 - SQL gerado - {"sql":"INSERT INTO cidade (nome, fk_estado) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_estado = VALUES(fk_estado)"}
+2025-10-13 00:25:11 - Bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:25:11 - Insert ID - {"insert_id":0,"table":"cidade"}
+2025-10-13 00:25:11 - ID = 0, buscando registro existente - {"table":"cidade"}
+2025-10-13 00:25:11 - SQL SELECT - {"sql":"SELECT id_cidade FROM cidade WHERE nome = ? AND fk_estado = ? LIMIT 1"}
+2025-10-13 00:25:11 - SELECT bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:25:11 - ID encontrado - {"id":1,"table":"cidade"}
+2025-10-13 00:25:11 - upsert_and_get_id concluído - {"table":"cidade","final_id":1}
+2025-10-13 00:25:11 - Cidade inserida - {"id":1}
+2025-10-13 00:25:11 - Processando BAIRRO
+2025-10-13 00:25:11 - upsert_and_get_id iniciado - {"table":"bairro","data":{"nome":"Jardim Nossa Senhora de Fátima","fk_cidade":1}}
+2025-10-13 00:25:11 - SQL gerado - {"sql":"INSERT INTO bairro (nome, fk_cidade) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_cidade = VALUES(fk_cidade)"}
+2025-10-13 00:25:11 - Bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:25:11 - Insert ID - {"insert_id":0,"table":"bairro"}
+2025-10-13 00:25:11 - ID = 0, buscando registro existente - {"table":"bairro"}
+2025-10-13 00:25:11 - SQL SELECT - {"sql":"SELECT id_bairro FROM bairro WHERE nome = ? AND fk_cidade = ? LIMIT 1"}
+2025-10-13 00:25:11 - SELECT bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:25:11 - ID encontrado - {"id":2,"table":"bairro"}
+2025-10-13 00:25:11 - upsert_and_get_id concluído - {"table":"bairro","final_id":2}
+2025-10-13 00:25:11 - Bairro inserido - {"id":2}
+2025-10-13 00:25:11 - Processando CEP
+2025-10-13 00:25:11 - upsert_and_get_id iniciado - {"table":"cep","data":{"numero_cep":"13607070","logradouro":"Rua José Costa","fk_bairro":2}}
+2025-10-13 00:25:11 - SQL gerado - {"sql":"INSERT INTO cep (numero_cep, logradouro, fk_bairro) VALUES (?, ?, ?) \r\n            ON DUPLICATE KEY UPDATE numero_cep = VALUES(numero_cep), logradouro = VALUES(logradouro), fk_bairro = VALUES(fk_bairro)"}
+2025-10-13 00:25:11 - Bind params - {"types":"sss","values":["13607070","Rua José Costa",2]}
+2025-10-13 00:25:11 - Insert ID - {"insert_id":0,"table":"cep"}
+2025-10-13 00:25:11 - ID = 0, buscando registro existente - {"table":"cep"}
+2025-10-13 00:25:11 - SQL SELECT - {"sql":"SELECT id_cep FROM cep WHERE numero_cep = ? AND fk_bairro = ? LIMIT 1"}
+2025-10-13 00:25:11 - SELECT bind params - {"types":"ss","values":["13607070",2]}
+2025-10-13 00:25:11 - ID encontrado - {"id":2,"table":"cep"}
+2025-10-13 00:25:11 - upsert_and_get_id concluído - {"table":"cep","final_id":2}
+2025-10-13 00:25:11 - CEP inserido - {"id":2}
+2025-10-13 00:25:11 - Processando USUÁRIO
+2025-10-13 00:25:11 - SQL Usuario - {"sql":"INSERT INTO usuario \r\n                 (nome, cpf, email, senha, tipo_usuario, numero_residencia, complemento_endereco, fk_id_cep) \r\n                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"}
+2025-10-13 00:25:11 - EXCEÇÃO capturada - {"message":"Unknown column 'complemento_endereco' in 'field list'"}
+2025-10-13 00:25:11 - Transação revertida (rollback)
+2025-10-13 00:25:11 - Resposta final - {"success":false,"message":"Unknown column 'complemento_endereco' in 'field list'"}
+2025-10-13 00:27:35 - Conexão estabelecida com sucesso
+2025-10-13 00:27:35 - Dados recebidos (raw) - "{\"name\":\"Matheus Henrique Araujo Silva\",\"cpf\":\"349.866.423-91\",\"email\":\"teste@teste.com\",\"password\":\"123456\",\"cep\":\"13607-070\",\"street\":\"Rua José Costa\",\"number\":\"163\",\"neighborhood\":\"Jardim Nossa Senhora de Fátima\",\"city\":\"Araras\",\"state\":\"SP\"}"
+2025-10-13 00:27:35 - Dados decodificados - {"name":"Matheus Henrique Araujo Silva","cpf":"349.866.423-91","email":"teste@teste.com","password":"123456","cep":"13607-070","street":"Rua José Costa","number":"163","neighborhood":"Jardim Nossa Senhora de Fátima","city":"Araras","state":"SP"}
+2025-10-13 00:27:35 - Variáveis processadas - {"name":"Matheus Henrique Araujo Silva","cpf":"34986642391","email":"teste@teste.com","cep":"13607070","city":"Araras","state":"SP"}
+2025-10-13 00:27:35 - Todas as validações passaram
+2025-10-13 00:27:35 - Iniciando transação
+2025-10-13 00:27:35 - Processando ESTADO
+2025-10-13 00:27:35 - upsert_and_get_id iniciado - {"table":"estado","data":{"uf":"SP"}}
+2025-10-13 00:27:35 - SQL gerado - {"sql":"INSERT INTO estado (uf) VALUES (?) \r\n            ON DUPLICATE KEY UPDATE uf = VALUES(uf)"}
+2025-10-13 00:27:35 - Bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:27:35 - Insert ID - {"insert_id":0,"table":"estado"}
+2025-10-13 00:27:35 - ID = 0, buscando registro existente - {"table":"estado"}
+2025-10-13 00:27:35 - SQL SELECT - {"sql":"SELECT id_estado FROM estado WHERE uf = ? LIMIT 1"}
+2025-10-13 00:27:35 - SELECT bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:27:35 - ID encontrado - {"id":1,"table":"estado"}
+2025-10-13 00:27:35 - upsert_and_get_id concluído - {"table":"estado","final_id":1}
+2025-10-13 00:27:35 - Estado inserido - {"id":1}
+2025-10-13 00:27:35 - Processando CIDADE
+2025-10-13 00:27:35 - upsert_and_get_id iniciado - {"table":"cidade","data":{"nome":"Araras","fk_estado":1}}
+2025-10-13 00:27:35 - SQL gerado - {"sql":"INSERT INTO cidade (nome, fk_estado) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_estado = VALUES(fk_estado)"}
+2025-10-13 00:27:35 - Bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:27:35 - Insert ID - {"insert_id":0,"table":"cidade"}
+2025-10-13 00:27:35 - ID = 0, buscando registro existente - {"table":"cidade"}
+2025-10-13 00:27:35 - SQL SELECT - {"sql":"SELECT id_cidade FROM cidade WHERE nome = ? AND fk_estado = ? LIMIT 1"}
+2025-10-13 00:27:35 - SELECT bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:27:35 - ID encontrado - {"id":1,"table":"cidade"}
+2025-10-13 00:27:35 - upsert_and_get_id concluído - {"table":"cidade","final_id":1}
+2025-10-13 00:27:35 - Cidade inserida - {"id":1}
+2025-10-13 00:27:35 - Processando BAIRRO
+2025-10-13 00:27:35 - upsert_and_get_id iniciado - {"table":"bairro","data":{"nome":"Jardim Nossa Senhora de Fátima","fk_cidade":1}}
+2025-10-13 00:27:35 - SQL gerado - {"sql":"INSERT INTO bairro (nome, fk_cidade) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_cidade = VALUES(fk_cidade)"}
+2025-10-13 00:27:35 - Bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:27:35 - Insert ID - {"insert_id":0,"table":"bairro"}
+2025-10-13 00:27:35 - ID = 0, buscando registro existente - {"table":"bairro"}
+2025-10-13 00:27:35 - SQL SELECT - {"sql":"SELECT id_bairro FROM bairro WHERE nome = ? AND fk_cidade = ? LIMIT 1"}
+2025-10-13 00:27:35 - SELECT bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:27:35 - ID encontrado - {"id":2,"table":"bairro"}
+2025-10-13 00:27:35 - upsert_and_get_id concluído - {"table":"bairro","final_id":2}
+2025-10-13 00:27:35 - Bairro inserido - {"id":2}
+2025-10-13 00:27:35 - Processando CEP
+2025-10-13 00:27:35 - upsert_and_get_id iniciado - {"table":"cep","data":{"numero_cep":"13607070","logradouro":"Rua José Costa","fk_bairro":2}}
+2025-10-13 00:27:35 - SQL gerado - {"sql":"INSERT INTO cep (numero_cep, logradouro, fk_bairro) VALUES (?, ?, ?) \r\n            ON DUPLICATE KEY UPDATE numero_cep = VALUES(numero_cep), logradouro = VALUES(logradouro), fk_bairro = VALUES(fk_bairro)"}
+2025-10-13 00:27:35 - Bind params - {"types":"sss","values":["13607070","Rua José Costa",2]}
+2025-10-13 00:27:35 - Insert ID - {"insert_id":0,"table":"cep"}
+2025-10-13 00:27:35 - ID = 0, buscando registro existente - {"table":"cep"}
+2025-10-13 00:27:35 - SQL SELECT - {"sql":"SELECT id_cep FROM cep WHERE numero_cep = ? AND fk_bairro = ? LIMIT 1"}
+2025-10-13 00:27:35 - SELECT bind params - {"types":"ss","values":["13607070",2]}
+2025-10-13 00:27:35 - ID encontrado - {"id":2,"table":"cep"}
+2025-10-13 00:27:35 - upsert_and_get_id concluído - {"table":"cep","final_id":2}
+2025-10-13 00:27:35 - CEP inserido - {"id":2}
+2025-10-13 00:27:35 - Processando USUÁRIO
+2025-10-13 00:27:35 - SQL Usuario - {"sql":"INSERT INTO usuario \r\n                 (nome, cpf, email, senha, tipo_usuario, numero_residencia, complemento_endereco, fk_id_cep) \r\n                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"}
+2025-10-13 00:27:35 - EXCEÇÃO capturada - {"message":"Unknown column 'complemento_endereco' in 'field list'"}
+2025-10-13 00:27:35 - Transação revertida (rollback)
+2025-10-13 00:27:35 - Resposta final - {"success":false,"message":"Unknown column 'complemento_endereco' in 'field list'"}
+2025-10-13 00:30:54 - Conexão estabelecida com sucesso
+2025-10-13 00:30:54 - Dados recebidos (raw) - "{\"name\":\"Matheus Henrique Araujo Silva\",\"cpf\":\"349.866.423-91\",\"email\":\"teste@teste.com\",\"password\":\"123456\",\"cep\":\"13607-070\",\"street\":\"Rua José Costa\",\"number\":\"163\",\"neighborhood\":\"Jardim Nossa Senhora de Fátima\",\"city\":\"Araras\",\"state\":\"SP\"}"
+2025-10-13 00:30:54 - Dados decodificados - {"name":"Matheus Henrique Araujo Silva","cpf":"349.866.423-91","email":"teste@teste.com","password":"123456","cep":"13607-070","street":"Rua José Costa","number":"163","neighborhood":"Jardim Nossa Senhora de Fátima","city":"Araras","state":"SP"}
+2025-10-13 00:30:54 - Variáveis processadas - {"name":"Matheus Henrique Araujo Silva","cpf":"34986642391","email":"teste@teste.com","cep":"13607070","city":"Araras","state":"SP"}
+2025-10-13 00:30:54 - Todas as validações passaram
+2025-10-13 00:30:54 - Iniciando transação
+2025-10-13 00:30:54 - Processando ESTADO
+2025-10-13 00:30:54 - upsert_and_get_id iniciado - {"table":"estado","data":{"uf":"SP"}}
+2025-10-13 00:30:54 - SQL gerado - {"sql":"INSERT INTO estado (uf) VALUES (?) \r\n            ON DUPLICATE KEY UPDATE uf = VALUES(uf)"}
+2025-10-13 00:30:54 - Bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:30:54 - Insert ID - {"insert_id":0,"table":"estado"}
+2025-10-13 00:30:54 - ID = 0, buscando registro existente - {"table":"estado"}
+2025-10-13 00:30:54 - SQL SELECT - {"sql":"SELECT id_estado FROM estado WHERE uf = ? LIMIT 1"}
+2025-10-13 00:30:54 - SELECT bind params - {"types":"s","values":["SP"]}
+2025-10-13 00:30:54 - ID encontrado - {"id":1,"table":"estado"}
+2025-10-13 00:30:54 - upsert_and_get_id concluído - {"table":"estado","final_id":1}
+2025-10-13 00:30:54 - Estado inserido - {"id":1}
+2025-10-13 00:30:54 - Processando CIDADE
+2025-10-13 00:30:54 - upsert_and_get_id iniciado - {"table":"cidade","data":{"nome":"Araras","fk_estado":1}}
+2025-10-13 00:30:54 - SQL gerado - {"sql":"INSERT INTO cidade (nome, fk_estado) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_estado = VALUES(fk_estado)"}
+2025-10-13 00:30:54 - Bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:30:54 - Insert ID - {"insert_id":0,"table":"cidade"}
+2025-10-13 00:30:54 - ID = 0, buscando registro existente - {"table":"cidade"}
+2025-10-13 00:30:54 - SQL SELECT - {"sql":"SELECT id_cidade FROM cidade WHERE nome = ? AND fk_estado = ? LIMIT 1"}
+2025-10-13 00:30:54 - SELECT bind params - {"types":"ss","values":["Araras",1]}
+2025-10-13 00:30:54 - ID encontrado - {"id":1,"table":"cidade"}
+2025-10-13 00:30:54 - upsert_and_get_id concluído - {"table":"cidade","final_id":1}
+2025-10-13 00:30:54 - Cidade inserida - {"id":1}
+2025-10-13 00:30:54 - Processando BAIRRO
+2025-10-13 00:30:54 - upsert_and_get_id iniciado - {"table":"bairro","data":{"nome":"Jardim Nossa Senhora de Fátima","fk_cidade":1}}
+2025-10-13 00:30:54 - SQL gerado - {"sql":"INSERT INTO bairro (nome, fk_cidade) VALUES (?, ?) \r\n            ON DUPLICATE KEY UPDATE nome = VALUES(nome), fk_cidade = VALUES(fk_cidade)"}
+2025-10-13 00:30:54 - Bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:30:54 - Insert ID - {"insert_id":0,"table":"bairro"}
+2025-10-13 00:30:54 - ID = 0, buscando registro existente - {"table":"bairro"}
+2025-10-13 00:30:54 - SQL SELECT - {"sql":"SELECT id_bairro FROM bairro WHERE nome = ? AND fk_cidade = ? LIMIT 1"}
+2025-10-13 00:30:54 - SELECT bind params - {"types":"ss","values":["Jardim Nossa Senhora de Fátima",1]}
+2025-10-13 00:30:54 - ID encontrado - {"id":2,"table":"bairro"}
+2025-10-13 00:30:54 - upsert_and_get_id concluído - {"table":"bairro","final_id":2}
+2025-10-13 00:30:54 - Bairro inserido - {"id":2}
+2025-10-13 00:30:54 - Processando CEP
+2025-10-13 00:30:54 - upsert_and_get_id iniciado - {"table":"cep","data":{"numero_cep":"13607070","logradouro":"Rua José Costa","fk_bairro":2}}
+2025-10-13 00:30:54 - SQL gerado - {"sql":"INSERT INTO cep (numero_cep, logradouro, fk_bairro) VALUES (?, ?, ?) \r\n            ON DUPLICATE KEY UPDATE numero_cep = VALUES(numero_cep), logradouro = VALUES(logradouro), fk_bairro = VALUES(fk_bairro)"}
+2025-10-13 00:30:54 - Bind params - {"types":"sss","values":["13607070","Rua José Costa",2]}
+2025-10-13 00:30:54 - Insert ID - {"insert_id":0,"table":"cep"}
+2025-10-13 00:30:54 - ID = 0, buscando registro existente - {"table":"cep"}
+2025-10-13 00:30:54 - SQL SELECT - {"sql":"SELECT id_cep FROM cep WHERE numero_cep = ? AND fk_bairro = ? LIMIT 1"}
+2025-10-13 00:30:54 - SELECT bind params - {"types":"ss","values":["13607070",2]}
+2025-10-13 00:30:54 - ID encontrado - {"id":2,"table":"cep"}
+2025-10-13 00:30:54 - upsert_and_get_id concluído - {"table":"cep","final_id":2}
+2025-10-13 00:30:54 - CEP inserido - {"id":2}
+2025-10-13 00:30:54 - Processando USUÁRIO
+2025-10-13 00:30:54 - SQL Usuario - {"sql":"INSERT INTO usuario \r\n                 (nome, cpf, email, senha, tipo_usuario, numero_residencia, fk_id_cep) \r\n                 VALUES (?, ?, ?, ?, ?, ?, ?)"}
+2025-10-13 00:30:54 - Executando insert do usuário
+2025-10-13 00:30:54 - Usuário inserido com sucesso, commitando transação
+2025-10-13 00:30:54 - Transação commitada com sucesso
+2025-10-13 00:30:54 - Resposta final - {"success":true,"message":"Usuário cadastrado com sucesso!"}
