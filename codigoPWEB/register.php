@@ -1,10 +1,7 @@
 <?php
 include('conexao.php');
 
-
 header("Content-Type: application/json");
-
-$file = "users.json";
 
 // Função de validação de CPF
 function validarCPF($cpf) {
@@ -21,66 +18,119 @@ function validarCPF($cpf) {
     return true;
 }
 
-// Recebe dados
+// Recebe dados do JSON
 $data = json_decode(file_get_contents("php://input"), true);
 
-$name = trim($data["name"] ?? "");
-$cpf = trim($data["cpf"] ?? "");
+$nome = trim($data["nome"] ?? "");
+$cpf = preg_replace('/[^0-9]/', '', trim($data["cpf"] ?? ""));
 $email = trim($data["email"] ?? "");
-$password = $data["password"] ?? "";
-$cep = trim($data["cep"] ?? "");
-$street = trim($data["street"] ?? "");
-$number = trim($data["number"] ?? "");
-$neighborhood = trim($data["neighborhood"] ?? "");
-$city = trim($data["city"] ?? "");
-$state = trim($data["state"] ?? "");
+$senha = password_hash($data["senha"] ?? "", PASSWORD_DEFAULT); // HASH DA SENHA!
+$cep = preg_replace('/[^0-9]/', '', trim($data["cep"] ?? ""));
+$logradouro = trim($data["rua"] ?? ""); // NOME DA RUA
+$bairro_nome = trim($data["bairro"] ?? ""); // BAIRRO
+$numero_residencia = trim($data["numero_residencia"] ?? "");
+$complemento_endereco = trim($data["complemento_endereco"] ?? "");
+$cidade_nome = trim($data["cidade"] ?? "");
+$estado_uf = strtoupper(trim($data["estado"] ?? ""));
 
-// Validação básica
-if (!$name || !$cpf || !$email || !$password || !$cep || !$street || !$number || !$neighborhood || !$city || !$state) {
-    echo json_encode(["success" => false, "message" => "Preencha todos os campos."]);
+// Validações básicas
+if (empty($nome) || empty($cpf) || empty($email) || empty($senha)) {
+    echo json_encode(["success" => false, "message" => "Campos obrigatórios não preenchidos."]);
     exit;
 }
 
+// Validação de CPF
 if (!validarCPF($cpf)) {
     echo json_encode(["success" => false, "message" => "CPF inválido."]);
     exit;
 }
 
-// Se não existir arquivo, cria
-if (!file_exists($file)) file_put_contents($file, json_encode([]));
-
-// Lê usuários existentes
-$users = json_decode(file_get_contents($file), true);
-
-// Verifica duplicados
-foreach ($users as $user) {
-    if ($user["email"] === $email) {
-        echo json_encode(["success" => false, "message" => "E-mail já cadastrado."]);
-        exit;
-    }
-    if ($user["cpf"] === $cpf) {
-        echo json_encode(["success" => false, "message" => "CPF já cadastrado."]);
-        exit;
-    }
+// Verifica se CPF ou Email já existem (COM PREPARED STATEMENT)
+$stmt = $conn->prepare("SELECT ID_USER FROM usuario WHERE cpf = ? OR email = ?");
+$stmt->bind_param("ss", $cpf, $email);
+$stmt->execute();
+if ($stmt->get_result()->num_rows > 0) {
+    echo json_encode(["success" => false, "message" => "CPF ou E-mail já cadastrado."]);
+    exit;
 }
 
-// Adiciona novo
-$users[] = [
-    "name" => $name,
-    "cpf" => $cpf,
-    "email" => $email,
-    "password" => password_hash($password, PASSWORD_DEFAULT),
-    "address" => [
-        "cep" => $cep,
-        "street" => $street,
-        "number" => $number,
-        "neighborhood" => $neighborhood,
-        "city" => $city,
-        "state" => $state
-    ]
-];
+// ------------------- INSERÇÃO NO BANCO -------------------
+$conn->begin_transaction();
 
-// Salva
-file_put_contents($file, json_encode($users, JSON_PRETTY_PRINT));
+try {
+    // 1️⃣ ESTADO - Busca ou cria
+    $stmt = $conn->prepare("SELECT ID_ESTADO FROM estado WHERE UF = ?");
+    $stmt->bind_param("s", $estado_uf);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $id_estado = $result->fetch_assoc()["ID_ESTADO"];
+    } else {
+        $stmt = $conn->prepare("INSERT INTO estado (UF) VALUES (?)");
+        $stmt->bind_param("s", $estado_uf);
+        $stmt->execute();
+        $id_estado = $conn->insert_id;
+    }
 
-echo json_encode(["success" => true, "message" => "Usuário cadastrado com sucesso!"]);
+    // 2️⃣ CIDADE - Busca ou cria
+    $stmt = $conn->prepare("SELECT ID_CIDADE FROM cidade WHERE NOME = ? AND FK_ESTADO = ?");
+    $stmt->bind_param("si", $cidade_nome, $id_estado);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $id_cidade = $result->fetch_assoc()["ID_CIDADE"];
+    } else {
+        $stmt = $conn->prepare("INSERT INTO cidade (NOME, FK_ESTADO) VALUES (?, ?)");
+        $stmt->bind_param("si", $cidade_nome, $id_estado);
+        $stmt->execute();
+        $id_cidade = $conn->insert_id;
+    }
+
+    // 3️⃣ BAIRRO - Busca ou cria (AGORA COM O NOME DO BAIRRO, NÃO DA RUA!)
+    $stmt = $conn->prepare("SELECT ID_BAIRRO FROM bairro WHERE NOME = ? AND FK_CIDADE = ?");
+    $stmt->bind_param("si", $bairro_nome, $id_cidade);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $id_bairro = $result->fetch_assoc()["ID_BAIRRO"];
+    } else {
+        $stmt = $conn->prepare("INSERT INTO bairro (NOME, FK_CIDADE) VALUES (?, ?)");
+        $stmt->bind_param("si", $bairro_nome, $id_cidade);
+        $stmt->execute();
+        $id_bairro = $conn->insert_id;
+    }
+
+    // 4️⃣ CEP - Busca ou cria
+    $stmt = $conn->prepare("SELECT ID_CEP FROM cep WHERE ID_CEP = ? AND LOGRADOURO = ? AND FK_BAIRRO = ?");
+    $stmt->bind_param("ssi", $cep, $logradouro, $id_bairro);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $id_cep = $result->fetch_assoc()["ID_CEP"];
+    } else {
+        $stmt = $conn->prepare("INSERT INTO cep (ID_CEP, LOGRADOURO, FK_BAIRRO) VALUES (?, ?, ?)");
+        $stmt->bind_param("ssi", $cep, $logradouro, $id_bairro);
+        $stmt->execute();
+        $id_cep = $conn->insert_id;
+    }
+
+    // 5️⃣ USUÁRIO
+    $stmt = $conn->prepare("INSERT INTO usuario (NOME, CPF, EMAIL, SENHA, NUMERO_RESIDENCIA, COMPLEMENTO_ENDERENCO, FK_ID_CEP) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssssi", $nome, $cpf, $email, $senha, $numero_residencia, $complemento_endereco, $id_cep);
+    $stmt->execute();
+
+    $conn->commit();
+    echo json_encode(["success" => true, "message" => "Usuário cadastrado com sucesso!"]);
+
+} catch (Exception $e) {
+    $conn->rollback();
+    echo json_encode(["success" => false, "message" => "Erro ao cadastrar: " . $e->getMessage()]);
+}
+
+$conn->close();
+?>
