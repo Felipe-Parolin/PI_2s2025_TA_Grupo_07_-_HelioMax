@@ -23,7 +23,7 @@ $response = ["success" => false, "message" => "Email ou senha incorretos."];
 if (isset($users[$email]) && $users[$email] === $password) {
     $_SESSION["user"] = $email;
 
-    
+
     if ($remember) {
         setcookie("rememberedEmail", $email, time() + (7 * 24 * 60 * 60), "/");
     }

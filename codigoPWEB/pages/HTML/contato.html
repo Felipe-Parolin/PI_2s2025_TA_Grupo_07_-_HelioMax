@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="../../images/icon.png" />
+    <title>Contato</title>
+    <link rel="stylesheet" href="../../styles/style_contato.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+      <button class="mobile-menu-close" id="mobileMenuClose">×</button>
+      <ul class="mobile-nav-links">
+        <li><a href="landpage.html">Início</a></li>
+        <li><a href="sobre.html">Sobre</a></li>
+        <li><a href="contato.html" class="active">Contato</a></li>
+        <li><a href="login.html">Login</a></li>
+      </ul>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+      <nav class="nav">
+        <a href="landpage.html" class="logo">⚡ HelioMax</a>
+        <ul class="nav-links">
+          <li><a href="landpage.html">Início</a></li>
+          <li><a href="sobre.html">Sobre</a></li>
+          <li><a href="contato.html" class="active">Contato</a></li>
+        </ul>
+        <div style="display: flex; align-items: center; gap: 1rem">
+          <a href="login.html" class="cta-button">Login</a>
+          <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+      <section class="hero-contact">
+        <div class="hero-content">
+          <h1>Entre em Contato</h1>
+          <p>
+            Tem dúvidas, sugestões ou quer saber mais sobre a HelioMax? Nossa
+            equipe está pronta para ajudar você!
+          </p>
+        </div>
+      </section>
+
+      <section class="contact-section">
+        <div class="contact-wrapper">
+          <!-- Contact Form -->
+          <div class="contact-form-card">
+            <div class="card-header">
+              <div class="card-icon">✉️</div>
+              <h3>Envie sua Mensagem</h3>
+            </div>
+            <div class="success-message" id="successMessage">
+              ✅ Mensagem enviada com sucesso! Entraremos em contato em breve.
+            </div>
+            <form id="contactForm">
+              <div class="form-group">
+                <label for="name">Nome Completo *</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  placeholder="Seu nome completo"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="email">E-mail *</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="seu@email.com"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="phone">Telefone</label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  placeholder="(11) 99999-9999"
+                />
+              </div>
+              <div class="form-group">
+                <label for="message">Mensagem *</label>
+                <textarea
+                  id="message"
+                  name="message"
+                  placeholder="Descreva sua dúvida, sugestão ou como podemos ajudar..."
+                  required
+                ></textarea>
+              </div>
+              <button type="submit" class="form-submit">
+                <span>Enviar Mensagem</span>
+                <span class="button-icon">⚡</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Contact Information -->
+          <div class="contact-info-wrapper">
+            <div class="contact-info-card">
+              <div class="card-header">
+                <div class="card-icon">💬</div>
+                <h3>Outras Formas de Contato</h3>
+              </div>
+              <p class="info-subtitle">
+                Escolha a melhor forma de falar conosco
+              </p>
+
+              <div class="contact-details">
+                <div class="contact-item">
+                  <div class="contact-item-icon">📧</div>
+                  <div class="contact-item-content">
+                    <h4>E-mail</h4>
+                    <p>contato@heliomax.com.br</p>
+                    <p>suporte@heliomax.com.br</p>
+                  </div>
+                </div>
+
+                <div class="contact-item">
+                  <div class="contact-item-icon">📱</div>
+                  <div class="contact-item-content">
+                    <h4>WhatsApp</h4>
+                    <p>(11) 99999-9999</p>
+                    <p class="hours">Seg a Sex, 8h às 18h</p>
+                  </div>
+                </div>
+
+                <div class="contact-item">
+                  <div class="contact-item-icon">🌐</div>
+                  <div class="contact-item-content">
+                    <h4>Redes Sociais</h4>
+                    <p>@heliomax_oficial</p>
+                    <p class="social-links">LinkedIn • Instagram • Twitter</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="logo" style="font-size: 1.8rem; margin-bottom: 1rem">
+          ⚡ HelioMax
+        </div>
+        <p>
+          A solução completa para gerenciamento inteligente de veículos
+          elétricos.
+        </p>
+        <p>&copy; 2025 HelioMax. Todos os direitos reservados.</p>
+      </div>
+    </footer>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const mobileMenuToggle = document.getElementById("mobileMenuToggle");
+        const mobileMenu = document.getElementById("mobileMenu");
+        const mobileMenuClose = document.getElementById("mobileMenuClose");
+        const mobileMenuOverlay = document.getElementById("mobileMenuOverlay");
+
+        if (mobileMenuToggle) {
+          mobileMenuToggle.addEventListener("click", () => {
+            mobileMenu.classList.add("active");
+            mobileMenuOverlay.classList.add("active");
+          });
+        }
+
+        if (mobileMenuClose) {
+          mobileMenuClose.addEventListener("click", () => {
+            mobileMenu.classList.remove("active");
+            mobileMenuOverlay.classList.remove("active");
+          });
+        }
+
+        if (mobileMenuOverlay) {
+          mobileMenuOverlay.addEventListener("click", () => {
+            mobileMenu.classList.remove("active");
+            mobileMenuOverlay.classList.remove("active");
+          });
+        }
+
+        window.addEventListener("scroll", () => {
+          const header = document.querySelector(".header");
+          if (header) {
+            if (window.scrollY > 50) {
+              header.style.background = "rgba(13, 13, 13, 0.98)";
+              header.style.boxShadow = "0 2px 20px rgba(93, 173, 226, 0.2)";
+            } else {
+              header.style.background = "rgba(13, 13, 13, 0.98)";
+              header.style.boxShadow = "0 2px 20px rgba(93, 173, 226, 0.1)";
+            }
+          }
+        });
+
+        const contactForm = document.getElementById("contactForm");
+        const successMessage = document.getElementById("successMessage");
+
+        contactForm.addEventListener("submit", function (e) {
+          e.preventDefault();
+          successMessage.classList.add("show");
+          this.reset();
+          setTimeout(() => {
+            successMessage.classList.remove("show");
+          }, 5000);
+        });
+      });
+    </script>
+  </body>
+</html>
