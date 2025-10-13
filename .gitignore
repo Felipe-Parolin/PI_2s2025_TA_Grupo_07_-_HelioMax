@@ -1,1 +1,50 @@
+# Configurações do Visual Studio Code
 .vscode/
+*.code-workspace
+
+# Arquivos do Sistema Operacional
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# Arquivos temporários do PHP
+*.log
+*.tmp
+
+# Arquivos de sessão do PHP
+sessions/
+tmp/
+
+# Configurações locais (caso tenham arquivos de config com senhas)
+config/local.php
+.env
+
+# Backups de banco de dados locais
+*.sql.backup
+*.sql~
+backups/
+diagramasBD/backups/
+
+# Cache
+cache/
+*.cache
+
+# Uploads de teste (se houver pasta de uploads)
+uploads/temp/
+
+# Node modules (caso usem algum preprocessador CSS/JS no futuro)
+node_modules/
+
+# Arquivos de log do XAMPP
+error.log
+access.log
