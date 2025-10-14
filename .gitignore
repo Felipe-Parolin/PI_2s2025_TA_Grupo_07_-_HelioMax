@@ -2,6 +2,9 @@
 .vscode/
 *.code-workspace
 
+# Arquivos de sessão do SQLTools (VS Code)
+*.session.sql
+
 # Arquivos do Sistema Operacional
 # Windows
 Thumbs.db
