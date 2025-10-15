@@ -579,7 +579,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cep_id = $pdo->lastInsertId();
       }
 
-      $stmt = $pdo->prepare("UPDATE usuario SET NOME = ?, EMAIL = ?, CPF = ?, NUMERO_RESIDENCIA = ?, COMPLEMENTO_ENDERENCO = ?, FK_ID_CEP = ? WHERE ID_USER = ?");
+      $stmt = $pdo->prepare("UPDATE usuario SET NOME = ?, EMAIL = ?, CPF = ?, NUMERO_RESIDENCIA = ?, COMPLEMENTO_ENDERECO = ?, FK_ID_CEP = ? WHERE ID_USER = ?");
       $stmt->execute([$nome, $email, $cpf, $numero, $complemento, $cep_id, $_SESSION['usuario_id']]);
 
       $_SESSION['usuario_nome'] = $nome;
