@@ -986,7 +986,7 @@ $usuario = $stmt->fetch();
             <div>
               <label class="block text-gray-400 text-sm font-semibold mb-2">Complemento</label>
               <input type="text" name="complemento"
-                value="<?php echo htmlspecialchars($usuario['COMPLEMENTO_ENDERENCO'] ?? ''); ?>"
+                value="<?php echo htmlspecialchars($usuario['COMPLEMENTO_ENDERECO'] ?? ''); ?>"
                 class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
             </div>
 
