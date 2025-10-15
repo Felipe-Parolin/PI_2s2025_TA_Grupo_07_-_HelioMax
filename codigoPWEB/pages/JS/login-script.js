@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const emailInput = document.getElementById('email');
     const loginButton = document.querySelector('.login-button');
     const loadingOverlay = document.getElementById('loadingOverlay');
+    const forgotPasswordLink = document.querySelector('.forgot-password');
 
     let isLoading = false;
 
@@ -14,6 +15,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // Adiciona o listener para o botão de mostrar/ocultar senha
     if (togglePassword) {
         togglePassword.addEventListener('click', handleTogglePassword);
+    }
+
+    // Adiciona o listener para o link "Esqueceu a senha"
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', handleForgotPassword);
+    }
+
+    // Função para lidar com o clique em "Esqueceu a senha"
+    function handleForgotPassword(e) {
+        e.preventDefault();
+        showNotification('Esta funcionalidade está em produção. Em breve estará disponível!', 'warning');
     }
 
     // Função principal que lida com o envio do formulário
@@ -126,6 +138,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Adiciona os estilos da notificação (importante)
     const notificationStyles = document.createElement('style');
-    notificationStyles.textContent = `@keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } } .notification { position: fixed; top: 20px; right: 20px; z-index: 10000; min-width: 300px; padding: 1rem; border-radius: 12px; color: white; font-weight: 500; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); transform: translateX(100%); transition: all 0.3s ease; border-left: 4px solid; } .notification.show { transform: translateX(0); } .notification.hide { transform: translateX(100%); opacity: 0; } .notification.success { background: rgba(40, 167, 69, 0.9); border-left-color: #28a745; } .notification.error { background: rgba(220, 53, 69, 0.9); border-left-color: #dc3545; } .notification-content { display: flex; align-items: center; gap: 0.5rem; } .notification-close { background: none; border: none; color: inherit; cursor: pointer; }`;
+    notificationStyles.textContent = `@keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } } .notification { position: fixed; top: 20px; right: 20px; z-index: 10000; min-width: 300px; padding: 1rem; border-radius: 12px; color: white; font-weight: 500; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); transform: translateX(100%); transition: all 0.3s ease; border-left: 4px solid; } .notification.show { transform: translateX(0); } .notification.hide { transform: translateX(100%); opacity: 0; } .notification.success { background: rgba(40, 167, 69, 0.9); border-left-color: #28a745; } .notification.error { background: rgba(220, 53, 69, 0.9); border-left-color: #dc3545; } .notification.warning { background: rgba(255, 193, 7, 0.9); border-left-color: #ffc107; color: #333; } .notification-content { display: flex; align-items: center; gap: 0.5rem; } .notification-close { background: none; border: none; color: inherit; cursor: pointer; }`;
     document.head.appendChild(notificationStyles);
 });
