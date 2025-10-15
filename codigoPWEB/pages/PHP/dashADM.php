@@ -1,6 +1,15 @@
 <?php
 session_start();
 
+// --- ETAPA 2: DEFINA O ADMINISTRADOR PADRÃO AQUI ---
+// IMPORTANTE: Altere o ID para o ID do usuário administrador no seu banco de dados.
+// Todo ponto criado, editado ou deletado será associado a este usuário.
+if (!isset($_SESSION['usuario_id'])) {
+  header('Location: login.php');
+  exit;
+}
+echo $_SESSION['usuario_nome'];
+
 // Configuração do banco de dados
 $host = '127.0.0.1';
 $dbname = 'heliomax';
@@ -14,270 +23,11 @@ try {
   die("Erro na conexão: " . $e->getMessage());
 }
 
-// Variáveis de controle de estado e mensagens
-$erro_login = '';
-$sucesso_recuperacao = '';
-$erro_recuperacao = '';
 
-// Verificar se está logado
-if (!isset($_SESSION['usuario_id'])) {
+// --- ETAPA 1: TODO O BLOCO DE LOGIN, RECUPERAÇÃO DE SENHA E HTML FOI REMOVIDO DAQUI ---
 
-  // --- LÓGICA DE RECUPERAÇÃO DE SENHA ---
-  if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
-    // AÇÃO 1: SOLICITAR TOKEN DE RECUPERAÇÃO
-    if ($_POST['action'] === 'solicitar_token') {
-      $email = trim($_POST['email']);
-
-      $stmt = $pdo->prepare("SELECT ID_USER FROM usuario WHERE EMAIL = ?");
-      $stmt->execute([$email]);
-      $usuario = $stmt->fetch();
-
-      if ($usuario) {
-        $user_id = $usuario['ID_USER'];
-        // Gera um token criptograficamente seguro (64 caracteres)
-        $token = bin2hex(random_bytes(32));
-        // Token expira em 1 hora
-        $expiracao = date('Y-m-d H:i:s', strtotime('+1 hour'));
-
-        $stmt = $pdo->prepare("UPDATE usuario SET token_recuperacao = ?, expiracao_token = ? WHERE ID_USER = ?");
-        $stmt->execute([$token, $expiracao, $user_id]);
-
-        // --- SIMULAÇÃO DE ENVIO DE EMAIL ---
-        // ATENÇÃO: Em um ambiente real, você enviaria este link por e-mail.
-        $link_recuperacao = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . "?action=resetar_senha&token=" . $token;
-
-        $sucesso_recuperacao = "O link de recuperação foi gerado. <br>Por favor, clique no link abaixo para redefinir sua senha: <br><a href=\"$link_recuperacao\" class=\"text-cyan-400 font-semibold hover:underline break-all\">$link_recuperacao</a>";
-        // ------------------------------------
-      } else {
-        $sucesso_recuperacao = "Se o email estiver cadastrado, um link de recuperação (simulado) foi gerado.";
-      }
-    }
-
-    // AÇÃO 2: ATUALIZAR SENHA (APÓS SUBMISSÃO DO FORMULÁRIO DE RESET)
-    if ($_POST['action'] === 'resetar_senha_final') {
-      $token = $_POST['token'];
-      $nova_senha = $_POST['nova_senha'];
-      $confirmar = $_POST['confirmar_senha'];
-
-      if ($nova_senha !== $confirmar) {
-        $erro_recuperacao = 'As senhas não conferem.';
-      } else {
-        // Busca o usuário pelo token e verifica se não expirou
-        $stmt = $pdo->prepare("SELECT ID_USER FROM usuario WHERE token_recuperacao = ? AND expiracao_token > NOW()");
-        $stmt->execute([$token]);
-        $usuario = $stmt->fetch();
-
-        if ($usuario) {
-          // Atualiza a senha e limpa o token
-          $stmt = $pdo->prepare("UPDATE usuario SET SENHA = ?, token_recuperacao = NULL, expiracao_token = NULL WHERE ID_USER = ?");
-          $stmt->execute([$nova_senha, $usuario['ID_USER']]);
-
-          // Redireciona para a tela de login com mensagem de sucesso
-          header('Location: dashADM.php?login_msg=Senha alterada com sucesso! Faça login.');
-          exit;
-        } else {
-          $erro_recuperacao = 'Token inválido ou expirado. Por favor, solicite a recuperação novamente.';
-        }
-      }
-    }
-  }
-
-  // --- LÓGICA DE LOGIN ORIGINAL ---
-  if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
-    $email = $_POST['email'];
-    $senha = $_POST['senha'];
-
-    $stmt = $pdo->prepare("SELECT ID_USER, NOME, EMAIL, TIPO_USUARIO FROM usuario WHERE EMAIL = ? AND SENHA = ?");
-    $stmt->execute([$email, $senha]);
-
-    if ($usuario = $stmt->fetch()) {
-      $_SESSION['usuario_id'] = $usuario['ID_USER'];
-      $_SESSION['usuario_nome'] = $usuario['NOME'];
-      $_SESSION['usuario_email'] = $usuario['EMAIL'];
-      header('Location: dashADM.php');
-      exit;
-    } else {
-      $erro_login = 'Email ou senha inválidos!';
-    }
-  }
-
-  // Processa a mensagem de sucesso pós-reset
-  if (isset($_GET['login_msg'])) {
-    $sucesso_recuperacao = htmlspecialchars($_GET['login_msg']);
-  }
-
-  // --- RENDERIZAÇÃO DA TELA DE LOGIN, RECUPERAÇÃO OU RESET ---
-
-  // 1. Variáveis de controle para renderização
-  $modo_recuperacao = isset($_GET['action']) && $_GET['action'] === 'recuperar_senha';
-  $modo_reset = isset($_GET['action']) && $_GET['action'] === 'resetar_senha' && isset($_GET['token']);
-  $token_reset = $modo_reset ? $_GET['token'] : '';
-
-  if ($modo_reset) {
-    // Verifica a validade do token antes de mostrar o formulário de reset
-    $stmt = $pdo->prepare("SELECT ID_USER FROM usuario WHERE token_recuperacao = ? AND expiracao_token > NOW()");
-    $stmt->execute([$token_reset]);
-    if (!$stmt->fetch()) {
-      $erro_recuperacao = 'Link de recuperação inválido ou expirado. Por favor, solicite a recuperação novamente.';
-      $modo_reset = false; // Volta para o modo de solicitação
-      $modo_recuperacao = true;
-    }
-  }
-
-  // Mostrar tela de login, solicitação ou reset
-  ?>
-  <!DOCTYPE html>
-  <html lang="pt-BR">
-
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-      <?php
-      if ($modo_reset)
-        echo 'Redefinir Senha';
-      elseif ($modo_recuperacao)
-        echo 'Recuperar Senha';
-      else
-        echo 'Login';
-      ?>
-      - HelioMax Admin
-    </title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-  </head>
-
-  <body
-    class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
-    <div class="w-full max-w-md">
-      <div
-        class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-8 border border-cyan-500/20">
-        <div class="flex justify-center mb-8">
-          <div class="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center">
-            <i data-lucide="zap" class="w-10 h-10 text-white"></i>
-          </div>
-        </div>
-
-        <h1 class="text-3xl font-bold text-white text-center mb-2">HelioMax Admin</h1>
-        <p class="text-gray-400 text-center mb-8">
-          <?php
-          if ($modo_reset)
-            echo 'Defina sua nova senha';
-          elseif ($modo_recuperacao)
-            echo 'Informe seu e-mail para recuperar a senha';
-          else
-            echo 'Faça login para continuar';
-          ?>
-        </p>
-
-        <?php if ($erro_login): ?>
-          <div class="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl">
-            <p class="text-red-400 text-sm"><?php echo $erro_login; ?></p>
-          </div>
-        <?php endif; ?>
-
-        <?php if ($sucesso_recuperacao): ?>
-          <div class="mb-6 p-4 bg-green-500/20 border border-green-500/30 rounded-xl">
-            <p class="text-green-400 text-sm"><?php echo $sucesso_recuperacao; ?></p>
-          </div>
-        <?php endif; ?>
-
-        <?php if ($erro_recuperacao): ?>
-          <div class="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl">
-            <p class="text-red-400 text-sm"><?php echo $erro_recuperacao; ?></p>
-          </div>
-        <?php endif; ?>
-
-        <?php if ($modo_reset): ?>
-          <form method="POST" action="">
-            <input type="hidden" name="action" value="resetar_senha_final">
-            <input type="hidden" name="token" value="<?php echo htmlspecialchars($token_reset); ?>">
-
-            <div class="mb-6">
-              <label class="block text-gray-400 text-sm font-semibold mb-2">Nova Senha</label>
-              <input type="password" name="nova_senha" required
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
-            </div>
-
-            <div class="mb-6">
-              <label class="block text-gray-400 text-sm font-semibold mb-2">Confirmar Nova Senha</label>
-              <input type="password" name="confirmar_senha" required
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
-            </div>
-
-            <button type="submit"
-              class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg shadow-cyan-500/30">
-              Redefinir Senha
-            </button>
-
-            <p class="text-center mt-4">
-              <a href="dashADM.php" class="text-gray-400 text-sm hover:text-cyan-400 transition-colors">Voltar para o
-                Login</a>
-            </p>
-          </form>
-
-        <?php elseif ($modo_recuperacao): ?>
-          <form method="POST" action="">
-            <input type="hidden" name="action" value="solicitar_token">
-
-            <div class="mb-6">
-              <label class="block text-gray-400 text-sm font-semibold mb-2">Email Cadastrado</label>
-              <input type="email" name="email" required
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
-            </div>
-
-            <button type="submit"
-              class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg shadow-cyan-500/30">
-              Enviar Link de Recuperação
-            </button>
-
-            <p class="text-center mt-4">
-              <a href="dashADM.php" class="text-gray-400 text-sm hover:text-cyan-400 transition-colors">Voltar para o
-                Login</a>
-            </p>
-          </form>
-
-        <?php else: ?>
-          <form method="POST" action="">
-            <input type="hidden" name="action" value="login">
-            <div class="mb-6">
-              <label class="block text-gray-400 text-sm font-semibold mb-2">Email</label>
-              <input type="email" name="email" required value="matheus@email.com"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
-            </div>
-
-            <div class="mb-6">
-              <label class="block text-gray-400 text-sm font-semibold mb-2">Senha</label>
-              <input type="password" name="senha" required value="123456"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
-            </div>
-
-            <button type="submit"
-              class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg shadow-cyan-500/30">
-              Entrar
-            </button>
-
-            <p class="text-center mt-4">
-              <a href="?action=recuperar_senha" class="text-gray-400 text-sm hover:text-cyan-400 transition-colors">Esqueceu
-                a senha?</a>
-            </p>
-          </form>
-
-          <p class="text-xs text-gray-500 text-center mt-6">Credenciais padrão já preenchidas</p>
-        <?php endif; ?>
-      </div>
-    </div>
-
-    <script>lucide.createIcons();</script>
-  </body>
-
-  </html>
-  <?php
-  exit;
-}
-
-// ID do usuário logado
+// ID do usuário logado (agora definido manualmente)
 $admin_id = $_SESSION['usuario_id'];
 
 // Processar ações do CRUD
@@ -583,7 +333,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $stmt->execute([$nome, $email, $cpf, $numero, $complemento, $cep_id, $_SESSION['usuario_id']]);
 
       $_SESSION['usuario_nome'] = $nome;
-      $_SESSION['usuario_email'] = $email;
 
       $pdo->commit();
       $mensagem = 'Perfil atualizado com sucesso!';
@@ -623,7 +372,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // LOGOUT
 if (isset($_GET['logout'])) {
   session_destroy();
-  header('Location: dashADM.php');
+  header('Location: ../HTML/landpage.html'); // Alterado para redirecionar para a landpage
   exit;
 }
 
@@ -684,7 +433,8 @@ $usuario = $stmt->fetch();
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale-1.0" />
+  <link rel="icon" type="image/png" href="../../images/icon.png">
   <title>HelioMax Admin Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>

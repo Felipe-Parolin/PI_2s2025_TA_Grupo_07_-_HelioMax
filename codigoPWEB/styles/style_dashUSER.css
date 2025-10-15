@@ -1,0 +1,116 @@
+/* --- ESTILOS GERAIS E VARIÁVEIS --- */
+:root {
+  --bg-dark: #0f172a;
+  --bg-light: #1e293b;
+  --border-color: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --primary-blue: #3b82f6;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+/* --- CONTÊINER PRINCIPAL DA APLICAÇÃO --- */
+.app-container {
+  width: 100%;
+  max-width: 900px; /* Largura máxima da interface */
+  height: 80vh; /* Altura da interface */
+  max-height: 700px;
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Espaçamento entre header, main e footer */
+}
+
+/* --- CABEÇALHO --- */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.welcome-message {
+  background-color: var(--bg-dark);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* --- CONTEÚDO PRINCIPAL (Área "Calcular Rota") --- */
+.main-content {
+  flex-grow: 1; /* Faz esta área ocupar todo o espaço vertical disponível */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-dark);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.route-calculator-placeholder h2 {
+  font-size: 1.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* --- NAVEGAÇÃO INFERIOR --- */
+.bottom-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+/* --- ESTILOS DOS BOTÕES --- */
+.btn {
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn:hover {
+  background-color: var(--border-color);
+  border-color: #4b5563;
+}
+
+.btn-logout {
+  background-color: #b91c1c20;
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.btn-logout:hover {
+  background-color: #ef4444;
+  color: var(--text-primary);
+}
+
+.btn-nav {
+  flex-grow: 1; /* Faz os 3 botões ocuparem o mesmo espaço */
+  text-align: center;
+}

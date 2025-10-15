@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="../../images/icon.png" />
     <title>Cadastro</title>
-    <link rel="stylesheet" href="../../styles/style_login_register.css" />
+    <link rel="stylesheet" href="../../styles/login-style.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
       rel="stylesheet"
@@ -15,7 +15,6 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
   </head>
-
   <body>
     <div class="login-container">
       <div class="login-card">
@@ -160,6 +159,19 @@
 
             <div class="form-group">
               <div class="input-wrapper">
+                <i class="fas fa-home"></i>
+                <input
+                  type="text"
+                  id="complement"
+                  name="complement"
+                  placeholder=" "
+                />
+                <label for="complement">Complemento</label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="input-wrapper">
                 <i class="fas fa-city"></i>
                 <input
                   type="text"
@@ -212,7 +224,7 @@
           </div>
 
           <div class="signup-link">
-            <p>Já tem conta? <a href="login.html">Entrar</a></p>
+            <p>Já tem conta? <a href="../PHP/login.php">Entrar</a></p>
           </div>
         </form>
       </div>
@@ -251,7 +263,7 @@
         if (!email) return;
 
         try {
-          const response = await fetch("PHP/verificarEmail.php", {
+          const response = await fetch("../PHP/verificarEmail.php", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email }),
@@ -293,7 +305,7 @@
             return;
           }
 
-          document.getElementById("street").value = data.logradouro || "";
+          document.getElementById("street").value = data.logouro || "";
           document.getElementById("neighborhood").value = data.bairro || "";
           document.getElementById("city").value = data.localidade || "";
           document.getElementById("state").value = data.uf || "";
@@ -360,13 +372,14 @@
             cep: document.getElementById("cep").value.trim(),
             street: document.getElementById("street").value.trim(),
             number: document.getElementById("number").value.trim(),
+            complement: document.getElementById("complement").value.trim(),
             neighborhood: document.getElementById("neighborhood").value.trim(),
             city: document.getElementById("city").value.trim(),
             state: document.getElementById("state").value.trim().toUpperCase(),
           };
 
           try {
-            const response = await fetch("PHP/register.php", {
+            const response = await fetch("../PHP/api_register.php", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(data),
@@ -375,7 +388,7 @@
             const result = await response.json();
             if (result.success) {
               alert("Usuário cadastrado com sucesso!");
-              window.location.href = "login.html";
+              window.location.href = "../PHP/login.php";
             } else {
               alert(result.message);
             }

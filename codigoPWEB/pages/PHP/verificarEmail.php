@@ -1,49 +1,23 @@
 <?php
-header('Content-Type: application/json; charset=utf-8');
-include('conexao.php');
+header("Content-Type: application/json");
+require_once('conexao.php'); // deve definir $pdo
 
-// Verifica se a conexão com o banco existe
-if (!isset($conn) || $conn->connect_error) {
-    echo json_encode(['exists' => false, 'error' => 'Erro de conexão com banco de dados']);
-    exit;
-}
-
-// Recebe os dados JSON
+// recebe JSON
 $data = json_decode(file_get_contents("php://input"), true);
-$email = strtolower(trim($data["email"] ?? ""));
+$email = strtolower(trim($data['email'] ?? ''));
 
-// Se email vazio, retorna false
-if (empty($email)) {
+if (!$email) {
     echo json_encode(['exists' => false]);
-    $conn->close();
     exit;
 }
 
-// Valida formato do email
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    echo json_encode(['exists' => false, 'error' => 'Email inválido']);
-    $conn->close();
-    exit;
+try {
+    $stmt = $pdo->prepare("SELECT 1 FROM usuario WHERE LOWER(EMAIL) = ? LIMIT 1");
+    $stmt->execute([$email]);
+    $exists = (bool) $stmt->fetchColumn();
+    echo json_encode(['exists' => $exists]);
+} catch (Exception $e) {
+    // não vaza detalhes sensíveis em produção
+    error_log("verificarEmail error: " . $e->getMessage());
+    echo json_encode(['exists' => false]);
 }
-
-// Busca no banco de dados usando prepared statement
-$stmt = $conn->prepare("SELECT id_usuario FROM usuario WHERE LOWER(email) = ? LIMIT 1");
-
-if (!$stmt) {
-    echo json_encode(['exists' => false, 'error' => 'Erro na preparação da consulta']);
-    $conn->close();
-    exit;
-}
-
-$stmt->bind_param("s", $email);
-$stmt->execute();
-$result = $stmt->get_result();
-
-// Retorna se existe ou não
-$exists = $result->num_rows > 0;
-echo json_encode(['exists' => $exists]);
-
-// Fecha statement e conexão
-$stmt->close();
-$conn->close();
-?>
