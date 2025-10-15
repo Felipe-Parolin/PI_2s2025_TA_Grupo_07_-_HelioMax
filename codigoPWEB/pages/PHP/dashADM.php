@@ -8,7 +8,6 @@ if (!isset($_SESSION['usuario_id'])) {
   header('Location: login.php');
   exit;
 }
-echo $_SESSION['usuario_nome'];
 
 // Configuração do banco de dados
 $host = '127.0.0.1';
