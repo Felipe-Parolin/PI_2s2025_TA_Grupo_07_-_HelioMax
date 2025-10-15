@@ -10,6 +10,68 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      /* Estilos para notificação fixa */
+      .fixed-notification {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(255, 193, 7, 0.95);
+        color: #333;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        z-index: 9999;
+        max-width: 350px;
+        border-left: 4px solid #ff9800;
+        animation: slideInFromRight 0.5s ease;
+      }
+
+      .fixed-notification-icon {
+        font-size: 1.5rem;
+        flex-shrink: 0;
+        color: #666;
+      }
+
+      .fixed-notification-text {
+        font-weight: 600;
+        font-size: 0.95rem;
+        line-height: 1.4;
+      }
+
+      @keyframes slideInFromRight {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      /* Responsivo para mobile */
+      @media (max-width: 480px) {
+        .fixed-notification {
+          bottom: 10px;
+          right: 10px;
+          left: 10px;
+          max-width: none;
+          padding: 0.9rem 1.2rem;
+        }
+
+        .fixed-notification-text {
+          font-size: 0.85rem;
+        }
+      }
+    </style>
   </head>
   <body>
     <!-- Mobile Menu Overlay -->
@@ -155,6 +217,15 @@
         </div>
       </section>
     </main>
+
+    <!-- Notificação Fixa -->
+    <div class="fixed-notification">
+      <i class="fas fa-exclamation-triangle fixed-notification-icon"></i>
+      <div class="fixed-notification-text">
+        Esta página está em produção. Apenas o visual está disponível no
+        momento.
+      </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">

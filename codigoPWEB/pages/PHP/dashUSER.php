@@ -1,22 +1,17 @@
 <?php
 session_start();
 
-// --- ETAPA 1: LOGIN REMOVIDO E USUÁRIO PADRÃO DEFINIDO ---
-// IMPORTANTE: Altere o ID e o Nome para o usuário que você quer que acesse este painel.
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
     exit;
 }
 
-// [NOVO] LÓGICA DE LOGOUT
 if (isset($_GET['logout'])) {
     session_destroy();
-    header('Location: ../HTML/landpage.html'); // Redireciona para a página principal
+    header('Location: ../HTML/landpage.html');
     exit;
 }
 
-
-// 2. CONFIGURAÇÃO E CONEXÃO COM O BANCO DE DADOS
 $host = '127.0.0.1';
 $dbname = 'heliomax';
 $username = 'root';
@@ -29,7 +24,6 @@ try {
     die("Erro na conexão: " . $e->getMessage());
 }
 
-// 3. BUSCAR DADOS DO USUÁRIO LOGADO (agora o usuário padrão)
 $user_id = $_SESSION['usuario_id'];
 $stmt = $pdo->prepare("SELECT u.*, c.LOGRADOURO, b.NOME as bairro, ci.NOME as cidade, e.UF 
                        FROM usuario u
@@ -41,48 +35,33 @@ $stmt = $pdo->prepare("SELECT u.*, c.LOGRADOURO, b.NOME as bairro, ci.NOME as ci
 $stmt->execute([$user_id]);
 $usuario_logado = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Se nenhum usuário for encontrado com o ID padrão, cria um array vazio para evitar erros
 if (!$usuario_logado) {
     $usuario_logado = ['NOME' => 'Visitante', 'EMAIL' => 'email@exemplo.com'];
 }
 
-
-// 4. LÓGICA PARA PROCESSAR FORMULÁRIOS (PERFIL, SENHA, VEÍCULOS)
 $mensagem = '';
 $tipo_mensagem = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
 
-    // ATUALIZAR PERFIL (LÓGICA REAPROVEITADA DO SEU CÓDIGO)
     if ($action === 'atualizar_perfil') {
-        // ... (A mesma lógica do seu `dashADM.php` para atualizar perfil iria aqui) ...
-        // Por simplicidade, vamos apenas mostrar uma mensagem
         $mensagem = 'Perfil atualizado com sucesso!';
         $tipo_mensagem = 'sucesso';
     }
 
-    // ALTERAR SENHA (LÓGICA REAPROVEITADA DO SEU CÓDIGO)
     if ($action === 'alterar_senha') {
-        // ... (A mesma lógica do seu `dashADM.php` para alterar senha iria aqui) ...
         $mensagem = 'Senha alterada com sucesso!';
         $tipo_mensagem = 'sucesso';
     }
 
-    // [NOVO] SALVAR VEÍCULO (EXEMPLO DE LÓGICA)
     if ($action === 'salvar_veiculo') {
         $marca = $_POST['marca'];
         $modelo = $_POST['modelo'];
-        // EM UM CENÁRIO REAL:
-        // $stmt = $pdo->prepare("INSERT INTO veiculo (MARCA, MODELO, FK_ID_USUARIO) VALUES (?, ?, ?)");
-        // $stmt->execute([$marca, $modelo, $user_id]);
         $mensagem = 'Veículo "' . htmlspecialchars($marca) . ' ' . htmlspecialchars($modelo) . '" salvo com sucesso!';
         $tipo_mensagem = 'sucesso';
     }
 }
 
-
-// 5. BUSCAR DADOS PARA EXIBIÇÃO
-// [ADAPTADO] BUSCAR TODOS OS PONTOS DE RECARGA ATIVOS PARA O USUÁRIO
 $stmt_pontos = $pdo->prepare("
     SELECT pc.*, sp.DESCRICAO as status_desc, c.LOGRADOURO, b.NOME as bairro, ci.NOME as cidade, e.UF
     FROM ponto_carregamento pc
@@ -97,8 +76,6 @@ $stmt_pontos = $pdo->prepare("
 $stmt_pontos->execute();
 $pontos_disponiveis = $stmt_pontos->fetchAll(PDO::FETCH_ASSOC);
 
-// [NOVO] DADOS SIMULADOS PARA VEÍCULOS E HISTÓRICO
-// Em um cenário real, isso viria do banco de dados
 $meus_veiculos = [
     ['ID' => 1, 'MARCA' => 'Renault', 'MODELO' => 'Zoe', 'BATERIA_KWH' => 52],
     ['ID' => 2, 'MARCA' => 'Chevrolet', 'MODELO' => 'Bolt', 'BATERIA_KWH' => 65]
@@ -120,6 +97,7 @@ $historico_recargas = [
     <title>HelioMax - Painel do Usuário</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .modal {
             display: none;
@@ -134,7 +112,61 @@ $historico_recargas = [
             color: white;
         }
 
-        /* Cor para item ativo no menu */
+        .fixed-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 193, 7, 0.95);
+            color: #333;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            z-index: 9999;
+            max-width: 350px;
+            border-left: 4px solid #ff9800;
+            animation: slideInFromRight 0.5s ease;
+        }
+
+        .fixed-notification-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            color: #666;
+        }
+
+        .fixed-notification-text {
+            font-weight: 600;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        @keyframes slideInFromRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .fixed-notification {
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+                padding: 0.9rem 1.2rem;
+            }
+
+            .fixed-notification-text {
+                font-size: 0.85rem;
+            }
+        }
     </style>
 </head>
 
@@ -195,7 +227,7 @@ $historico_recargas = [
             </button>
         </header>
 
-        <?php if ($mensagem): // Exibe mensagens de sucesso/erro ?>
+        <?php if ($mensagem): ?>
             <div
                 class="mb-6 p-4 <?php echo $tipo_mensagem === 'sucesso' ? 'bg-green-500/20 border-green-500/30' : 'bg-red-500/20 border-red-500/30'; ?> border rounded-xl flex items-center gap-3">
                 <i data-lucide="<?php echo $tipo_mensagem === 'sucesso' ? 'check-circle' : 'alert-circle'; ?>"
@@ -244,6 +276,14 @@ $historico_recargas = [
             </div>
         </div>
     </main>
+
+    <!-- Notificação Fixa -->
+    <div class="fixed-notification">
+        <i class="fas fa-exclamation-triangle fixed-notification-icon"></i>
+        <div class="fixed-notification-text">
+            Este página está em produção. Apenas o visual está disponível no momento.
+        </div>
+    </div>
 
 
     <div id="modalPerfil" class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
@@ -349,19 +389,16 @@ $historico_recargas = [
 
         function abrirModal(id) {
             document.getElementById(id).classList.add('active');
-            lucide.createIcons(); // Recria ícones dentro do modal
+            lucide.createIcons();
         }
 
         function fecharModal(id) {
             document.getElementById(id).classList.remove('active');
         }
 
-        // Lógica para abas do Modal de Perfil (reaproveitada)
         function mudarTab(tab) {
-            // ... (Cole a sua função mudarTab aqui) ...
         }
 
-        // Fechar modal ao clicar fora (reaproveitado)
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', function (e) {
                 if (e.target === this) {

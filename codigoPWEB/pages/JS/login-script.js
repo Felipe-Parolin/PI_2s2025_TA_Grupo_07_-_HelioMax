@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const loginButton = document.querySelector('.login-button');
     const loadingOverlay = document.getElementById('loadingOverlay');
     const forgotPasswordLink = document.querySelector('.forgot-password');
+    const socialButtons = document.querySelectorAll('.social-button');
 
     let isLoading = false;
 
@@ -22,6 +23,18 @@ document.addEventListener('DOMContentLoaded', function () {
         forgotPasswordLink.addEventListener('click', handleForgotPassword);
     }
 
+    // [NOVO] Adiciona listeners para os botões sociais (Google e GitHub)
+    socialButtons.forEach(button => {
+        button.addEventListener('click', handleSocialLogin);
+    });
+
+    // [NOVO] Função para lidar com login social
+    function handleSocialLogin(e) {
+        e.preventDefault();
+        const platform = this.classList.contains('google') ? 'Google' : 'GitHub';
+        showNotification(`Login com ${platform} está em produção. Em breve estará disponível!`, 'warning');
+    }
+
     // Função para lidar com o clique em "Esqueceu a senha"
     function handleForgotPassword(e) {
         e.preventDefault();
@@ -34,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (isLoading) return;
 
         const email = emailInput.value.trim();
-        // O id no seu HTML é 'password', não 'senha'
         const password = passwordInput.value;
 
         if (!email || !password) {
@@ -49,7 +61,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await fetch("api_login.php", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                // Garante que os nomes das chaves (email, password) correspondem ao que a API espera
                 body: JSON.stringify({ email: email, password: password })
             });
 
@@ -66,7 +77,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 1200);
 
             } else {
-                // Se a API retornou um erro, lança uma exceção com a mensagem dela
                 throw new Error(resultData.message || 'Erro ao fazer login');
             }
 
@@ -83,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- Funções Auxiliares (copiadas do seu script original) ---
+    // --- Funções Auxiliares ---
 
     function handleTogglePassword() {
         const currentType = passwordInput.getAttribute('type');
@@ -136,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => { if (notification.parentNode) notification.parentNode.removeChild(notification); }, 300);
     }
 
-    // Adiciona os estilos da notificação (importante)
+    // Adiciona os estilos da notificação
     const notificationStyles = document.createElement('style');
     notificationStyles.textContent = `@keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } } .notification { position: fixed; top: 20px; right: 20px; z-index: 10000; min-width: 300px; padding: 1rem; border-radius: 12px; color: white; font-weight: 500; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); transform: translateX(100%); transition: all 0.3s ease; border-left: 4px solid; } .notification.show { transform: translateX(0); } .notification.hide { transform: translateX(100%); opacity: 0; } .notification.success { background: rgba(40, 167, 69, 0.9); border-left-color: #28a745; } .notification.error { background: rgba(220, 53, 69, 0.9); border-left-color: #dc3545; } .notification.warning { background: rgba(255, 193, 7, 0.9); border-left-color: #ffc107; color: #333; } .notification-content { display: flex; align-items: center; gap: 0.5rem; } .notification-close { background: none; border: none; color: inherit; cursor: pointer; }`;
     document.head.appendChild(notificationStyles);
