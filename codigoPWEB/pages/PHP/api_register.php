@@ -23,15 +23,15 @@ function validarCPF($cpf)
 // -------- Recebe dados --------
 $data = json_decode(file_get_contents("php://input"), true);
 
-$nome = trim($data["name"] ?? ""); // HTML envia "name"
+$nome = trim($data["name"] ?? "");
 $cpf = preg_replace('/[^0-9]/', '', trim($data["cpf"] ?? ""));
 $email = strtolower(trim($data["email"] ?? ""));
-$senha_plana = trim($data["password"] ?? ""); // HTML envia "password"
-$cep = preg_replace('/[^0-9]/', '', trim($data["cep"] ?? ""));
+$senha_plana = trim($data["password"] ?? "");
+$cep = preg_replace('/[^0-9]/', '', trim($data["cep"] ?? "")); // Número real do CEP (ex: 01310100)
 $logradouro = trim($data["street"] ?? "");
 $bairro_nome = trim($data["neighborhood"] ?? "");
 $numero_residencia = trim($data["number"] ?? "");
-$complemento_endereco = trim($data["complement"] ?? ""); // HTML envia "complement"
+$complemento_endereco = trim($data["complement"] ?? "");
 $cidade_nome = trim($data["city"] ?? "");
 $estado_uf = strtoupper(trim($data["state"] ?? ""));
 
@@ -90,22 +90,28 @@ try {
         $id_bairro = $pdo->lastInsertId();
     }
 
-    // 4️⃣ CEP
-    $stmt = $pdo->prepare("SELECT ID_CEP FROM cep WHERE ID_CEP = ? AND LOGRADOURO = ? AND FK_BAIRRO = ?");
-    $stmt->execute([$cep, $logradouro, $id_bairro]);
-    $id_cep = $stmt->fetchColumn();
-    if (!$id_cep) {
+    // 4️⃣ CEP - **CORRIGIDO: Usa o número do CEP como ID_CEP**
+    // Verifica se o CEP já existe (usando o número real do CEP como chave primária)
+    $stmt = $pdo->prepare("SELECT ID_CEP FROM cep WHERE ID_CEP = ?");
+    $stmt->execute([$cep]);
+    $cep_existente = $stmt->fetchColumn();
+
+    if ($cep_existente) {
+        // CEP já existe, usa o existente
+        $id_cep = $cep_existente;
+    } else {
+        // CEP não existe, insere novo usando o número do CEP como ID
         $stmt = $pdo->prepare("INSERT INTO cep (ID_CEP, LOGRADOURO, FK_BAIRRO) VALUES (?, ?, ?)");
         $stmt->execute([$cep, $logradouro, $id_bairro]);
-        $id_cep = $pdo->lastInsertId();
+        $id_cep = $cep; // Usa o próprio número do CEP como ID
     }
 
-    // 5️⃣ USUÁRIO (TIPO_USUARIO = 0 fixo e nome da coluna igual ao BD)
+    // 5️⃣ USUÁRIO (TIPO_USUARIO = 0 fixo)
     $stmt = $pdo->prepare("
-    INSERT INTO usuario 
-    (NOME, CPF, EMAIL, SENHA, NUMERO_RESIDENCIA, COMPLEMENTO_ENDERECO, FK_ID_CEP, TIPO_USUARIO)
-    VALUES (?, ?, ?, ?, ?, ?, ?, 0)
-");
+        INSERT INTO usuario 
+        (NOME, CPF, EMAIL, SENHA, NUMERO_RESIDENCIA, COMPLEMENTO_ENDERECO, FK_ID_CEP, TIPO_USUARIO)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 0)
+    ");
     $stmt->execute([
         $nome,
         $cpf,
@@ -115,11 +121,12 @@ try {
         $complemento_endereco,
         $id_cep
     ]);
+
     $pdo->commit();
     echo json_encode(["success" => true, "message" => "Usuário cadastrado com sucesso!"]);
 
 } catch (Exception $e) {
     $pdo->rollBack();
     error_log("Erro cadastro: " . $e->getMessage());
-    echo json_encode(["success" => false, "message" => "Erro ao cadastrar usuário."]);
+    echo json_encode(["success" => false, "message" => "Erro ao cadastrar usuário: " . $e->getMessage()]);
 }

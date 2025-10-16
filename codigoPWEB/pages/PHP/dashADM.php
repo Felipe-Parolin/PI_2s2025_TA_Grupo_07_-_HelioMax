@@ -263,7 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
   }
 
-  // ATUALIZAR PERFIL (ATUALIZADO COM LIMPEZA DE CPF E NÚMERO)
+  // ATUALIZAR PERFIL (CORRIGIDO COM VALIDAÇÃO DE CPF DUPLICADO)
   if ($action === 'atualizar_perfil') {
     $nome = $_POST['nome'];
     $email = $_POST['email'];
@@ -271,13 +271,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cpf = preg_replace('/\D/', '', $_POST['cpf']);
     $numero = preg_replace('/\D/', '', $_POST['numero_residencia']);
     $complemento = $_POST['complemento'];
-    $logradouro_perfil = $_POST['logradouro_perfil'];
-    $bairro_perfil = $_POST['bairro_perfil'];
-    $cidade_perfil = $_POST['cidade_perfil'];
-    $uf_perfil = strtoupper($_POST['uf_perfil']);
+    $logradouro_perfil = trim($_POST['logradouro_perfil']);
+    $bairro_perfil = trim($_POST['bairro_perfil']);
+    $cidade_perfil = trim($_POST['cidade_perfil']);
+    $uf_perfil = strtoupper(trim($_POST['uf_perfil']));
 
     try {
       $pdo->beginTransaction();
+
+      // **NOVA VALIDAÇÃO: Verificar se o CPF já existe em outro usuário**
+      $stmt = $pdo->prepare("SELECT ID_USER FROM usuario WHERE CPF = ? AND ID_USER != ?");
+      $stmt->execute([$cpf, $_SESSION['usuario_id']]);
+      $cpf_existente = $stmt->fetch();
+
+      if ($cpf_existente) {
+        throw new Exception("Este CPF já está cadastrado para outro usuário!");
+      }
+
+      // **NOVA VALIDAÇÃO: Verificar se o EMAIL já existe em outro usuário**
+      $stmt = $pdo->prepare("SELECT ID_USER FROM usuario WHERE EMAIL = ? AND ID_USER != ?");
+      $stmt->execute([$email, $_SESSION['usuario_id']]);
+      $email_existente = $stmt->fetch();
+
+      if ($email_existente) {
+        throw new Exception("Este e-mail já está cadastrado para outro usuário!");
+      }
 
       $cep_id = null;
 
@@ -322,10 +340,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $bairro_id = $pdo->lastInsertId();
         }
 
-        // Criar CEP/Logradouro
-        $stmt = $pdo->prepare("INSERT INTO cep (LOGRADOURO, FK_BAIRRO) VALUES (?, ?)");
+        // **CORREÇÃO: Verificar se o CEP já existe antes de inserir**
+        $stmt = $pdo->prepare("SELECT ID_CEP FROM cep WHERE LOGRADOURO = ? AND FK_BAIRRO = ?");
         $stmt->execute([$logradouro_perfil, $bairro_id]);
-        $cep_id = $pdo->lastInsertId();
+        $cep_row = $stmt->fetch();
+
+        if ($cep_row) {
+          $cep_id = $cep_row['ID_CEP'];
+        } else {
+          $stmt = $pdo->prepare("INSERT INTO cep (LOGRADOURO, FK_BAIRRO) VALUES (?, ?)");
+          $stmt->execute([$logradouro_perfil, $bairro_id]);
+          $cep_id = $pdo->lastInsertId();
+        }
       }
 
       $stmt = $pdo->prepare("UPDATE usuario SET NOME = ?, EMAIL = ?, CPF = ?, NUMERO_RESIDENCIA = ?, COMPLEMENTO_ENDERECO = ?, FK_ID_CEP = ? WHERE ID_USER = ?");
@@ -336,7 +362,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $pdo->commit();
       $mensagem = 'Perfil atualizado com sucesso!';
       $tipo_mensagem = 'sucesso';
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
       $pdo->rollBack();
       $mensagem = 'Erro ao atualizar: ' . $e->getMessage();
       $tipo_mensagem = 'erro';
@@ -344,26 +370,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 
   // ALTERAR SENHA
+  // ALTERAR SENHA (CORRIGIDO COM password_verify)
   if ($action === 'alterar_senha') {
     $senha_atual = $_POST['senha_atual'];
     $nova_senha = $_POST['nova_senha'];
     $confirmar = $_POST['confirmar_senha'];
 
-    $stmt = $pdo->prepare("SELECT SENHA FROM usuario WHERE ID_USER = ?");
-    $stmt->execute([$_SESSION['usuario_id']]);
-    $senha_bd = $stmt->fetch()['SENHA'];
+    try {
+      // Buscar o hash da senha atual do banco
+      $stmt = $pdo->prepare("SELECT SENHA FROM usuario WHERE ID_USER = ?");
+      $stmt->execute([$_SESSION['usuario_id']]);
+      $senha_hash_bd = $stmt->fetch()['SENHA'];
 
-    if ($senha_atual !== $senha_bd) {
-      $mensagem = 'Senha atual incorreta!';
+      // **CORREÇÃO: Usar password_verify() para comparar com hash**
+      if (!password_verify($senha_atual, $senha_hash_bd)) {
+        $mensagem = 'Senha atual incorreta!';
+        $tipo_mensagem = 'erro';
+      } elseif ($nova_senha !== $confirmar) {
+        $mensagem = 'As senhas não conferem!';
+        $tipo_mensagem = 'erro';
+      } elseif (strlen($nova_senha) < 6) {
+        $mensagem = 'A nova senha deve ter pelo menos 6 caracteres!';
+        $tipo_mensagem = 'erro';
+      } else {
+        // **CORREÇÃO: Gerar hash da nova senha com password_hash()**
+        $nova_senha_hash = password_hash($nova_senha, PASSWORD_DEFAULT);
+
+        $stmt = $pdo->prepare("UPDATE usuario SET SENHA = ? WHERE ID_USER = ?");
+        $stmt->execute([$nova_senha_hash, $_SESSION['usuario_id']]);
+
+        $mensagem = 'Senha alterada com sucesso!';
+        $tipo_mensagem = 'sucesso';
+      }
+    } catch (Exception $e) {
+      $mensagem = 'Erro ao alterar senha: ' . $e->getMessage();
       $tipo_mensagem = 'erro';
-    } elseif ($nova_senha !== $confirmar) {
-      $mensagem = 'As senhas não conferem!';
-      $tipo_mensagem = 'erro';
-    } else {
-      $stmt = $pdo->prepare("UPDATE usuario SET SENHA = ? WHERE ID_USER = ?");
-      $stmt->execute([$nova_senha, $_SESSION['usuario_id']]);
-      $mensagem = 'Senha alterada com sucesso!';
-      $tipo_mensagem = 'sucesso';
     }
   }
 }
@@ -380,7 +421,6 @@ $busca = $_GET['busca'] ?? '';
 $status_filtro = $_GET['status'] ?? '';
 
 // Estatísticas
-// **AJUSTE: Conta apenas os pontos do administrador logado**
 $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM ponto_carregamento WHERE FK_ID_USUARIO_CADASTRO = ?");
 $stmt->execute([$admin_id]);
 $totalPontos = $stmt->fetch()['total'];
@@ -395,14 +435,16 @@ $sql = "SELECT pc.*, sp.DESCRICAO as status_desc, c.LOGRADOURO, b.NOME as bairro
         LEFT JOIN bairro b ON c.FK_BAIRRO = b.ID_BAIRRO
         LEFT JOIN cidade ci ON b.FK_CIDADE = ci.ID_CIDADE
         LEFT JOIN estado e ON ci.FK_ESTADO = e.ID_ESTADO
-        WHERE pc.FK_ID_USUARIO_CADASTRO = ?"; // **AJUSTE: FILTRAR PONTOS PELO ID DO ADMIN LOGADO**
+        WHERE pc.FK_ID_USUARIO_CADASTRO = ?";
 
-$params = [$admin_id]; // Adiciona o ID do admin como primeiro parâmetro
+$params = [$admin_id];
 
 if ($busca) {
   $sql .= " AND (c.LOGRADOURO LIKE ? OR b.NOME LIKE ? OR ci.NOME LIKE ?)";
   $params = array_merge($params, ["%$busca%", "%$busca%", "%$busca%"]);
 }
+
+// Filtro de status usando comparação exata
 if ($status_filtro) {
   $sql .= " AND sp.DESCRICAO = ?";
   $params[] = $status_filtro;
@@ -571,10 +613,11 @@ $usuario = $stmt->fetch();
         <select name="status"
           class="px-6 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 transition-colors cursor-pointer">
           <option value="">Todos os Status</option>
-          <option value="Ativo" <?php echo $status_filtro === 'Ativo' ? 'selected' : ''; ?>>Ativos</option>
-          <option value="Inativo" <?php echo $status_filtro === 'Inativo' ? 'selected' : ''; ?>>Inativos</option>
-          <option value="Manutenção" <?php echo $status_filtro === 'Manutenção' ? 'selected' : ''; ?>>Em Manutenção
-          </option>
+          <?php foreach ($status_lista as $st): ?>
+            <option value="<?php echo htmlspecialchars($st['DESCRICAO']); ?>" <?php echo $status_filtro === $st['DESCRICAO'] ? 'selected' : ''; ?>>
+              <?php echo htmlspecialchars($st['DESCRICAO']); ?>
+            </option>
+          <?php endforeach; ?>
         </select>
         <button type="submit"
           class="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-semibold transition-colors">
@@ -934,6 +977,8 @@ $usuario = $stmt->fetch();
       <div id="contentDadosPessoais" class="p-6">
         <form method="POST" action="">
           <input type="hidden" name="action" value="atualizar_perfil">
+          <!-- Campo oculto para enviar o CPF (não editável) -->
+          <input type="hidden" name="cpf" value="<?php echo htmlspecialchars($usuario['CPF']); ?>">
 
           <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
             <i data-lucide="edit-3" class="w-5 h-5 text-cyan-400"></i>
@@ -948,10 +993,29 @@ $usuario = $stmt->fetch();
             </div>
 
             <div>
-              <label class="block text-gray-400 text-sm font-semibold mb-2">CPF * (Apenas Números)</label>
-              <input type="text" name="cpf" required value="<?php echo htmlspecialchars($usuario['CPF']); ?>"
-                maxlength="11" oninput="this.value = this.value.replace(/\D/g, '')" inputmode="numeric"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+              <label class="block text-gray-400 text-sm font-semibold mb-2">CPF *</label>
+              <div class="relative">
+                <input type="text" value="<?php echo htmlspecialchars($usuario['CPF']); ?>" readonly disabled
+                  class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none"
+                  style="pointer-events: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;">
+                <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="text-gray-600">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                </div>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                Não pode ser alterado por segurança
+              </p>
             </div>
 
             <div class="md:col-span-2">

@@ -68,7 +68,7 @@
                 <label for="email">E-mail</label>
               </div>
               <div id="emailWarning" class="email-warning">
-                ❌ Este e-mail já está cadastrado.
+                ⚠ Este e-mail já está cadastrado.
               </div>
             </div>
 
@@ -126,6 +126,9 @@
               <div id="loadingCep" class="loading-container">
                 <div class="spinner"></div>
                 <span>Buscando endereço...</span>
+              </div>
+              <div id="cepError" class="email-warning" style="color: #dc3545">
+                ⚠ Erro ao buscar CEP. Preencha manualmente.
               </div>
             </div>
 
@@ -240,8 +243,10 @@
       const emailInput = document.getElementById("email");
       const emailWarning = document.getElementById("emailWarning");
       const loadingCep = document.getElementById("loadingCep");
+      const cepError = document.getElementById("cepError");
       const logo = document.querySelector(".logo");
       let emailValido = true;
+      let tentativasBuscaCep = 0;
 
       function handleLogoRedirect(e) {
         e.preventDefault();
@@ -250,6 +255,7 @@
 
       logo.addEventListener("click", handleLogoRedirect);
 
+      // Máscara de CPF
       cpfInput.addEventListener("input", () => {
         let value = cpfInput.value.replace(/\D/g, "");
         value = value.replace(/(\d{3})(\d)/, "$1.$2");
@@ -258,6 +264,7 @@
         cpfInput.value = value;
       });
 
+      // Validação de email
       emailInput.addEventListener("blur", async () => {
         const email = emailInput.value.trim();
         if (!email) return;
@@ -277,44 +284,134 @@
             emailWarning.classList.remove("show");
             emailValido = true;
           }
-        } catch {
-          console.error("Erro ao verificar e-mail");
+        } catch (error) {
+          console.error("Erro ao verificar e-mail:", error);
         }
       });
 
+      // Máscara e busca de CEP
       cepInput.addEventListener("input", () => {
         let value = cepInput.value.replace(/\D/g, "");
         if (value.length > 5) value = value.replace(/(\d{5})(\d)/, "$1-$2");
         cepInput.value = value;
-        if (value.length === 9) buscarCEP(value);
+
+        // Esconde mensagem de erro ao digitar
+        cepError.classList.remove("show");
+
+        if (value.length === 9) {
+          buscarCEP(value);
+        }
       });
 
+      // **FUNÇÃO MELHORADA DE BUSCA DE CEP**
       async function buscarCEP(cep) {
-        const cleanCep = cep.replace("-", "");
+        const cleanCep = cep.replace(/\D/g, "");
+
+        // Valida o CEP
+        if (cleanCep.length !== 8) {
+          mostrarErroCep("CEP deve ter 8 dígitos");
+          return;
+        }
+
         loadingCep.classList.add("show");
+        cepError.classList.remove("show");
+        tentativasBuscaCep++;
 
         try {
+          // Timeout de 10 segundos
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000);
+
           const response = await fetch(
-            `https://viacep.com.br/ws/${cleanCep}/json/`
+            `https://viacep.com.br/ws/${cleanCep}/json/`,
+            { signal: controller.signal }
           );
+
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            throw new Error("Erro na resposta da API");
+          }
+
           const data = await response.json();
           loadingCep.classList.remove("show");
 
+          // Verifica se o CEP foi encontrado
           if (data.erro) {
-            alert("CEP não encontrado!");
+            mostrarErroCep("CEP não encontrado!");
+            limparCamposEndereco();
             return;
           }
 
-          document.getElementById("street").value = data.logouro || "";
-          document.getElementById("neighborhood").value = data.bairro || "";
-          document.getElementById("city").value = data.localidade || "";
-          document.getElementById("state").value = data.uf || "";
-        } catch {
+          // **CORREÇÃO: logradouro em vez de logouro**
+          const logradouro = data.logradouro || "";
+          const bairro = data.bairro || "";
+          const cidade = data.localidade || "";
+          const estado = data.uf || "";
+
+          // Preenche os campos
+          document.getElementById("street").value = logradouro;
+          document.getElementById("neighborhood").value = bairro;
+          document.getElementById("city").value = cidade;
+          document.getElementById("state").value = estado;
+
+          // Avisa se algum campo veio vazio
+          if (!logradouro || !bairro) {
+            mostrarAvisoCep(
+              "Alguns dados não foram encontrados. Complete manualmente."
+            );
+          }
+
+          // Reseta contador de tentativas
+          tentativasBuscaCep = 0;
+        } catch (error) {
           loadingCep.classList.remove("show");
-          alert("Erro ao buscar CEP!");
+
+          console.error("Erro ao buscar CEP:", error);
+
+          // Se foi timeout
+          if (error.name === "AbortError") {
+            mostrarErroCep(
+              "Tempo esgotado. Tente novamente ou preencha manualmente."
+            );
+          }
+          // Se falhou após 2 tentativas, permite preenchimento manual
+          else if (tentativasBuscaCep >= 2) {
+            mostrarErroCep(
+              "Não foi possível buscar o CEP. Preencha manualmente."
+            );
+            tentativasBuscaCep = 0;
+          }
+          // Primeira tentativa falhou, tenta novamente automaticamente
+          else {
+            setTimeout(() => buscarCEP(cep), 1500);
+          }
         }
       }
 
+      function mostrarErroCep(mensagem) {
+        cepError.textContent = "⚠ " + mensagem;
+        cepError.classList.add("show");
+      }
+
+      function mostrarAvisoCep(mensagem) {
+        cepError.textContent = "ℹ️ " + mensagem;
+        cepError.style.color = "#ffc107";
+        cepError.classList.add("show");
+        setTimeout(() => {
+          cepError.classList.remove("show");
+          cepError.style.color = "#dc3545";
+        }, 5000);
+      }
+
+      function limparCamposEndereco() {
+        document.getElementById("street").value = "";
+        document.getElementById("neighborhood").value = "";
+        document.getElementById("city").value = "";
+        document.getElementById("state").value = "";
+      }
+
+      // Navegação entre steps
       nextBtn.addEventListener("click", () => {
         const password = document.getElementById("password").value.trim();
         const confirmPassword = document
@@ -355,10 +452,12 @@
         step1.classList.add("active");
       });
 
+      // Envio do formulário
       document
         .getElementById("registerForm")
         .addEventListener("submit", async (e) => {
           e.preventDefault();
+
           if (!emailValido) {
             alert("Corrija o e-mail antes de continuar.");
             return;
@@ -386,13 +485,15 @@
             });
 
             const result = await response.json();
+
             if (result.success) {
               alert("Usuário cadastrado com sucesso!");
               window.location.href = "../PHP/login.php";
             } else {
-              alert(result.message);
+              alert(result.message || "Erro ao cadastrar usuário!");
             }
-          } catch {
+          } catch (error) {
+            console.error("Erro:", error);
             alert("Erro ao cadastrar usuário!");
           }
         });
