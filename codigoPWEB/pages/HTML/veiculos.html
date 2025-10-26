@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="../../images/icon.png" />
+    <title>Meus Veículos - HelioMax</title>
+    <link rel="stylesheet" href="../../styles/style_meus_veiculos.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+      <button class="mobile-menu-close" id="mobileMenuClose">×</button>
+      <ul class="mobile-nav-links">
+        <li><a href="#">Dashboard</a></li>
+        <li><a href="#">Rotas</a></li>
+        <li><a href="#">Pontos Favoritos</a></li>
+        <li><a href="#">Contato</a></li>
+      </ul>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+      <nav class="nav">
+        <div class="logo">⚡ HelioMax</div>
+        <ul class="nav-links">
+          <li><a href="#">Dashboard</a></li>
+          <li><a href="#">Rotas</a></li>
+          <li><a href="#">Pontos Favoritos</a></li>
+          <li><a href="#">Contato</a></li>
+        </ul>
+        <div style="display: flex; align-items: center; gap: 1rem">
+          <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="container">
+        <!-- Page Header -->
+        <div class="page-header fade-in">
+          <div class="page-title-group">
+            <h1 class="page-title">🚗 Meus Veículos</h1>
+            <p class="page-subtitle">
+              Gerencie todos os seus veículos elétricos cadastrados
+            </p>
+          </div>
+          <a href="#" class="cta-button add-vehicle-btn">
+            + Cadastrar Veículo
+          </a>
+        </div>
+
+        <!-- Vehicles Grid -->
+        <section class="vehicles-section">
+          <div class="vehicles-grid" id="vehiclesGrid">
+            <!-- Vehicle Card 1 -->
+            <article class="vehicle-card fade-in stagger-1" data-vehicle-id="1">
+              <div class="vehicle-card-header">
+                <h3 class="vehicle-name">Tesla Model 3</h3>
+                <button class="btn-delete" aria-label="Excluir veículo">
+                  Excluir
+                </button>
+              </div>
+              <div class="vehicle-info">
+                <div class="info-item">
+                  <span class="info-label">🎨 Cor:</span>
+                  <span class="info-value">Vermelho</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">🔢 Placa:</span>
+                  <span class="info-value">ABC-1234</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">⚡ Último Ponto:</span>
+                  <span class="info-value">Shopping Center Norte</span>
+                </div>
+              </div>
+              <div class="vehicle-actions">
+                <a href="#" class="btn-view">Ver Detalhes →</a>
+              </div>
+            </article>
+
+            <!-- Vehicle Card 2 -->
+            <article class="vehicle-card fade-in stagger-2" data-vehicle-id="2">
+              <div class="vehicle-card-header">
+                <h3 class="vehicle-name">Nissan Leaf</h3>
+                <button class="btn-delete" aria-label="Excluir veículo">
+                  Excluir
+                </button>
+              </div>
+              <div class="vehicle-info">
+                <div class="info-item">
+                  <span class="info-label">🎨 Cor:</span>
+                  <span class="info-value">Branco</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">🔢 Placa:</span>
+                  <span class="info-value">XYZ-5678</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">⚡ Último Ponto:</span>
+                  <span class="info-value">Estação Paulista</span>
+                </div>
+              </div>
+              <div class="vehicle-actions">
+                <a href="#" class="btn-view">Ver Detalhes →</a>
+              </div>
+            </article>
+
+            <!-- Vehicle Card 3 -->
+            <article class="vehicle-card fade-in stagger-3" data-vehicle-id="3">
+              <div class="vehicle-card-header">
+                <h3 class="vehicle-name">BMW i3</h3>
+                <button class="btn-delete" aria-label="Excluir veículo">
+                  Excluir
+                </button>
+              </div>
+              <div class="vehicle-info">
+                <div class="info-item">
+                  <span class="info-label">🎨 Cor:</span>
+                  <span class="info-value">Azul</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">🔢 Placa:</span>
+                  <span class="info-value">DEF-9012</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">⚡ Último Ponto:</span>
+                  <span class="info-value">Av. Paulista, 1000</span>
+                </div>
+              </div>
+              <div class="vehicle-actions">
+                <a href="#" class="btn-view">Ver Detalhes →</a>
+              </div>
+            </article>
+          </div>
+
+          <!-- Empty State (hidden by default) -->
+          <div class="empty-state" id="emptyState" style="display: none">
+            <div class="empty-icon">🚗</div>
+            <h2>Nenhum veículo cadastrado</h2>
+            <p>
+              Comece adicionando seu primeiro veículo elétrico para aproveitar
+              todos os recursos da plataforma.
+            </p>
+            <a href="#" class="cta-button">+ Cadastrar Primeiro Veículo</a>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="logo" style="font-size: 1.8rem; margin-bottom: 1rem">
+          ⚡ HelioMax
+        </div>
+        <p>
+          A solução completa para gerenciamento inteligente de veículos
+          elétricos.
+        </p>
+        <p>&copy; 2025 HelioMax.</p>
+      </div>
+    </footer>
+
+    <script src="../../scripts/meus_veiculos.js"></script>
+  </body>
+</html>
