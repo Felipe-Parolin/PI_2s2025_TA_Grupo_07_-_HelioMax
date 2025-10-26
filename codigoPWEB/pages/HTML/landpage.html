@@ -5,14 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="../../images/icon.png" />
     <title>HelioMax</title>
-    <link rel="stylesheet" href="../../styles/style_landpage.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="../../styles/style_landpage.css" />
+    <script src="../JS/script.js"></script>
   </head>
   <body>
-    <!-- Mobile Menu -->
+    <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
 
     <!-- Mobile Menu -->
@@ -79,73 +80,138 @@
       </div>
     </section>
 
-    <!-- Features Section -->
+    <!-- Features Section - CARROSSEL -->
     <section class="features" id="funcionalidades">
       <div class="container">
-        <h2 class="section-title fade-in">Funcionalidades Completas</h2>
-        <p class="section-subtitle fade-in stagger-1">
+        <h2 class="section-title">Funcionalidades Completas</h2>
+        <p class="section-subtitle">
           Tudo que você precisa para uma experiência perfeita com veículos
           elétricos
         </p>
 
-        <div class="features-grid">
-          <div class="feature-card fade-in stagger-1">
-            <div class="feature-icon">🗺️</div>
-            <h3>Rotas Personalizadas</h3>
-            <p>
-              Crie pontos de viagem personalizados como de casa para trabalho.
-              Rotas otimizadas que consomem o menor nível de bateria possível.
-            </p>
+        <div class="carousel-container">
+          <div class="carousel-track-container">
+            <div class="carousel-track" id="carouselTrack">
+              <div class="carousel-slide active">
+                <div class="feature-card">
+                  <div class="feature-icon-wrapper">
+                    <div class="feature-icon">🗺️</div>
+                    <span class="feature-number">01</span>
+                  </div>
+                  <div class="feature-content">
+                    <h3>Rotas Personalizadas</h3>
+                    <p>
+                      Crie pontos de viagem personalizados como de casa para
+                      trabalho. Rotas otimizadas que consomem o menor nível de
+                      bateria possível.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="carousel-slide">
+                <div class="feature-card">
+                  <div class="feature-icon-wrapper">
+                    <div class="feature-icon">🚗</div>
+                    <span class="feature-number">02</span>
+                  </div>
+                  <div class="feature-content">
+                    <h3>Cadastro de Veículos</h3>
+                    <p>
+                      Registre seu veículo elétrico com todas as especificações
+                      técnicas para cálculos precisos de autonomia e consumo.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="carousel-slide">
+                <div class="feature-card">
+                  <div class="feature-icon-wrapper">
+                    <div class="feature-icon">⚡</div>
+                    <span class="feature-number">03</span>
+                  </div>
+                  <div class="feature-content">
+                    <h3>Pontos de Carregamento</h3>
+                    <p>
+                      Base completa de dados com informações detalhadas: tipos
+                      de carregadores, disponibilidade, ocupação e avaliações
+                      dos usuários.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="carousel-slide">
+                <div class="feature-card">
+                  <div class="feature-icon-wrapper">
+                    <div class="feature-icon">🔍</div>
+                    <span class="feature-number">04</span>
+                  </div>
+                  <div class="feature-content">
+                    <h3>Filtros Avançados</h3>
+                    <p>
+                      Encontre pontos de carregamento ideais usando filtros por
+                      valor do kW, tempo de recarga, avaliações e proximidade.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="carousel-slide">
+                <div class="feature-card">
+                  <div class="feature-icon-wrapper">
+                    <div class="feature-icon">📊</div>
+                    <span class="feature-number">05</span>
+                  </div>
+                  <div class="feature-content">
+                    <h3>Histórico de Viagens</h3>
+                    <p>
+                      Relatórios detalhados de cada rota: tempo gasto, trajeto
+                      percorrido, energia consumida e estatísticas de
+                      eficiência.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="carousel-slide">
+                <div class="feature-card">
+                  <div class="feature-icon-wrapper">
+                    <div class="feature-icon">⭐</div>
+                    <span class="feature-number">06</span>
+                  </div>
+                  <div class="feature-content">
+                    <h3>Avaliações de Usuários</h3>
+                    <p>
+                      "Excelente app, ajudou muito no meu dia a dia com o carro
+                      elétrico!" – Marina C.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="feature-card fade-in stagger-2">
-            <div class="feature-icon">🚗</div>
-            <h3>Cadastro de Veículos</h3>
-            <p>
-              Registre seu veículo elétrico com todas as especificações técnicas
-              para cálculos precisos de autonomia e consumo.
-            </p>
-          </div>
+          <div class="carousel-controls">
+            <button class="carousel-button" id="prevBtn">‹</button>
 
-          <div class="feature-card fade-in stagger-3">
-            <div class="feature-icon">⚡</div>
-            <h3>Pontos de Carregamento</h3>
-            <p>
-              Base completa de dados com informações detalhadas: tipos de
-              carregadores, disponibilidade, ocupação e avaliações dos usuários.
-            </p>
-          </div>
+            <div class="carousel-indicators" id="indicators">
+              <div class="indicator active" data-index="0"></div>
+              <div class="indicator" data-index="1"></div>
+              <div class="indicator" data-index="2"></div>
+              <div class="indicator" data-index="3"></div>
+              <div class="indicator" data-index="4"></div>
+              <div class="indicator" data-index="5"></div>
+            </div>
 
-          <div class="feature-card fade-in stagger-4">
-            <div class="feature-icon">🔍</div>
-            <h3>Filtros Avançados</h3>
-            <p>
-              Encontre pontos de carregamento ideais usando filtros por valor do
-              kW, tempo de recarga, avaliações e proximidade.
-            </p>
-          </div>
-
-          <div class="feature-card fade-in stagger-5">
-            <div class="feature-icon">📊</div>
-            <h3>Histórico de Viagens</h3>
-            <p>
-              Relatórios detalhados de cada rota: tempo gasto, trajeto
-              percorrido, energia consumida e estatísticas de eficiência.
-            </p>
-          </div>
-
-          <div class="feature-card fade-in stagger-6">
-            <div class="feature-icon">⭐</div>
-            <h3>Avaliações de Usuários</h3>
-            <p>
-              "Excelente app, ajudou muito no meu dia a dia com o carro
-              elétrico!" – Marina C.
-            </p>
+            <button class="carousel-button" id="nextBtn">›</button>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- CTA Section -->
     <section class="cta-section" id="demo">
       <div class="cta-content">
         <h2 class="fade-in">
@@ -163,6 +229,7 @@
       </div>
     </section>
 
+    <!-- Footer -->
     <footer class="footer" id="contato">
       <div class="footer-content">
         <div class="logo" style="font-size: 1.8rem; margin-bottom: 1rem">
@@ -176,106 +243,6 @@
       </div>
     </footer>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        // Smooth scroll para links internos
-        document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-          anchor.addEventListener("click", function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute("href"));
-            if (target) {
-              target.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
-              });
-            }
-            // Fechar menu mobile se estiver aberto
-            const mobileMenu = document.getElementById("mobileMenu");
-            const mobileMenuOverlay =
-              document.getElementById("mobileMenuOverlay");
-            if (mobileMenu && mobileMenu.classList.contains("active")) {
-              mobileMenu.classList.remove("active");
-              mobileMenuOverlay.classList.remove("active");
-            }
-          });
-        });
-
-        // Mobile Menu Toggle
-        const mobileMenuToggle = document.getElementById("mobileMenuToggle");
-        const mobileMenu = document.getElementById("mobileMenu");
-        const mobileMenuClose = document.getElementById("mobileMenuClose");
-        const mobileMenuOverlay = document.getElementById("mobileMenuOverlay");
-
-        if (mobileMenuToggle && mobileMenu) {
-          mobileMenuToggle.addEventListener("click", () => {
-            mobileMenu.classList.add("active");
-            mobileMenuOverlay.classList.add("active");
-          });
-        }
-
-        if (mobileMenuClose && mobileMenu) {
-          mobileMenuClose.addEventListener("click", () => {
-            mobileMenu.classList.remove("active");
-            mobileMenuOverlay.classList.remove("active");
-          });
-        }
-
-        // Fechar menu ao clicar no overlay
-        if (mobileMenuOverlay) {
-          mobileMenuOverlay.addEventListener("click", () => {
-            mobileMenu.classList.remove("active");
-            mobileMenuOverlay.classList.remove("active");
-          });
-        }
-
-        // Header scroll effect
-        window.addEventListener("scroll", () => {
-          const header = document.querySelector(".header");
-          if (header) {
-            if (window.scrollY > 100) {
-              header.style.background = "rgba(13, 13, 13, 0.95)";
-              header.style.boxShadow = "none";
-            }
-          }
-        });
-
-        // Intersection Observer para animações
-        const observerOptions = {
-          threshold: 0.1,
-          rootMargin: "0px 0px -50px 0px",
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.style.animationPlayState = "running";
-            }
-          });
-        }, observerOptions);
-
-        document.querySelectorAll(".fade-in").forEach((el) => {
-          observer.observe(el);
-        });
-
-        // Otimizar performance para dispositivos móveis
-        if (window.innerWidth <= 768) {
-          // Reduzir animações em dispositivos móveis
-          document.querySelectorAll(".floating-card").forEach((card) => {
-            card.style.animation = "none";
-          });
-        }
-
-        // Ajustar layout em mudanças de orientação
-        window.addEventListener("orientationchange", () => {
-          setTimeout(() => {
-            // Recalcular heights após mudança de orientação
-            const heroVisual = document.querySelector(".hero-visual");
-            if (window.innerWidth <= 768) {
-              heroVisual.style.height = "180px";
-            }
-          }, 100);
-        });
-      });
-    </script>
+    <script src="script.js"></script>
   </body>
 </html>
