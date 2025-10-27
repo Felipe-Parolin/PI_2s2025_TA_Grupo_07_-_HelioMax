@@ -12,10 +12,8 @@
     />
   </head>
   <body>
-    <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
 
-    <!-- Mobile Menu -->
     <div class="mobile-menu" id="mobileMenu">
       <button class="mobile-menu-close" id="mobileMenuClose">×</button>
       <ul class="mobile-nav-links">
@@ -26,7 +24,6 @@
       </ul>
     </div>
 
-    <!-- Header -->
     <header class="header">
       <nav class="nav">
         <a href="landpage.html" class="logo">⚡ HelioMax</a>
@@ -42,7 +39,6 @@
       </nav>
     </header>
 
-    <!-- Main Content -->
     <main class="main">
       <section class="hero-about">
         <div class="hero-content">
@@ -55,27 +51,100 @@
         </div>
       </section>
 
-      <section class="about-section">
+      <section class="roadmap-section">
         <div class="container">
-          <div class="about-content-wrapper">
-            <div class="about-card">
-              <div class="card-icon">📖</div>
-              <h2>Nossa História</h2>
-              <p>
-                A HelioMax nasceu da paixão por tecnologia e sustentabilidade.
-                Percebemos a crescente demanda por infraestrutura e
-                gerenciamento eficiente para veículos elétricos e decidimos
-                criar uma plataforma que simplificasse a vida dos motoristas e
-                operadores de estações de carregamento.
-              </p>
-              <p>
-                Desde nossa fundação em 2024, temos trabalhado incansavelmente
-                para desenvolver soluções inovadoras que otimizam rotas,
-                monitoram o desempenho da bateria e conectam usuários a uma rede
-                abrangente de pontos de carregamento. Acreditamos que a
-                transição para a mobilidade elétrica deve ser fácil, acessível e
-                inteligente.
-              </p>
+          <h2 class="roadmap-title">Nossa Jornada</h2>
+          <p class="roadmap-subtitle">
+            A evolução do HelioMax ao longo de 2025
+          </p>
+
+          <div class="roadmap-container">
+            <div class="roadmap-line"></div>
+
+            <div class="milestone" data-aos="fade-up">
+              <div class="milestone-content left-content">
+                <div class="milestone-date">Fevereiro 2025</div>
+                <h3>O Início da Jornada</h3>
+                <p>
+                  Começamos a desenvolver o HelioMax na disciplina de Projeto
+                  Interdisciplinar I, na faculdade de Sistemas de Informação.
+                  Uma ideia que nasceu da paixão por tecnologia e
+                  sustentabilidade.
+                </p>
+              </div>
+              <div class="milestone-dot">
+                <div class="pulse-ring"></div>
+                <div class="milestone-icon">🚀</div>
+              </div>
+              <div></div>
+            </div>
+
+            <div class="milestone" data-aos="fade-up" data-aos-delay="200">
+              <div></div>
+              <div class="milestone-dot">
+                <div class="pulse-ring"></div>
+                <div class="milestone-icon">☕</div>
+              </div>
+              <div class="milestone-content">
+                <div class="milestone-date">Junho 2025</div>
+                <h3>Primeiro Protótipo</h3>
+                <p>
+                  Desenvolvemos nosso primeiro protótipo funcional em Java, que
+                  roda no terminal. Um marco importante que provou a viabilidade
+                  do conceito e nos deu a confiança para seguir em frente.
+                </p>
+              </div>
+            </div>
+
+            <div class="milestone" data-aos="fade-up" data-aos-delay="400">
+              <div class="milestone-content left-content">
+                <div class="milestone-date">Agosto 2025</div>
+                <h3>Evolução para Web</h3>
+                <p>
+                  Na disciplina de Projeto Interdisciplinar II, levamos o
+                  HelioMax para o próximo nível. Começamos a desenvolver uma
+                  plataforma web completa e funcional, transformando nosso
+                  protótipo em uma solução robusta e acessível.
+                </p>
+              </div>
+              <div class="milestone-dot">
+                <div class="pulse-ring"></div>
+                <div class="milestone-icon">💻</div>
+              </div>
+              <div></div>
+            </div>
+
+            <div class="milestone" data-aos="zoom-in" data-aos-delay="600">
+              <div></div>
+              <div class="milestone-dot milestone-final-dot">
+                <div class="explosion-ring ring-1"></div>
+                <div class="explosion-ring ring-2"></div>
+                <div class="explosion-ring ring-3"></div>
+                <div class="sparkles">
+                  <span class="sparkle" style="--i: 0"></span>
+                  <span class="sparkle" style="--i: 1"></span>
+                  <span class="sparkle" style="--i: 2"></span>
+                  <span class="sparkle" style="--i: 3"></span>
+                  <span class="sparkle" style="--i: 4"></span>
+                  <span class="sparkle" style="--i: 5"></span>
+                  <span class="sparkle" style="--i: 6"></span>
+                  <span class="sparkle" style="--i: 7"></span>
+                </div>
+                <div class="milestone-icon">🎉</div>
+              </div>
+              <div class="milestone-content milestone-final-content">
+                <div class="milestone-date">Dezembro 2025</div>
+                <h3>🌟 Lançamento Oficial 🌟</h3>
+                <p>
+                  O grande momento chega! Finalizamos o projeto HelioMax com
+                  todas as funcionalidades implementadas. Uma plataforma
+                  completa para gerenciamento inteligente de veículos elétricos,
+                  pronta para revolucionar a mobilidade sustentável!
+                </p>
+                <div class="final-badge">
+                  <span class="badge-text">✨ Projeto Concluído ✨</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -117,7 +186,6 @@
         </div>
       </section>
 
-      <!-- Team Section -->
       <section class="team-section">
         <div class="container">
           <h2>Nossa Equipe</h2>
@@ -151,7 +219,6 @@
       </section>
     </main>
 
-    <!-- Footer -->
     <footer class="footer">
       <div class="footer-content">
         <div class="logo" style="font-size: 1.8rem; margin-bottom: 1rem">
@@ -204,6 +271,24 @@
               header.style.boxShadow = "0 2px 20px rgba(93, 173, 226, 0.1)";
             }
           }
+        });
+
+        // Scroll Animation Observer
+        const observerOptions = {
+          threshold: 0.2,
+          rootMargin: "0px 0px -100px 0px",
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("animate-in");
+            }
+          });
+        }, observerOptions);
+
+        document.querySelectorAll(".milestone").forEach((milestone) => {
+          observer.observe(milestone);
         });
       });
     </script>

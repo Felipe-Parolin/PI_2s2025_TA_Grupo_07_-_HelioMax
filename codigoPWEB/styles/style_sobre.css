@@ -18,7 +18,7 @@ body {
   position: fixed;
   top: 0;
   width: 100%;
-  background: #0d0d0d; /* sólido, sem transparência */
+  background: #0d0d0d;
   backdrop-filter: none;
   z-index: 1000;
   padding: 0.8rem 0;
@@ -232,65 +232,297 @@ body {
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
-/* About Section */
-.about-section {
+/* ROADMAP SECTION */
+.roadmap-section {
   padding: 5rem 1rem;
   background: #0d0d0d;
-}
-
-.about-content-wrapper {
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.about-card {
-  background: rgba(93, 173, 226, 0.08);
-  border-radius: 24px;
-  padding: 3rem;
-  border: 1px solid rgba(93, 173, 226, 0.2);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
-.about-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
-  background: linear-gradient(135deg, #5dade2 0%, #48cae4 100%);
-}
-
-.card-icon {
-  font-size: 3rem;
-  margin-bottom: 1.5rem;
+.roadmap-title {
   text-align: center;
-  filter: drop-shadow(0 4px 8px rgba(93, 173, 226, 0.3));
-}
-
-.about-card h2 {
-  font-size: clamp(2rem, 5vw, 2.8rem);
-  font-weight: 800;
-  margin-bottom: 2rem;
-  text-align: center;
+  font-size: clamp(2.5rem, 6vw, 3.5rem);
+  font-weight: 900;
+  margin-bottom: 1rem;
   background: linear-gradient(135deg, #5dade2 0%, #48cae4 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.about-card p {
-  color: rgba(255, 255, 255, 0.85);
-  font-size: clamp(1rem, 2.5vw, 1.15rem);
-  line-height: 1.8;
-  margin-bottom: 1.5rem;
-  text-align: justify;
+.roadmap-subtitle {
+  text-align: center;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 4rem;
 }
 
-.about-card p:last-child {
-  margin-bottom: 0;
+.roadmap-container {
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+  padding: 2rem 0;
+}
+
+/* Linha vertical do roadmap */
+.roadmap-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(
+    180deg,
+    rgba(93, 173, 226, 0.3) 0%,
+    rgba(93, 173, 226, 0.6) 50%,
+    rgba(93, 173, 226, 1) 100%
+  );
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+/* Milestone base */
+.milestone {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 3rem;
+  align-items: center;
+  margin-bottom: 4rem;
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 2;
+}
+
+.milestone.animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Alinha o texto do card da esquerda para a direita */
+.left-content {
+  text-align: right;
+}
+
+/* DOT do milestone */
+.milestone-dot {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.milestone-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #5dade2 0%, #48cae4 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  box-shadow: 0 10px 40px rgba(93, 173, 226, 0.4);
+  position: relative;
+}
+
+/* Pulse ring animation */
+.pulse-ring {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border: 3px solid #5dade2;
+  border-radius: 50%;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  opacity: 0;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Conteúdo do milestone */
+.milestone-content {
+  background: rgba(93, 173, 226, 0.08);
+  padding: 2.5rem;
+  border-radius: 20px;
+  border: 1px solid rgba(93, 173, 226, 0.2);
+  position: relative;
+  transition: all 0.3s ease;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.milestone-content:hover {
+  background: rgba(93, 173, 226, 0.15);
+  border-color: rgba(93, 173, 226, 0.4);
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(93, 173, 226, 0.2);
+}
+
+.milestone-date {
+  font-size: 0.9rem;
+  color: #5dade2;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.milestone-content h3 {
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #ffffff;
+}
+
+.milestone-content p {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: clamp(0.95rem, 2vw, 1.05rem);
+  line-height: 1.7;
+}
+
+/* MILESTONE FINAL - Apenas estilos de cor e animação */
+.milestone-final-dot .milestone-icon {
+  background: linear-gradient(135deg, #ffd700 0%, #ffa500 50%, #ff6347 100%);
+  box-shadow: 0 0 60px rgba(255, 215, 0, 0.6), 0 0 100px rgba(255, 165, 0, 0.4);
+  animation: finalPulse 2s ease-in-out infinite;
+}
+
+@keyframes finalPulse {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(5deg);
+  }
+}
+
+.explosion-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 3px solid;
+  animation: explode 2s ease-out infinite;
+}
+
+.ring-1 {
+  border-color: #ffd700;
+  animation-delay: 0s;
+}
+
+.ring-2 {
+  border-color: #ffa500;
+  animation-delay: 0.3s;
+}
+
+.ring-3 {
+  border-color: #ff6347;
+  animation-delay: 0.6s;
+}
+
+@keyframes explode {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.sparkles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.sparkle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #ffd700;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #ffd700;
+  animation: sparkleFloat 3s ease-in-out infinite;
+  top: 50%;
+  left: 50%;
+  transform-origin: center;
+  animation-delay: calc(var(--i) * 0.2s);
+}
+
+@keyframes sparkleFloat {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(calc(var(--i) * 45deg))
+      translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(calc(var(--i) * 45deg))
+      translateY(-60px);
+    opacity: 0;
+  }
+}
+
+.milestone-final-content {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.1) 0%,
+    rgba(255, 165, 0, 0.1) 100%
+  );
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(255, 215, 0, 0.2);
+}
+
+.milestone-final-content:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.15) 0%,
+    rgba(255, 165, 0, 0.15) 100%
+  );
+  border-color: rgba(255, 215, 0, 0.5);
+  box-shadow: 0 25px 80px rgba(255, 215, 0, 0.3);
+}
+
+.final-badge {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.badge-text {
+  display: inline-block;
+  background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+  color: #0d0d0d;
+  padding: 0.7rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+  animation: badgeGlow 2s ease-in-out infinite;
+}
+
+@keyframes badgeGlow {
+  0%,
+  100% {
+    box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 5px 30px rgba(255, 215, 0, 0.8);
+  }
 }
 
 /* Values Section */
@@ -478,12 +710,53 @@ body {
     background-attachment: scroll;
   }
 
-  .about-card {
-    padding: 2rem;
+  .roadmap-section {
+    padding: 3rem 1rem;
   }
 
-  .card-icon {
-    font-size: 2.5rem;
+  .roadmap-line {
+    left: 30px; /* Metade de 60px (tamanho do ícone) */
+  }
+
+  .milestone {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .milestone-content,
+  .left-content {
+    text-align: left;
+    flex: 1;
+  }
+
+  .milestone > div:not([class]) {
+    display: none;
+  }
+
+  .milestone-dot {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    order: -1;
+  }
+
+  .milestone-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+
+  .pulse-ring,
+  .explosion-ring {
+    width: 60px;
+    height: 60px;
+  }
+
+  .milestone-content {
+    padding: 1.5rem;
   }
 
   .values-grid {
@@ -500,19 +773,43 @@ body {
     padding: 3rem 1rem;
   }
 
-  .about-section,
+  .roadmap-section {
+    padding: 2rem 1rem;
+  }
+
+  .roadmap-line {
+    left: 25px; /* Metade de 50px (tamanho do ícone) */
+  }
+
   .values-section,
   .team-section {
     padding: 3rem 1rem;
   }
 
-  .about-card {
-    padding: 1.5rem;
-    border-radius: 16px;
-  }
-
   .value-card,
   .team-member {
     padding: 1.8rem;
+  }
+
+  .milestone-dot {
+    width: 50px;
+    height: 50px;
+  }
+
+  .milestone-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.3rem;
+  }
+
+  .pulse-ring,
+  .explosion-ring {
+    width: 50px;
+    height: 50px;
+  }
+
+  .badge-text {
+    font-size: 0.9rem;
+    padding: 0.6rem 1.2rem;
   }
 }
