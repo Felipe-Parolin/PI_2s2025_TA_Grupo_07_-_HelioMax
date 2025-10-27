@@ -394,7 +394,7 @@ body {
   line-height: 1.7;
 }
 
-/* MILESTONE FINAL - Apenas estilos de cor e animação */
+/* MILESTONE FINAL */
 .milestone-final-dot .milestone-icon {
   background: linear-gradient(135deg, #ffd700 0%, #ffa500 50%, #ff6347 100%);
   box-shadow: 0 0 60px rgba(255, 215, 0, 0.6), 0 0 100px rgba(255, 165, 0, 0.4);
@@ -416,6 +416,14 @@ body {
   border-radius: 50%;
   border: 3px solid;
   animation: explode 2s ease-out infinite;
+}
+
+/* CORREÇÃO: Adicionando o tamanho de volta aos anéis da animação */
+.ring-1,
+.ring-2,
+.ring-3 {
+  width: 80px;
+  height: 80px;
 }
 
 .ring-1 {
@@ -715,7 +723,7 @@ body {
   }
 
   .roadmap-line {
-    left: 30px; /* Metade de 60px (tamanho do ícone) */
+    left: 30px;
   }
 
   .milestone {
@@ -778,7 +786,7 @@ body {
   }
 
   .roadmap-line {
-    left: 25px; /* Metade de 50px (tamanho do ícone) */
+    left: 25px;
   }
 
   .values-section,
