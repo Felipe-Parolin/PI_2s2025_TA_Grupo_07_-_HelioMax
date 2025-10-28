@@ -1,176 +1,182 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="../../images/icon.png" />
-    <title>Meus Veículos - HelioMax</title>
-    <link rel="stylesheet" href="../../styles/style_meus_veiculos.css" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <!-- Mobile Menu Overlay -->
-    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+    <title>Dashboard - Meus Veículos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../../styles/style_meus_veiculos.css">
+    <style>
+        /* Estilos adicionais */
+        .sidebar-item.active {
+            background-color: #0284c7; 
+            color: white;
+        }
 
-    <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobileMenu">
-      <button class="mobile-menu-close" id="mobileMenuClose">×</button>
-      <ul class="mobile-nav-links">
-        <li><a href="#">Dashboard</a></li>
-        <li><a href="#">Rotas</a></li>
-        <li><a href="#">Pontos Favoritos</a></li>
-        <li><a href="#">Contato</a></li>
-      </ul>
-    </div>
+        /* Classe para esconder a sidebar em mobile por padrão */
+        .sidebar-mobile-hidden {
+            transform: translateX(-100%);
+        }
+    </style>
+</head>
 
-    <!-- Header -->
-    <header class="header">
-      <nav class="nav">
-        <div class="logo">⚡ HelioMax</div>
-        <ul class="nav-links">
-          <li><a href="#">Dashboard</a></li>
-          <li><a href="#">Rotas</a></li>
-          <li><a href="#">Pontos Favoritos</a></li>
-          <li><a href="#">Contato</a></li>
-        </ul>
-        <div style="display: flex; align-items: center; gap: 1rem">
-          <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
-        </div>
-      </nav>
-    </header>
+<body
+    class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex">
 
-    <!-- Main Content -->
-    <main class="main-content">
-      <div class="container">
-        <!-- Page Header -->
-        <div class="page-header fade-in">
-          <div class="page-title-group">
-            <h1 class="page-title">🚗 Meus Veículos</h1>
-            <p class="page-subtitle">
-              Gerencie todos os seus veículos elétricos cadastrados
-            </p>
-          </div>
-          <a href="#" class="cta-button add-vehicle-btn">
-            + Cadastrar Veículo
-          </a>
+    <aside id="sidebar"
+        class="fixed inset-y-0 left-0 w-64 bg-slate-900/50 backdrop-blur-xl border-r border-cyan-500/20 p-4 
+               flex flex-col flex-shrink-0 z-50 
+               md:relative md:translate-x-0 transition-transform duration-300 sidebar-mobile-hidden">
+        
+        <div class="flex items-center gap-3 mb-10">
+            <div
+                class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
+                <i data-lucide="zap" class="w-7 h-7 text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-white">HelioMax</h1>
+                <p class="text-xs text-cyan-400">Desenvolvimento</p>
+            </div>
         </div>
 
-        <!-- Vehicles Grid -->
-        <section class="vehicles-section">
-          <div class="vehicles-grid" id="vehiclesGrid">
-            <!-- Vehicle Card 1 -->
-            <article class="vehicle-card fade-in stagger-1" data-vehicle-id="1">
-              <div class="vehicle-card-header">
-                <h3 class="vehicle-name">Tesla Model 3</h3>
-                <button class="btn-delete" aria-label="Excluir veículo">
-                  Excluir
-                </button>
-              </div>
-              <div class="vehicle-info">
-                <div class="info-item">
-                  <span class="info-label">🎨 Cor:</span>
-                  <span class="info-value">Vermelho</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">🔢 Placa:</span>
-                  <span class="info-value">ABC-1234</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">⚡ Último Ponto:</span>
-                  <span class="info-value">Shopping Center Norte</span>
-                </div>
-              </div>
-              <div class="vehicle-actions">
-                <a href="#" class="btn-view">Ver Detalhes →</a>
-              </div>
-            </article>
+        <nav class="flex-grow">
+            <a href="#"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item"
+                id="sidebar-dashboard">
+                <i data-lucide="layout-dashboard"></i> <span>Dashboard</span>
+            </a>
+            <a href="#"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
+                id="sidebar-historico">
+                <i data-lucide="history"></i> <span>Histórico</span>
+            </a>
+            <a href="#"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item active mt-2"
+                id="sidebar-veiculos">
+                <i data-lucide="car"></i> <span>Meus Veículos</span>
+            </a>
+        </nav>
 
-            <!-- Vehicle Card 2 -->
-            <article class="vehicle-card fade-in stagger-2" data-vehicle-id="2">
-              <div class="vehicle-card-header">
-                <h3 class="vehicle-name">Nissan Leaf</h3>
-                <button class="btn-delete" aria-label="Excluir veículo">
-                  Excluir
-                </button>
-              </div>
-              <div class="vehicle-info">
-                <div class="info-item">
-                  <span class="info-label">🎨 Cor:</span>
-                  <span class="info-value">Branco</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">🔢 Placa:</span>
-                  <span class="info-value">XYZ-5678</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">⚡ Último Ponto:</span>
-                  <span class="info-value">Estação Paulista</span>
-                </div>
-              </div>
-              <div class="vehicle-actions">
-                <a href="#" class="btn-view">Ver Detalhes →</a>
-              </div>
-            </article>
+        <div class="mt-auto pt-4 border-t border-cyan-500/20">
+            <a href="#"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item">
+                <i data-lucide="user-cog"></i> <span>Minha Conta</span>
+            </a>
+            <a href="#"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/30 transition-colors sidebar-item mt-2">
+                <i data-lucide="log-out"></i> <span>Sair</span>
+            </a>
+        </div>
+    </aside>
 
-            <!-- Vehicle Card 3 -->
-            <article class="vehicle-card fade-in stagger-3" data-vehicle-id="3">
-              <div class="vehicle-card-header">
-                <h3 class="vehicle-name">BMW i3</h3>
-                <button class="btn-delete" aria-label="Excluir veículo">
-                  Excluir
-                </button>
-              </div>
-              <div class="vehicle-info">
-                <div class="info-item">
-                  <span class="info-label">🎨 Cor:</span>
-                  <span class="info-value">Azul</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">🔢 Placa:</span>
-                  <span class="info-value">DEF-9012</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">⚡ Último Ponto:</span>
-                  <span class="info-value">Av. Paulista, 1000</span>
-                </div>
-              </div>
-              <div class="vehicle-actions">
-                <a href="#" class="btn-view">Ver Detalhes →</a>
-              </div>
-            </article>
-          </div>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" 
+        onclick="toggleSidebar()"></div>
 
-          <!-- Empty State (hidden by default) -->
-          <div class="empty-state" id="emptyState" style="display: none">
-            <div class="empty-icon">🚗</div>
-            <h2>Nenhum veículo cadastrado</h2>
-            <p>
-              Comece adicionando seu primeiro veículo elétrico para aproveitar
-              todos os recursos da plataforma.
-            </p>
-            <a href="#" class="cta-button">+ Cadastrar Primeiro Veículo</a>
-          </div>
+
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+        <header class="flex justify-between items-center mb-6 md:mb-8">
+            <div class="flex-1">
+                <h1 class="text-2xl md:text-3xl font-bold text-white">Meus Veículos</h1>
+                <p class="text-gray-400 text-sm md:text-base">Gerencie seus veículos elétricos cadastrados.</p>
+            </div>
+
+            <button id="toggle-sidebar-btn" class="p-2 md:hidden text-white" onclick="toggleSidebar()">
+                <i data-lucide="menu" class="w-7 h-7"></i>
+            </button>
+
+            <button id="btn-cadastrar-veiculo"
+                class="hidden md:flex bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl items-center gap-2 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 hover:scale-[1.02] ml-4">
+                <i data-lucide="plus-circle"></i>
+                <span>Cadastrar Veículo</span>
+            </button>
+        </header>
+
+        <section class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 md:p-6">
+            <div class="flex justify-between items-center mb-4 border-b border-cyan-500/10 pb-3">
+                <h2 class="text-xl md:text-2xl font-semibold">Lista de Veículos</h2>
+                <button id="btn-cadastrar-veiculo-mobile"
+                    class="md:hidden bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-xl text-sm flex items-center gap-1">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    Cadastrar
+                </button>
+            </div>
+            
+            <div id="vehicle-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <article class="vehicle-card bg-slate-700/50 p-6 rounded-xl shadow-lg border border-slate-700 hover:shadow-cyan-500/20 transition-all duration-300">
+                    <div class="flex items-center mb-4 border-b border-slate-600 pb-3">
+                        <i data-lucide="car-front" class="w-8 h-8 text-cyan-400 mr-4 flex-shrink-0"></i>
+                        <div>
+                            <h3 class="text-xl font-bold text-white" data-marca="Renault" data-modelo="Zoe">Renault Zoe</h3>
+                            <p class="text-sm text-gray-400">Veículo principal</p>
+                        </div>
+                    </div>
+                    <div class="space-y-2 text-sm text-gray-300">
+                        <p class="flex items-center gap-2"><i data-lucide="battery-charging" class="w-4 h-4 text-green-400"></i> Capacidade da Bateria: <span class="font-semibold text-white">52 kWh</span></p>
+                        <p class="flex items-center gap-2"><i data-lucide="gauge" class="w-4 h-4 text-blue-400"></i> Autonomia Estimada: <span class="font-semibold text-white">395 km (WLTP)</span></p>
+                        <p class="flex items-center gap-2"><i data-lucide="bolt" class="w-4 h-4 text-yellow-400"></i> Tipo de Plug: <span class="font-semibold text-white">Type 2 / CCS</span></p>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-700">
+                        <button class="btn-editar bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white py-2 px-4 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1" data-id="1">
+                            <i data-lucide="edit" class="w-4 h-4"></i> Editar
+                        </button>
+                        <button class="btn-excluir bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white py-2 px-4 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1" data-id="1">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Excluir
+                        </button>
+                    </div>
+                </article>
+
+                <article class="vehicle-card bg-slate-700/50 p-6 rounded-xl shadow-lg border border-slate-700 hover:shadow-cyan-500/20 transition-all duration-300">
+                    <div class="flex items-center mb-4 border-b border-slate-600 pb-3">
+                        <i data-lucide="car-front" class="w-8 h-8 text-cyan-400 mr-4 flex-shrink-0"></i>
+                        <div>
+                            <h3 class="text-xl font-bold text-white" data-marca="Chevrolet" data-modelo="Bolt">Chevrolet Bolt EV</h3>
+                            <p class="text-sm text-gray-400">Veículo secundário</p>
+                        </div>
+                    </div>
+                    <div class="space-y-2 text-sm text-gray-300">
+                        <p class="flex items-center gap-2"><i data-lucide="battery-charging" class="w-4 h-4 text-green-400"></i> Capacidade da Bateria: <span class="font-semibold text-white">65 kWh</span></p>
+                        <p class="flex items-center gap-2"><i data-lucide="gauge" class="w-4 h-4 text-blue-400"></i> Autonomia Estimada: <span class="font-semibold text-white">417 km (EPA)</span></p>
+                        <p class="flex items-center gap-2"><i data-lucide="bolt" class="w-4 h-4 text-yellow-400"></i> Tipo de Plug: <span class="font-semibold text-white">CCS</span></p>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-700">
+                        <button class="btn-editar bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white py-2 px-4 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1" data-id="2">
+                            <i data-lucide="edit" class="w-4 h-4"></i> Editar
+                        </button>
+                        <button class="btn-excluir bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white py-2 px-4 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1" data-id="2">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Excluir
+                        </button>
+                    </div>
+                </article>
+
+                <article onclick="document.getElementById('btn-cadastrar-veiculo').click()"
+                    class="hidden lg:flex bg-slate-800/20 p-6 rounded-xl border-2 border-dashed border-cyan-500/50 text-center text-gray-500 flex-col items-center justify-center cursor-pointer hover:border-cyan-400/80 hover:bg-slate-800/30 transition-all duration-300">
+                    <i data-lucide="plus-circle" class="w-12 h-12 mb-2 text-cyan-500"></i>
+                    <p class="text-lg font-medium text-cyan-400">Adicionar Novo Veículo</p>
+                    <p class="text-sm text-gray-500">Clique para cadastrar um novo veículo elétrico.</p>
+                </article>
+
+            </div>
+            
+            <div id="empty-state" class="text-center py-20 hidden">
+                <i data-lucide="circle-slash" class="w-16 h-16 mx-auto text-gray-600"></i>
+                <p class="mt-4 text-xl text-gray-400">Você ainda não possui veículos cadastrados.</p>
+                <p class="text-gray-500">Clique em "Cadastrar Veículo" para começar.</p>
+            </div>
         </section>
-      </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-      <div class="footer-content">
-        <div class="logo" style="font-size: 1.8rem; margin-bottom: 1rem">
-          ⚡ HelioMax
-        </div>
-        <p>
-          A solução completa para gerenciamento inteligente de veículos
-          elétricos.
-        </p>
-        <p>&copy; 2025 HelioMax.</p>
-      </div>
-    </footer>
+    <script src="../JS/meus_veiculos.js"></script>
 
-    <script src="../../scripts/meus_veiculos.js"></script>
-  </body>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+
 </html>
