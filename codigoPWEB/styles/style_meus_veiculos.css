@@ -1,5 +1,5 @@
 /*
- * Arquivo: veiculos.css
+ * Arquivo: style_meus_veiculos.css
  * Estilos customizados para a tela de veículos (complementando o Tailwind CSS).
  */
 
@@ -15,4 +15,80 @@
 .vehicle-card:hover {
     transform: translateY(-5px); /* Efeito de pequena elevação */
     border-color: #06b6d4; /* Cor da borda mais intensa (cyan-500) */
+}
+
+/* Sidebar mobile hidden */
+.sidebar-mobile-hidden {
+    transform: translateX(-100%);
+}
+
+/* Sidebar active state */
+.sidebar-item.active {
+    background-color: #0284c7; 
+    color: white;
+}
+
+/* ============================================
+   RESPONSIVIDADE PARA TABLETS
+   ============================================ */
+
+/* Tablets - Portrait e Landscape (768px até 1279px) */
+@media (min-width: 768px) and (max-width: 1279px) {
+    /* Sidebar compacta em tablets */
+    aside#sidebar {
+        width: 5rem !important; /* Sidebar mais estreita */
+        padding: 1rem 0.5rem;
+    }
+    
+    /* Esconde todos os textos da sidebar */
+    aside#sidebar .sidebar-text {
+        display: none !important;
+    }
+    
+    /* Centraliza os ícones */
+    aside#sidebar .sidebar-item {
+        justify-content: center !important;
+        padding: 0.75rem !important;
+    }
+    
+    /* Esconde título e subtítulo do logo */
+    aside#sidebar h1,
+    aside#sidebar p {
+        display: none !important;
+    }
+    
+    /* Centraliza o logo */
+    aside#sidebar .flex.items-center.gap-3.mb-10 {
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+    
+    /* Reduz tamanho do logo */
+    aside#sidebar .w-12 {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+    }
+    
+    /* Mantém borda superior da seção inferior */
+    aside#sidebar .mt-auto {
+        border-top: 1px solid rgba(6, 182, 212, 0.2);
+    }
+}
+
+/* Desktop Grande (1280px+) - Sidebar normal */
+@media (min-width: 1280px) {
+    aside#sidebar {
+        width: 16rem !important; /* w-64 = 16rem */
+    }
+}
+
+/* ============================================
+   AJUSTES ADICIONAIS DE RESPONSIVIDADE
+   ============================================ */
+
+/* Mobile - Garante que sidebar fique escondida */
+@media (max-width: 767px) {
+    aside#sidebar.sidebar-mobile-hidden {
+        transform: translateX(-100%);
+    }
 }

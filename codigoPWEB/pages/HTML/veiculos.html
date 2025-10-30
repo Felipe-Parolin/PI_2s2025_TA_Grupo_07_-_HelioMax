@@ -7,35 +7,88 @@
     <title>Dashboard - Meus Veículos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="../../styles/style_meus_veiculos.css">
     <style>
-        /* Estilos adicionais */
+        /* Estilos customizados */
         .sidebar-item.active {
             background-color: #0284c7; 
             color: white;
         }
 
-        /* Classe para esconder a sidebar em mobile por padrão */
         .sidebar-mobile-hidden {
             transform: translateX(-100%);
+        }
+
+        /* Efeito de Destaque no Card ao Passar o Mouse */
+        .vehicle-card {
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+            position: relative; 
+        }
+
+        .vehicle-card:hover {
+            transform: translateY(-5px);
+            border-color: #06b6d4;
+        }
+
+        /* Breakpoints customizados para tablets */
+        @media (min-width: 768px) and (max-width: 1279px) {
+            /* Ajustes específicos para tablets (portrait e landscape) */
+            aside#sidebar {
+                width: 5rem !important; /* Sidebar mais estreita em tablets */
+            }
+            
+            aside#sidebar .sidebar-text {
+                display: none !important; /* Esconde textos da sidebar */
+            }
+            
+            aside#sidebar .sidebar-item {
+                justify-content: center !important;
+                padding: 0.75rem !important;
+            }
+            
+            aside#sidebar h1,
+            aside#sidebar p {
+                display: none !important;
+            }
+            
+            aside#sidebar .flex.items-center.gap-3.mb-10 {
+                justify-content: center;
+                margin-bottom: 2rem;
+            }
+            
+            aside#sidebar .w-12 {
+                width: 2.5rem !important;
+                height: 2.5rem !important;
+            }
+            
+            aside#sidebar .mt-auto {
+                border-top: 1px solid rgba(6, 182, 212, 0.2);
+            }
+        }
+        
+        /* Para telas muito grandes, volta sidebar normal */
+        @media (min-width: 1280px) {
+            aside#sidebar {
+                width: 16rem !important; /* 64 = 16rem */
+            }
         }
     </style>
 </head>
 
-<body
-    class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex">
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex">
 
+    <!-- Sidebar -->
     <aside id="sidebar"
         class="fixed inset-y-0 left-0 w-64 bg-slate-900/50 backdrop-blur-xl border-r border-cyan-500/20 p-4 
                flex flex-col flex-shrink-0 z-50 
-               md:relative md:translate-x-0 transition-transform duration-300 sidebar-mobile-hidden">
+               md:relative md:translate-x-0 
+               transition-all duration-300 sidebar-mobile-hidden">
         
         <div class="flex items-center gap-3 mb-10">
-            <div
-                class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
+            <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
                 <i data-lucide="zap" class="w-7 h-7 text-white"></i>
             </div>
-            <div>
+            <div class="sidebar-text">
                 <h1 class="text-xl font-bold text-white">HelioMax</h1>
                 <p class="text-xs text-cyan-400">Desenvolvimento</p>
             </div>
@@ -44,115 +97,148 @@
         <nav class="flex-grow">
             <a href="#"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item"
-                id="sidebar-dashboard">
-                <i data-lucide="layout-dashboard"></i> <span>Dashboard</span>
+                id="sidebar-dashboard" title="Dashboard">
+                <i data-lucide="layout-dashboard" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Dashboard</span>
             </a>
             <a href="#"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
-                id="sidebar-historico">
-                <i data-lucide="history"></i> <span>Histórico</span>
+                id="sidebar-historico" title="Histórico">
+                <i data-lucide="history" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Histórico</span>
             </a>
             <a href="#"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item active mt-2"
-                id="sidebar-veiculos">
-                <i data-lucide="car"></i> <span>Meus Veículos</span>
+                id="sidebar-veiculos" title="Meus Veículos">
+                <i data-lucide="car" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Meus Veículos</span>
             </a>
         </nav>
 
         <div class="mt-auto pt-4 border-t border-cyan-500/20">
             <a href="#"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item">
-                <i data-lucide="user-cog"></i> <span>Minha Conta</span>
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item"
+                title="Minha Conta">
+                <i data-lucide="user-cog" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Minha Conta</span>
             </a>
             <a href="#"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/30 transition-colors sidebar-item mt-2">
-                <i data-lucide="log-out"></i> <span>Sair</span>
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/30 transition-colors sidebar-item mt-2"
+                title="Sair">
+                <i data-lucide="log-out" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Sair</span>
             </a>
         </div>
     </aside>
 
+    <!-- Overlay para mobile -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" 
         onclick="toggleSidebar()"></div>
 
-
-    <main class="flex-1 p-4 md:p-8 overflow-y-auto">
-        <header class="flex justify-between items-center mb-6 md:mb-8">
-            <div class="flex-1">
-                <h1 class="text-2xl md:text-3xl font-bold text-white">Meus Veículos</h1>
-                <p class="text-gray-400 text-sm md:text-base">Gerencie seus veículos elétricos cadastrados.</p>
+    <!-- Main Content -->
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <header class="flex justify-between items-center mb-6 lg:mb-8 flex-wrap gap-4">
+            <div class="flex-1 min-w-0">
+                <h1 class="text-2xl sm:text-3xl font-bold text-white">Meus Veículos</h1>
+                <p class="text-gray-400 text-sm sm:text-base">Gerencie seus veículos elétricos cadastrados.</p>
             </div>
 
-            <button id="toggle-sidebar-btn" class="p-2 md:hidden text-white" onclick="toggleSidebar()">
-                <i data-lucide="menu" class="w-7 h-7"></i>
-            </button>
+            <div class="flex items-center gap-3">
+                <button id="toggle-sidebar-btn" class="p-2 md:hidden text-white" onclick="toggleSidebar()">
+                    <i data-lucide="menu" class="w-7 h-7"></i>
+                </button>
 
-            <button id="btn-cadastrar-veiculo"
-                class="hidden md:flex bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl items-center gap-2 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 hover:scale-[1.02] ml-4">
-                <i data-lucide="plus-circle"></i>
-                <span>Cadastrar Veículo</span>
-            </button>
+                <button id="btn-cadastrar-veiculo"
+                    class="hidden sm:flex bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl items-center gap-2 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 hover:scale-[1.02] text-sm sm:text-base">
+                    <i data-lucide="plus-circle" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                    <span class="hidden lg:inline">Cadastrar Veículo</span>
+                    <span class="lg:hidden">Cadastrar</span>
+                </button>
+            </div>
         </header>
 
-        <section class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 md:p-6">
-            <div class="flex justify-between items-center mb-4 border-b border-cyan-500/10 pb-3">
-                <h2 class="text-xl md:text-2xl font-semibold">Lista de Veículos</h2>
+        <section class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 sm:p-6">
+            <div class="flex justify-between items-center mb-4 border-b border-cyan-500/10 pb-3 flex-wrap gap-3">
+                <h2 class="text-xl sm:text-2xl font-semibold">Lista de Veículos</h2>
                 <button id="btn-cadastrar-veiculo-mobile"
-                    class="md:hidden bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-xl text-sm flex items-center gap-1">
+                    class="sm:hidden bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-xl text-sm flex items-center gap-1">
                     <i data-lucide="plus" class="w-4 h-4"></i>
                     Cadastrar
                 </button>
             </div>
             
-            <div id="vehicle-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Grid de Veículos com breakpoints otimizados -->
+            <div id="vehicle-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
 
-                <article class="vehicle-card bg-slate-700/50 p-6 rounded-xl shadow-lg border border-slate-700 hover:shadow-cyan-500/20 transition-all duration-300">
+                <!-- Card 1 -->
+                <article class="vehicle-card bg-slate-700/50 p-4 sm:p-6 rounded-xl shadow-lg border border-slate-700 hover:shadow-cyan-500/20 transition-all duration-300">
                     <div class="flex items-center mb-4 border-b border-slate-600 pb-3">
-                        <i data-lucide="car-front" class="w-8 h-8 text-cyan-400 mr-4 flex-shrink-0"></i>
-                        <div>
-                            <h3 class="text-xl font-bold text-white" data-marca="Renault" data-modelo="Zoe">Renault Zoe</h3>
-                            <p class="text-sm text-gray-400">Veículo principal</p>
+                        <i data-lucide="car-front" class="w-7 h-7 sm:w-8 sm:h-8 text-cyan-400 mr-3 sm:mr-4 flex-shrink-0"></i>
+                        <div class="min-w-0">
+                            <h3 class="text-lg sm:text-xl font-bold text-white truncate" data-marca="Renault" data-modelo="Zoe">Renault Zoe</h3>
+                            <p class="text-xs sm:text-sm text-gray-400">Veículo principal</p>
                         </div>
                     </div>
-                    <div class="space-y-2 text-sm text-gray-300">
-                        <p class="flex items-center gap-2"><i data-lucide="battery-charging" class="w-4 h-4 text-green-400"></i> Capacidade da Bateria: <span class="font-semibold text-white">52 kWh</span></p>
-                        <p class="flex items-center gap-2"><i data-lucide="gauge" class="w-4 h-4 text-blue-400"></i> Autonomia Estimada: <span class="font-semibold text-white">395 km (WLTP)</span></p>
-                        <p class="flex items-center gap-2"><i data-lucide="bolt" class="w-4 h-4 text-yellow-400"></i> Tipo de Plug: <span class="font-semibold text-white">Type 2 / CCS</span></p>
+                    <div class="space-y-2 text-xs sm:text-sm text-gray-300">
+                        <p class="flex items-center gap-2">
+                            <i data-lucide="battery-charging" class="w-4 h-4 text-green-400 flex-shrink-0"></i> 
+                            <span>Capacidade: <span class="font-semibold text-white">52 kWh</span></span>
+                        </p>
+                        <p class="flex items-center gap-2">
+                            <i data-lucide="gauge" class="w-4 h-4 text-blue-400 flex-shrink-0"></i> 
+                            <span>Autonomia: <span class="font-semibold text-white">395 km</span></span>
+                        </p>
+                        <p class="flex items-center gap-2">
+                            <i data-lucide="bolt" class="w-4 h-4 text-yellow-400 flex-shrink-0"></i> 
+                            <span>Plug: <span class="font-semibold text-white">Type 2 / CCS</span></span>
+                        </p>
                     </div>
-                    <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-700">
-                        <button class="btn-editar bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white py-2 px-4 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1" data-id="1">
-                            <i data-lucide="edit" class="w-4 h-4"></i> Editar
+                    <div class="flex justify-end gap-2 sm:gap-3 mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-slate-700">
+                        <button class="btn-editar bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white py-1.5 sm:py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center gap-1" data-id="1">
+                            <i data-lucide="edit" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i> Editar
                         </button>
-                        <button class="btn-excluir bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white py-2 px-4 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1" data-id="1">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i> Excluir
+                        <button class="btn-excluir bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white py-1.5 sm:py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center gap-1" data-id="1">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i> Excluir
                         </button>
                     </div>
                 </article>
 
-                <article class="vehicle-card bg-slate-700/50 p-6 rounded-xl shadow-lg border border-slate-700 hover:shadow-cyan-500/20 transition-all duration-300">
+                <!-- Card 2 -->
+                <article class="vehicle-card bg-slate-700/50 p-4 sm:p-6 rounded-xl shadow-lg border border-slate-700 hover:shadow-cyan-500/20 transition-all duration-300">
                     <div class="flex items-center mb-4 border-b border-slate-600 pb-3">
-                        <i data-lucide="car-front" class="w-8 h-8 text-cyan-400 mr-4 flex-shrink-0"></i>
-                        <div>
-                            <h3 class="text-xl font-bold text-white" data-marca="Chevrolet" data-modelo="Bolt">Chevrolet Bolt EV</h3>
-                            <p class="text-sm text-gray-400">Veículo secundário</p>
+                        <i data-lucide="car-front" class="w-7 h-7 sm:w-8 sm:h-8 text-cyan-400 mr-3 sm:mr-4 flex-shrink-0"></i>
+                        <div class="min-w-0">
+                            <h3 class="text-lg sm:text-xl font-bold text-white truncate" data-marca="Chevrolet" data-modelo="Bolt">Chevrolet Bolt EV</h3>
+                            <p class="text-xs sm:text-sm text-gray-400">Veículo secundário</p>
                         </div>
                     </div>
-                    <div class="space-y-2 text-sm text-gray-300">
-                        <p class="flex items-center gap-2"><i data-lucide="battery-charging" class="w-4 h-4 text-green-400"></i> Capacidade da Bateria: <span class="font-semibold text-white">65 kWh</span></p>
-                        <p class="flex items-center gap-2"><i data-lucide="gauge" class="w-4 h-4 text-blue-400"></i> Autonomia Estimada: <span class="font-semibold text-white">417 km (EPA)</span></p>
-                        <p class="flex items-center gap-2"><i data-lucide="bolt" class="w-4 h-4 text-yellow-400"></i> Tipo de Plug: <span class="font-semibold text-white">CCS</span></p>
+                    <div class="space-y-2 text-xs sm:text-sm text-gray-300">
+                        <p class="flex items-center gap-2">
+                            <i data-lucide="battery-charging" class="w-4 h-4 text-green-400 flex-shrink-0"></i> 
+                            <span>Capacidade: <span class="font-semibold text-white">65 kWh</span></span>
+                        </p>
+                        <p class="flex items-center gap-2">
+                            <i data-lucide="gauge" class="w-4 h-4 text-blue-400 flex-shrink-0"></i> 
+                            <span>Autonomia: <span class="font-semibold text-white">417 km</span></span>
+                        </p>
+                        <p class="flex items-center gap-2">
+                            <i data-lucide="bolt" class="w-4 h-4 text-yellow-400 flex-shrink-0"></i> 
+                            <span>Plug: <span class="font-semibold text-white">CCS</span></span>
+                        </p>
                     </div>
-                    <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-700">
-                        <button class="btn-editar bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white py-2 px-4 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1" data-id="2">
-                            <i data-lucide="edit" class="w-4 h-4"></i> Editar
+                    <div class="flex justify-end gap-2 sm:gap-3 mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-slate-700">
+                        <button class="btn-editar bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white py-1.5 sm:py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center gap-1" data-id="2">
+                            <i data-lucide="edit" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i> Editar
                         </button>
-                        <button class="btn-excluir bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white py-2 px-4 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1" data-id="2">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i> Excluir
+                        <button class="btn-excluir bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white py-1.5 sm:py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center gap-1" data-id="2">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i> Excluir
                         </button>
                     </div>
                 </article>
 
+                <!-- Card Placeholder -->
                 <article onclick="document.getElementById('btn-cadastrar-veiculo').click()"
-                    class="hidden lg:flex bg-slate-800/20 p-6 rounded-xl border-2 border-dashed border-cyan-500/50 text-center text-gray-500 flex-col items-center justify-center cursor-pointer hover:border-cyan-400/80 hover:bg-slate-800/30 transition-all duration-300">
+                    class="hidden xl:flex bg-slate-800/20 p-6 rounded-xl border-2 border-dashed border-cyan-500/50 text-center text-gray-500 flex-col items-center justify-center cursor-pointer hover:border-cyan-400/80 hover:bg-slate-800/30 transition-all duration-300">
                     <i data-lucide="plus-circle" class="w-12 h-12 mb-2 text-cyan-500"></i>
                     <p class="text-lg font-medium text-cyan-400">Adicionar Novo Veículo</p>
                     <p class="text-sm text-gray-500">Clique para cadastrar um novo veículo elétrico.</p>
@@ -160,16 +246,17 @@
 
             </div>
             
-            <div id="empty-state" class="text-center py-20 hidden">
-                <i data-lucide="circle-slash" class="w-16 h-16 mx-auto text-gray-600"></i>
-                <p class="mt-4 text-xl text-gray-400">Você ainda não possui veículos cadastrados.</p>
-                <p class="text-gray-500">Clique em "Cadastrar Veículo" para começar.</p>
+            <!-- Estado Vazio -->
+            <div id="empty-state" class="text-center py-12 sm:py-20 hidden">
+                <i data-lucide="circle-slash" class="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-gray-600"></i>
+                <p class="mt-4 text-lg sm:text-xl text-gray-400">Você ainda não possui veículos cadastrados.</p>
+                <p class="text-sm sm:text-base text-gray-500">Clique em "Cadastrar Veículo" para começar.</p>
             </div>
         </section>
     </main>
 
     <script src="../JS/meus_veiculos.js"></script>
-
+    
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof lucide !== 'undefined') {
