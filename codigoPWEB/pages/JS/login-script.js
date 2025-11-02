@@ -1,153 +1,479 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const loginForm = document.getElementById('loginForm');
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordInput = document.getElementById('password');
-    const emailInput = document.getElementById('email');
-    const loginButton = document.querySelector('.login-button');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const forgotPasswordLink = document.querySelector('.forgot-password');
-    const socialButtons = document.querySelectorAll('.social-button');
+// Toggle password visibility
+const togglePassword = document.getElementById('togglePassword');
+const passwordInput = document.getElementById('password');
 
-    let isLoading = false;
-
-    // Adiciona o listener de evento ao formulário
-    loginForm.addEventListener('submit', handleFormSubmit);
-
-    // Adiciona o listener para o botão de mostrar/ocultar senha
-    if (togglePassword) {
-        togglePassword.addEventListener('click', handleTogglePassword);
-    }
-
-    // Adiciona o listener para o link "Esqueceu a senha"
-    if (forgotPasswordLink) {
-        forgotPasswordLink.addEventListener('click', handleForgotPassword);
-    }
-
-    // [NOVO] Adiciona listeners para os botões sociais (Google e GitHub)
-    socialButtons.forEach(button => {
-        button.addEventListener('click', handleSocialLogin);
+if (togglePassword) {
+    togglePassword.addEventListener('click', function () {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.textContent = type === 'password' ? '👁️' : '🙈';
     });
+}
 
-    // [NOVO] Função para lidar com login social
-    function handleSocialLogin(e) {
+// Login form submission
+const loginForm = document.getElementById('loginForm');
+const loadingOverlay = document.getElementById('loadingOverlay');
+
+if (loginForm) {
+    loginForm.addEventListener('submit', async function (e) {
         e.preventDefault();
-        const platform = this.classList.contains('google') ? 'Google' : 'GitHub';
-        showNotification(`Login com ${platform} está em produção. Em breve estará disponível!`, 'warning');
-    }
 
-    // Função para lidar com o clique em "Esqueceu a senha"
-    function handleForgotPassword(e) {
-        e.preventDefault();
-        showNotification('Esta funcionalidade está em produção. Em breve estará disponível!', 'warning');
-    }
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
 
-    // Função principal que lida com o envio do formulário
-    async function handleFormSubmit(e) {
-        e.preventDefault();
-        if (isLoading) return;
-
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
-
-        if (!email || !password) {
-            showNotification('Por favor, preencha todos os campos.', 'error');
-            return;
-        }
+        // Mostra loading
+        loadingOverlay.style.display = 'flex';
 
         try {
-            showLoading();
-
-            // 1. Faz a requisição para a nova API
-            const response = await fetch("api_login.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: email, password: password })
+            const response = await fetch('../PHP/api_login.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
             });
 
-            // 2. Converte a resposta do servidor para JSON
-            const resultData = await response.json();
+            const data = await response.json();
 
-            // 3. Verifica se a requisição foi bem-sucedida E se a API retornou sucesso
-            if (response.ok && resultData.success) {
-                showNotification('Login realizado com sucesso! Redirecionando...', 'success');
-
-                // 4. Redireciona para a URL que o back-end enviou
+            if (data.success) {
+                // Login bem-sucedido. Usamos a mensagem do PHP ('Login bem-sucedido!')
+                showNotification(data.message, 'success');
                 setTimeout(() => {
-                    window.location.href = resultData.redirectUrl;
-                }, 1200);
-
+                    window.location.href = '../PHP/' + data.redirectUrl;
+                }, 1000);
             } else {
-                throw new Error(resultData.message || 'Erro ao fazer login');
+                // Login falhou. Usamos a mensagem do PHP ('E-mail ou senha inválidos!')
+                loadingOverlay.style.display = 'none';
+                showNotification(data.message || 'Erro ao fazer login. Tente novamente.', 'error');
             }
 
         } catch (error) {
-            hideLoading();
-            showNotification(error.message, 'error');
-
-            // Animação de "shake" para feedback visual
-            const loginCard = document.querySelector('.login-card');
-            loginCard.style.animation = 'shake 0.5s ease-in-out';
-            setTimeout(() => {
-                loginCard.style.animation = '';
-            }, 500);
+            console.error('Erro:', error);
+            loadingOverlay.style.display = 'none';
+            showNotification('Erro de conexão. Tente novamente.', 'error');
         }
+    });
+}
+
+// Função para mostrar notificações
+function showNotification(message, type) {
+    // Remove notificação anterior se existir
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) {
+        existingNotification.remove();
     }
 
-    // --- Funções Auxiliares ---
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
 
-    function handleTogglePassword() {
-        const currentType = passwordInput.getAttribute('type');
-        const newType = currentType === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', newType);
-        togglePassword.textContent = newType === 'password' ? '👁️' : '🙈';
+    document.body.appendChild(notification);
+
+    // Remove após 5 segundos
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => notification.remove(), 300);
+    }, 5000);
+}
+
+// ==================== RECUPERAÇÃO DE SENHA ====================
+
+function abrirModalRecuperacao(e) {
+    e.preventDefault();
+
+    // Cria o modal se não existir
+    if (!document.getElementById('modalRecuperacao')) {
+        const modal = document.createElement('div');
+        modal.id = 'modalRecuperacao';
+        modal.className = 'modal-recuperacao';
+        modal.innerHTML = `
+            <div class="modal-recuperacao-content">
+                <div class="modal-recuperacao-header">
+                    <h2>
+                        <i class="fas fa-key"></i>
+                        Recuperar Senha
+                    </h2>
+                    <button class="modal-close" onclick="fecharModalRecuperacao()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="modal-recuperacao-body">
+                    <p class="modal-description">
+                        Digite seu e-mail cadastrado e enviaremos um link para redefinir sua senha.
+                    </p>
+                    
+                    <form id="formRecuperacao" onsubmit="enviarRecuperacao(event)">
+                        <div class="form-group">
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="email_recuperacao" name="email" placeholder=" " required>
+                                <label for="email_recuperacao">E-mail</label>
+                            </div>
+                        </div>
+                        
+                        <div id="mensagemRecuperacao" class="mensagem-recuperacao" style="display: none;"></div>
+                        
+                        <button type="submit" class="btn-recuperacao">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Enviar Link de Recuperação</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Adiciona estilos do modal. (NOTA: Esta função também carrega os estilos de notificação)
+        adicionarEstilosModal();
     }
 
-    function showLoading() {
-        isLoading = true;
-        loadingOverlay.classList.add('active');
-        loginButton.disabled = true;
-        loginButton.innerHTML = '<span class="button-text">Entrando...</span>';
+    // Mostra o modal
+    document.getElementById('modalRecuperacao').style.display = 'flex';
+
+    // Limpa o formulário e mensagens
+    document.getElementById('formRecuperacao').reset();
+    const mensagem = document.getElementById('mensagemRecuperacao');
+    mensagem.style.display = 'none';
+}
+
+function fecharModalRecuperacao() {
+    const modal = document.getElementById('modalRecuperacao');
+    if (modal) {
+        modal.style.display = 'none';
     }
+}
 
-    function hideLoading() {
-        isLoading = false;
-        loadingOverlay.classList.remove('active');
-        loginButton.disabled = false;
-        loginButton.innerHTML = '<span class="button-text">Entrar</span><i class="fas fa-arrow-right button-icon"></i>';
-    }
+async function enviarRecuperacao(e) {
+    e.preventDefault();
 
-    function showNotification(message, type = 'info') {
-        const existingNotification = document.querySelector('.notification');
-        if (existingNotification) existingNotification.remove();
+    const email = document.getElementById('email_recuperacao').value;
+    const btnSubmit = e.target.querySelector('button[type="submit"]');
+    const mensagemDiv = document.getElementById('mensagemRecuperacao');
 
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `<div class="notification-content"><i class="fas ${getNotificationIcon(type)}"></i><span>${message}</span><button class="notification-close"><i class="fas fa-times"></i></button></div>`;
+    // Desabilita botão
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
-        document.body.appendChild(notification);
-        setTimeout(() => notification.classList.add('show'), 10);
-
-        const autoRemove = setTimeout(() => hideNotification(notification), 5000);
-
-        notification.querySelector('.notification-close').addEventListener('click', () => {
-            clearTimeout(autoRemove);
-            hideNotification(notification);
+    try {
+        const response = await fetch('../PHP/api_solicitar_recuperacao.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: email })
         });
-    }
 
-    function getNotificationIcon(type) {
-        const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
-        return icons[type] || icons.info;
-    }
+        const data = await response.json();
 
-    function hideNotification(notification) {
-        if (!notification) return;
-        notification.classList.add('hide');
-        setTimeout(() => { if (notification.parentNode) notification.parentNode.removeChild(notification); }, 300);
-    }
+        // Mostra mensagem
+        mensagemDiv.style.display = 'block';
+        mensagemDiv.className = `mensagem-recuperacao ${data.success ? 'success' : 'error'}`;
+        mensagemDiv.innerHTML = `
+            <i class="fas fa-${data.success ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${data.message}</span>
+        `;
 
-    // Adiciona os estilos da notificação
-    const notificationStyles = document.createElement('style');
-    notificationStyles.textContent = `@keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } } .notification { position: fixed; top: 20px; right: 20px; z-index: 10000; min-width: 300px; padding: 1rem; border-radius: 12px; color: white; font-weight: 500; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); transform: translateX(100%); transition: all 0.3s ease; border-left: 4px solid; } .notification.show { transform: translateX(0); } .notification.hide { transform: translateX(100%); opacity: 0; } .notification.success { background: rgba(40, 167, 69, 0.9); border-left-color: #28a745; } .notification.error { background: rgba(220, 53, 69, 0.9); border-left-color: #dc3545; } .notification.warning { background: rgba(255, 193, 7, 0.9); border-left-color: #ffc107; color: #333; } .notification-content { display: flex; align-items: center; gap: 0.5rem; } .notification-close { background: none; border: none; color: inherit; cursor: pointer; }`;
-    document.head.appendChild(notificationStyles);
+        if (data.success) {
+            // Limpa o formulário
+            document.getElementById('formRecuperacao').reset();
+
+            // Fecha o modal após 5 segundos
+            setTimeout(() => {
+                fecharModalRecuperacao();
+            }, 5000);
+        }
+
+    } catch (error) {
+        console.error('Erro:', error);
+        mensagemDiv.style.display = 'block';
+        mensagemDiv.className = 'mensagem-recuperacao error';
+        mensagemDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Erro de conexão. Tente novamente.</span>
+        `;
+    } finally {
+        // Reabilita botão
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Link de Recuperação';
+    }
+}
+
+function adicionarEstilosModal() {
+    if (document.getElementById('estilos-modal-recuperacao')) return;
+
+    const style = document.createElement('style');
+    style.id = 'estilos-modal-recuperacao';
+    style.textContent = `
+        .modal-recuperacao {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-recuperacao-content {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-radius: 24px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.3s ease;
+        }
+        
+        .modal-recuperacao-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            border-bottom: 1px solid rgba(6, 182, 212, 0.2);
+        }
+        
+        .modal-recuperacao-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            margin: 0;
+        }
+        
+        .modal-recuperacao-header i {
+            color: #06b6d4;
+        }
+        
+        .modal-close {
+            background: rgba(100, 116, 139, 0.2);
+            border: 1px solid rgba(100, 116, 139, 0.3);
+            color: #94a3b8;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-close:hover:not(:disabled) {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+        
+        .modal-recuperacao-body {
+            padding: 24px;
+        }
+        
+        .modal-description {
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        /* ADICIONADA MARGEM PARA SEPARAR DO BOTÃO */
+        .form-group {
+            margin-bottom: 24px; 
+        }
+
+        .mensagem-recuperacao {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px; /* AJUSTADO PARA DAR MAIS ESPAÇO */
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            animation: slideDown 0.3s ease;
+        }
+        
+        .mensagem-recuperacao.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+        }
+        
+        .mensagem-recuperacao.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+        
+        .mensagem-recuperacao i {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        
+        .btn-recuperacao {
+            width: 100%;
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            color: white;
+            font-weight: 700;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.3);
+        }
+        
+        .btn-recuperacao:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px -5px rgba(6, 182, 212, 0.4);
+        }
+        
+        .btn-recuperacao:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Estilo para notificações */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10001;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+        }
+        
+        .notification.success {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.95), rgba(22, 163, 74, 0.95));
+            border: 1px solid rgba(34, 197, 94, 0.5);
+        }
+        
+        .notification.error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95));
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+        
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .notification-content i {
+            font-size: 20px;
+        }
+        
+        .notification.fade-out {
+            animation: fadeOut 0.3s ease forwards;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+        
+        /* Fecha modal ao clicar fora */
+        @media (max-width: 640px) {
+            .modal-recuperacao-content {
+                margin: 20px;
+            }
+            
+            .modal-recuperacao-header h2 {
+                font-size: 20px;
+            }
+        }
+    `;
+
+    document.head.appendChild(style);
+}
+
+// *** NOVA LINHA: Carrega os estilos assim que o script é executado ***
+adicionarEstilosModal();
+
+// Fecha modal ao clicar fora
+document.addEventListener('click', function (e) {
+    const modal = document.getElementById('modalRecuperacao');
+    if (modal && e.target === modal) {
+        fecharModalRecuperacao();
+    }
+});
+
+// Fecha modal com tecla ESC
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        fecharModalRecuperacao();
+    }
 });
