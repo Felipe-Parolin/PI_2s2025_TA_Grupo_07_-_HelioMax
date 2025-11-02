@@ -15,61 +15,18 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
     <style>
-      /* Estilos para notificação fixa */
-      .fixed-notification {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: rgba(255, 193, 7, 0.95);
-        color: #333;
-        padding: 1rem 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
-        z-index: 9999;
-        max-width: 350px;
-        border-left: 4px solid #ff9800;
-        animation: slideInFromRight 0.5s ease;
+      .error-message {
+        color: #ff6b6b;
+        font-size: 0.85rem;
+        margin-top: 0.3rem;
+        display: none;
       }
-
-      .fixed-notification-icon {
-        font-size: 1.5rem;
-        flex-shrink: 0;
-        color: #666;
+      .error-message.show {
+        display: block;
       }
-
-      .fixed-notification-text {
-        font-weight: 600;
-        font-size: 0.95rem;
-        line-height: 1.4;
-      }
-
-      @keyframes slideInFromRight {
-        from {
-          transform: translateX(400px);
-          opacity: 0;
-        }
-        to {
-          transform: translateX(0);
-          opacity: 1;
-        }
-      }
-
-      /* Responsivo para mobile */
-      @media (max-width: 480px) {
-        .fixed-notification {
-          bottom: 10px;
-          right: 10px;
-          left: 10px;
-          max-width: none;
-          padding: 0.9rem 1.2rem;
-        }
-
-        .fixed-notification-text {
-          font-size: 0.85rem;
-        }
+      .form-group input.error,
+      .form-group textarea.error {
+        border-color: #ff6b6b;
       }
     </style>
   </head>
@@ -127,7 +84,15 @@
             <div class="success-message" id="successMessage">
               ✅ Mensagem enviada com sucesso! Entraremos em contato em breve.
             </div>
-            <form id="contactForm">
+            <form
+              id="contactForm"
+              action="https://formspree.io/f/xnnolwdq"
+              method="POST"
+              autocomplete="off"
+            >
+              <!-- Campo oculto para redirecionar após envio (preenchido automaticamente) -->
+              <input type="hidden" name="_next" id="redirectUrl" />
+
               <div class="form-group">
                 <label for="name">Nome Completo *</label>
                 <input
@@ -135,8 +100,10 @@
                   id="name"
                   name="name"
                   placeholder="Seu nome completo"
+                  autocomplete="off"
                   required
                 />
+                <div class="error-message" id="nameError"></div>
               </div>
               <div class="form-group">
                 <label for="email">E-mail *</label>
@@ -145,8 +112,10 @@
                   id="email"
                   name="email"
                   placeholder="seu@email.com"
+                  autocomplete="off"
                   required
                 />
+                <div class="error-message" id="emailError"></div>
               </div>
               <div class="form-group">
                 <label for="phone">Telefone</label>
@@ -155,7 +124,10 @@
                   id="phone"
                   name="phone"
                   placeholder="(11) 99999-9999"
+                  maxlength="15"
+                  autocomplete="off"
                 />
+                <div class="error-message" id="phoneError"></div>
               </div>
               <div class="form-group">
                 <label for="message">Mensagem *</label>
@@ -163,8 +135,10 @@
                   id="message"
                   name="message"
                   placeholder="Descreva sua dúvida, sugestão ou como podemos ajudar..."
+                  autocomplete="off"
                   required
                 ></textarea>
+                <div class="error-message" id="messageError"></div>
               </div>
               <button type="submit" class="form-submit">
                 <span>Enviar Mensagem</span>
@@ -189,8 +163,9 @@
                   <div class="contact-item-icon">📧</div>
                   <div class="contact-item-content">
                     <h4>E-mail</h4>
-                    <p>contato@heliomax.com.br</p>
-                    <p>suporte@heliomax.com.br</p>
+                    <p>admheliomax@gmail.com</p>
+                    <p>Preencha o formulário ao lado</p>
+                    <p>e nos mande uma mensagem!</p>
                   </div>
                 </div>
 
@@ -198,8 +173,8 @@
                   <div class="contact-item-icon">📱</div>
                   <div class="contact-item-content">
                     <h4>WhatsApp</h4>
-                    <p>(11) 99999-9999</p>
-                    <p class="hours">Seg a Sex, 8h às 18h</p>
+                    <p>(19) 99999-9999</p>
+                    <p class="hours">Seg a Sex, 19h às 22:30h</p>
                   </div>
                 </div>
 
@@ -208,7 +183,7 @@
                   <div class="contact-item-content">
                     <h4>Redes Sociais</h4>
                     <p>@heliomax_oficial</p>
-                    <p class="social-links">LinkedIn • Instagram • Twitter</p>
+                    <p class="social-links">Instagram</p>
                   </div>
                 </div>
               </div>
@@ -217,15 +192,6 @@
         </div>
       </section>
     </main>
-
-    <!-- Notificação Fixa -->
-    <div class="fixed-notification">
-      <i class="fas fa-exclamation-triangle fixed-notification-icon"></i>
-      <div class="fixed-notification-text">
-        Esta página está em produção. Apenas o visual está disponível no
-        momento.
-      </div>
-    </div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -243,6 +209,65 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {
+        // Define automaticamente a URL de redirecionamento
+        const redirectUrlInput = document.getElementById("redirectUrl");
+        const currentUrl = window.location.href.split("?")[0];
+        redirectUrlInput.value = currentUrl + "?success=true";
+
+        // Elementos do formulário
+        const contactForm = document.getElementById("contactForm");
+        const nameInput = document.getElementById("name");
+        const emailInput = document.getElementById("email");
+        const phoneInput = document.getElementById("phone");
+        const messageInput = document.getElementById("message");
+
+        // Marca que o formulário foi enviado
+        if (performance.navigation.type === 0) {
+          // Navegação normal - verifica se foi redirecionado do Formspree
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get("success") === "true") {
+            // Força a limpeza do formulário
+            contactForm.reset();
+            nameInput.value = "";
+            emailInput.value = "";
+            phoneInput.value = "";
+            messageInput.value = "";
+
+            // Mostra mensagem de sucesso
+            const successMessage = document.getElementById("successMessage");
+            successMessage.classList.add("show");
+
+            // Marca que acabou de enviar
+            sessionStorage.setItem("formJustSubmitted", "true");
+
+            // Limpa a URL
+            window.history.replaceState({}, "", window.location.pathname);
+
+            setTimeout(() => {
+              successMessage.classList.remove("show");
+            }, 5000);
+          }
+        }
+
+        // Detecta quando o usuário volta da página do Formspree (usando botão voltar)
+        window.addEventListener("pageshow", function (event) {
+          if (
+            event.persisted ||
+            sessionStorage.getItem("formJustSubmitted") === "true"
+          ) {
+            // Limpa o formulário completamente
+            contactForm.reset();
+            nameInput.value = "";
+            emailInput.value = "";
+            phoneInput.value = "";
+            messageInput.value = "";
+
+            // Remove a marcação
+            sessionStorage.removeItem("formJustSubmitted");
+          }
+        });
+
+        // Menu Mobile
         const mobileMenuToggle = document.getElementById("mobileMenuToggle");
         const mobileMenu = document.getElementById("mobileMenu");
         const mobileMenuClose = document.getElementById("mobileMenuClose");
@@ -269,6 +294,7 @@
           });
         }
 
+        // Scroll Header
         window.addEventListener("scroll", () => {
           const header = document.querySelector(".header");
           if (header) {
@@ -282,16 +308,206 @@
           }
         });
 
-        const contactForm = document.getElementById("contactForm");
-        const successMessage = document.getElementById("successMessage");
+        // Lista de palavras ofensivas
+        const badWords = [
+          "idiota",
+          "burro",
+          "imbecil",
+          "estupido",
+          "estúpido",
+          "otario",
+          "otário",
+          "fdp",
+          "merda",
+          "porra",
+          "caralho",
+          "desgraça",
+          "desgraçado",
+          "cuzao",
+          "cuzão",
+          "babaca",
+          "arrombado",
+          "filho da puta",
+          "filha da puta",
+          "puta",
+          "vagabundo",
+          "safado",
+          "cacete",
+          "pentelho",
+          "bosta",
+        ];
 
+        // Formatação automática do telefone
+        phoneInput.addEventListener("input", function (e) {
+          let value = e.target.value.replace(/\D/g, "");
+
+          if (value.length > 11) {
+            value = value.slice(0, 11);
+          }
+
+          if (value.length > 0) {
+            if (value.length <= 2) {
+              value = `(${value}`;
+            } else if (value.length <= 7) {
+              value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+            } else {
+              value = `(${value.slice(0, 2)}) ${value.slice(
+                2,
+                7
+              )}-${value.slice(7)}`;
+            }
+          }
+
+          e.target.value = value;
+        });
+
+        // Validação do telefone
+        function validatePhone(phone) {
+          const cleanPhone = phone.replace(/\D/g, "");
+
+          if (phone && cleanPhone.length > 0 && cleanPhone.length < 10) {
+            return "Telefone inválido. Digite um número completo.";
+          }
+
+          if (cleanPhone.length > 0) {
+            if (/^(\d)\1+$/.test(cleanPhone)) {
+              return "Digite um número de telefone válido.";
+            }
+
+            const ddd = parseInt(cleanPhone.slice(0, 2));
+            if (ddd < 11 || ddd > 99) {
+              return "DDD inválido.";
+            }
+          }
+
+          return "";
+        }
+
+        // Validação de email
+        function validateEmail(email) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+          if (!emailRegex.test(email)) {
+            return "Digite um e-mail válido.";
+          }
+
+          const suspiciousDomains = [
+            "tempmail",
+            "throwaway",
+            "guerrillamail",
+            "10minutemail",
+          ];
+          const domain = email.split("@")[1].toLowerCase();
+
+          if (suspiciousDomains.some((d) => domain.includes(d))) {
+            return "Por favor, use um e-mail válido e permanente.";
+          }
+
+          return "";
+        }
+
+        // Validação de conteúdo ofensivo
+        function containsBadWords(text) {
+          const lowerText = text
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+
+          return badWords.some((word) => {
+            const normalizedWord = word
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "");
+            return lowerText.includes(normalizedWord);
+          });
+        }
+
+        // Mostra erro
+        function showError(input, message) {
+          const errorDiv = document.getElementById(`${input.id}Error`);
+          errorDiv.textContent = message;
+          errorDiv.classList.add("show");
+          input.classList.add("error");
+        }
+
+        // Remove erro
+        function clearError(input) {
+          const errorDiv = document.getElementById(`${input.id}Error`);
+          errorDiv.classList.remove("show");
+          input.classList.remove("error");
+        }
+
+        // Validação em tempo real
+        emailInput.addEventListener("blur", function () {
+          const error = validateEmail(this.value);
+          if (error) {
+            showError(this, error);
+          } else {
+            clearError(this);
+          }
+        });
+
+        phoneInput.addEventListener("blur", function () {
+          const error = validatePhone(this.value);
+          if (error) {
+            showError(this, error);
+          } else {
+            clearError(this);
+          }
+        });
+
+        // Validação no submit
         contactForm.addEventListener("submit", function (e) {
           e.preventDefault();
-          successMessage.classList.add("show");
-          this.reset();
-          setTimeout(() => {
-            successMessage.classList.remove("show");
-          }, 5000);
+          let hasError = false;
+
+          // Limpa erros anteriores
+          clearError(nameInput);
+          clearError(emailInput);
+          clearError(phoneInput);
+          clearError(messageInput);
+
+          // Valida nome
+          if (nameInput.value.trim().length < 3) {
+            showError(nameInput, "Nome deve ter pelo menos 3 caracteres.");
+            hasError = true;
+          }
+
+          // Valida email
+          const emailError = validateEmail(emailInput.value);
+          if (emailError) {
+            showError(emailInput, emailError);
+            hasError = true;
+          }
+
+          // Valida telefone (se preenchido)
+          if (phoneInput.value) {
+            const phoneError = validatePhone(phoneInput.value);
+            if (phoneError) {
+              showError(phoneInput, phoneError);
+              hasError = true;
+            }
+          }
+
+          // Valida mensagem
+          if (messageInput.value.trim().length < 10) {
+            showError(
+              messageInput,
+              "Mensagem deve ter pelo menos 10 caracteres."
+            );
+            hasError = true;
+          } else if (containsBadWords(messageInput.value)) {
+            showError(
+              messageInput,
+              "Por favor, mantenha uma linguagem respeitosa."
+            );
+            hasError = true;
+          }
+
+          // Se não houver erros, envia o formulário
+          if (!hasError) {
+            this.submit();
+          }
         });
       });
     </script>
