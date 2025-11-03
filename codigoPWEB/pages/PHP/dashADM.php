@@ -1,9 +1,6 @@
 <?php
 session_start();
 
-// --- ETAPA 2: DEFINA O ADMINISTRADOR PADRÃO AQUI ---
-// IMPORTANTE: Altere o ID para o ID do usuário administrador no seu banco de dados.
-// Todo ponto criado, editado ou deletado será associado a este usuário.
 if (!isset($_SESSION['usuario_id'])) {
   header('Location: login.php');
   exit;
@@ -22,11 +19,6 @@ try {
   die("Erro na conexão: " . $e->getMessage());
 }
 
-
-// --- ETAPA 1: TODO O BLOCO DE LOGIN, RECUPERAÇÃO DE SENHA E HTML FOI REMOVIDO DAQUI ---
-
-
-// ID do usuário logado (agora definido manualmente)
 $admin_id = $_SESSION['usuario_id'];
 
 // Processar ações do CRUD
@@ -36,12 +28,12 @@ $tipo_mensagem = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $action = $_POST['action'] ?? '';
 
-  // CRIAR/EDITAR PONTO (Ambos os formulários usam esta lógica)
+  // CRIAR/EDITAR PONTO
   if ($action === 'salvar_ponto') {
-    // Uso de intval(trim(...)) para garantir a leitura correta do ID
     $id_ponto_raw = $_POST['id_ponto'] ?? '0';
     $id_ponto = intval(trim($id_ponto_raw));
 
+    $cep = preg_replace('/\D/', '', $_POST['cep_ponto']);
     $logradouro = trim($_POST['logradouro']);
     $numero = trim($_POST['numero']);
     $complemento = trim($_POST['complemento']);
@@ -56,8 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       if ($id_ponto > 0) {
         // LÓGICA DE EDIÇÃO
-
-        // **AJUSTE: Buscar o ID do CEP existente E verificar se o ponto pertence ao admin logado**
         $stmt = $pdo->prepare("SELECT LOCALIZACAO FROM ponto_carregamento WHERE ID_PONTO = ? AND FK_ID_USUARIO_CADASTRO = ?");
         $stmt->execute([$id_ponto, $admin_id]);
         $resultado = $stmt->fetch();
@@ -93,19 +83,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("UPDATE bairro SET NOME = ? WHERE ID_BAIRRO = ?");
         $stmt->execute([$bairro, $bairro_id]);
 
-        // Atualizar logradouro
-        $stmt = $pdo->prepare("UPDATE cep SET LOGRADOURO = ? WHERE ID_CEP = ?");
-        $stmt->execute([$logradouro, $cep_id]);
+        // Atualizar CEP na tabela cep
+        $cep_formatado = strlen($cep) === 8 ? substr($cep, 0, 5) . '-' . substr($cep, 5) : $cep;
+        $stmt = $pdo->prepare("UPDATE cep SET LOGRADOURO = ?, CEP = ? WHERE ID_CEP = ?");
+        $stmt->execute([$logradouro, $cep_formatado, $cep_id]);
 
-        // Atualizar ponto (já verificamos a permissão acima)
-        $stmt = $pdo->prepare("UPDATE ponto_carregamento SET VALOR_KWH = ?, FK_STATUS_PONTO = ? WHERE ID_PONTO = ?");
-        $stmt->execute([$valor_kwh, $status_ponto, $id_ponto]);
+        // Atualizar ponto COM número, CEP e complemento
+        $stmt = $pdo->prepare("UPDATE ponto_carregamento SET CEP = ?, NUMERO = ?, COMPLEMENTO = ?, VALOR_KWH = ?, FK_STATUS_PONTO = ? WHERE ID_PONTO = ?");
+        $stmt->execute([$cep_formatado, $numero, $complemento, $valor_kwh, $status_ponto, $id_ponto]);
 
         $mensagem = 'Ponto atualizado com sucesso!';
       } else {
         // LÓGICA DE CRIAÇÃO
-
-        // Verificar ou criar estado
         $stmt = $pdo->prepare("SELECT ID_ESTADO FROM estado WHERE UF = ?");
         $stmt->execute([$uf]);
         $estado = $stmt->fetch();
@@ -118,7 +107,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $estado_id = $pdo->lastInsertId();
         }
 
-        // Verificar ou criar cidade
         $stmt = $pdo->prepare("SELECT ID_CIDADE FROM cidade WHERE NOME = ? AND FK_ESTADO = ?");
         $stmt->execute([$cidade, $estado_id]);
         $cidade_row = $stmt->fetch();
@@ -131,7 +119,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $cidade_id = $pdo->lastInsertId();
         }
 
-        // Verificar ou criar bairro
         $stmt = $pdo->prepare("SELECT ID_BAIRRO FROM bairro WHERE NOME = ? AND FK_CIDADE = ?");
         $stmt->execute([$bairro, $cidade_id]);
         $bairro_row = $stmt->fetch();
@@ -144,14 +131,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $bairro_id = $pdo->lastInsertId();
         }
 
-        // Criar CEP/Logradouro
-        $stmt = $pdo->prepare("INSERT INTO cep (LOGRADOURO, FK_BAIRRO) VALUES (?, ?)");
-        $stmt->execute([$logradouro, $bairro_id]);
-        $cep_id = $pdo->lastInsertId();
+        // Formatar CEP
+        $cep_formatado = strlen($cep) === 8 ? substr($cep, 0, 5) . '-' . substr($cep, 5) : $cep;
 
-        // **AJUSTE: Criar ponto, incluindo o FK_ID_USUARIO_CADASTRO**
-        $stmt = $pdo->prepare("INSERT INTO ponto_carregamento (LOCALIZACAO, VALOR_KWH, FK_STATUS_PONTO, FK_ID_USUARIO_CADASTRO) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$cep_id, $valor_kwh, $status_ponto, $admin_id]);
+        // Verificar se o CEP já existe na tabela cep
+        $stmt = $pdo->prepare("SELECT ID_CEP FROM cep WHERE CEP = ? AND LOGRADOURO = ? AND FK_BAIRRO = ?");
+        $stmt->execute([$cep_formatado, $logradouro, $bairro_id]);
+        $cep_existente = $stmt->fetch();
+
+        if ($cep_existente) {
+          $cep_id = $cep_existente['ID_CEP'];
+        } else {
+          $stmt = $pdo->prepare("INSERT INTO cep (CEP, LOGRADOURO, FK_BAIRRO) VALUES (?, ?, ?)");
+          $stmt->execute([$cep_formatado, $logradouro, $bairro_id]);
+          $cep_id = $pdo->lastInsertId();
+        }
+
+        // Inserir ponto COM CEP, número e complemento
+        $stmt = $pdo->prepare("INSERT INTO ponto_carregamento (CEP, NUMERO, COMPLEMENTO, LOCALIZACAO, VALOR_KWH, FK_STATUS_PONTO, FK_ID_USUARIO_CADASTRO) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$cep_formatado, $numero, $complemento, $cep_id, $valor_kwh, $status_ponto, $admin_id]);
 
         $mensagem = 'Ponto cadastrado com sucesso!';
       }
@@ -165,14 +163,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
   }
 
-  // DELETAR PONTO (ATUALIZADO COM EXCLUSÃO EM CASCATA E PERMISSÃO)
+  // DELETAR PONTO (permanece igual)
   if ($action === 'deletar_ponto') {
     $id_ponto = $_POST['id_ponto'];
 
     try {
       $pdo->beginTransaction();
 
-      // 1. Obter o CEP ID do ponto E verificar se o ponto pertence ao admin logado
       $stmt = $pdo->prepare("SELECT LOCALIZACAO, FK_ID_USUARIO_CADASTRO FROM ponto_carregamento WHERE ID_PONTO = ?");
       $stmt->execute([$id_ponto]);
       $ponto_info = $stmt->fetch();
@@ -183,18 +180,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       $cep_id = $ponto_info['LOCALIZACAO'];
 
-
-      // 2. Deletar o Ponto de Carregamento (apenas se pertencer ao admin)
       $stmt = $pdo->prepare("DELETE FROM ponto_carregamento WHERE ID_PONTO = ? AND FK_ID_USUARIO_CADASTRO = ?");
       $stmt->execute([$id_ponto, $admin_id]);
 
       if ($cep_id) {
-        // 3. Verificar e deletar CEP (Logradouro)
         $stmt_check_cep = $pdo->prepare("
-                    SELECT 1 FROM ponto_carregamento WHERE LOCALIZACAO = ?
-                    UNION
-                    SELECT 1 FROM usuario WHERE FK_ID_CEP = ?
-                ");
+          SELECT 1 FROM ponto_carregamento WHERE LOCALIZACAO = ?
+          UNION
+          SELECT 1 FROM usuario WHERE FK_ID_CEP = ?
+        ");
         $stmt_check_cep->execute([$cep_id, $cep_id]);
         $cep_is_used = $stmt_check_cep->fetch();
 
@@ -206,7 +200,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $stmt = $pdo->prepare("DELETE FROM cep WHERE ID_CEP = ?");
           $stmt->execute([$cep_id]);
 
-          // 4. Verificar e deletar BAIRRO
           if ($bairro_id) {
             $stmt_check_bairro = $pdo->prepare("SELECT 1 FROM cep WHERE FK_BAIRRO = ?");
             $stmt_check_bairro->execute([$bairro_id]);
@@ -220,7 +213,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               $stmt = $pdo->prepare("DELETE FROM bairro WHERE ID_BAIRRO = ?");
               $stmt->execute([$bairro_id]);
 
-              // 5. Verificar e deletar CIDADE
               if ($cidade_id) {
                 $stmt_check_cidade = $pdo->prepare("SELECT 1 FROM bairro WHERE FK_CIDADE = ?");
                 $stmt_check_cidade->execute([$cidade_id]);
@@ -234,7 +226,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   $stmt = $pdo->prepare("DELETE FROM cidade WHERE ID_CIDADE = ?");
                   $stmt->execute([$cidade_id]);
 
-                  // 6. Verificar e deletar ESTADO
                   if ($estado_id) {
                     $stmt_check_estado = $pdo->prepare("SELECT 1 FROM cidade WHERE FK_ESTADO = ?");
                     $stmt_check_estado->execute([$estado_id]);
@@ -253,24 +244,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
 
       $pdo->commit();
-      $mensagem = 'Ponto e dados de endereço relacionados excluídos com sucesso!';
+      $mensagem = 'Ponto excluído com sucesso!';
       $tipo_mensagem = 'sucesso';
 
     } catch (Exception $e) {
       $pdo->rollBack();
-      $mensagem = 'Erro ao excluir ponto e dados relacionados: ' . $e->getMessage();
+      $mensagem = 'Erro ao excluir: ' . $e->getMessage();
       $tipo_mensagem = 'erro';
     }
   }
 
-  // ATUALIZAR PERFIL (CORRIGIDO COM VALIDAÇÃO DE CPF DUPLICADO)
+  // ATUALIZAR PERFIL
   if ($action === 'atualizar_perfil') {
     $nome = $_POST['nome'];
     $email = $_POST['email'];
-    // Limpar CPF e Número, permitindo apenas dígitos
     $cpf = preg_replace('/\D/', '', $_POST['cpf']);
-    $numero = preg_replace('/\D/', '', $_POST['numero_residencia']);
-    $complemento = $_POST['complemento'];
+    $cep_valor = preg_replace('/\D/', '', $_POST['cep_perfil']);
+    $numero = trim($_POST['numero_residencia']);
+    $complemento = trim($_POST['complemento']);
     $logradouro_perfil = trim($_POST['logradouro_perfil']);
     $bairro_perfil = trim($_POST['bairro_perfil']);
     $cidade_perfil = trim($_POST['cidade_perfil']);
@@ -279,7 +270,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
       $pdo->beginTransaction();
 
-      // **NOVA VALIDAÇÃO: Verificar se o CPF já existe em outro usuário**
       $stmt = $pdo->prepare("SELECT ID_USER FROM usuario WHERE CPF = ? AND ID_USER != ?");
       $stmt->execute([$cpf, $_SESSION['usuario_id']]);
       $cpf_existente = $stmt->fetch();
@@ -288,7 +278,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         throw new Exception("Este CPF já está cadastrado para outro usuário!");
       }
 
-      // **NOVA VALIDAÇÃO: Verificar se o EMAIL já existe em outro usuário**
       $stmt = $pdo->prepare("SELECT ID_USER FROM usuario WHERE EMAIL = ? AND ID_USER != ?");
       $stmt->execute([$email, $_SESSION['usuario_id']]);
       $email_existente = $stmt->fetch();
@@ -299,9 +288,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       $cep_id = null;
 
-      // Se preencheu endereço, criar/atualizar
       if ($logradouro_perfil && $bairro_perfil && $cidade_perfil && $uf_perfil) {
-        // Verificar ou criar estado
         $stmt = $pdo->prepare("SELECT ID_ESTADO FROM estado WHERE UF = ?");
         $stmt->execute([$uf_perfil]);
         $estado = $stmt->fetch();
@@ -314,7 +301,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $estado_id = $pdo->lastInsertId();
         }
 
-        // Verificar ou criar cidade
         $stmt = $pdo->prepare("SELECT ID_CIDADE FROM cidade WHERE NOME = ? AND FK_ESTADO = ?");
         $stmt->execute([$cidade_perfil, $estado_id]);
         $cidade_row = $stmt->fetch();
@@ -327,7 +313,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $cidade_id = $pdo->lastInsertId();
         }
 
-        // Verificar ou criar bairro
         $stmt = $pdo->prepare("SELECT ID_BAIRRO FROM bairro WHERE NOME = ? AND FK_CIDADE = ?");
         $stmt->execute([$bairro_perfil, $cidade_id]);
         $bairro_row = $stmt->fetch();
@@ -340,22 +325,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $bairro_id = $pdo->lastInsertId();
         }
 
-        // **CORREÇÃO: Verificar se o CEP já existe antes de inserir**
-        $stmt = $pdo->prepare("SELECT ID_CEP FROM cep WHERE LOGRADOURO = ? AND FK_BAIRRO = ?");
-        $stmt->execute([$logradouro_perfil, $bairro_id]);
+        // Formatar CEP
+        $cep_formatado = strlen($cep_valor) === 8 ? substr($cep_valor, 0, 5) . '-' . substr($cep_valor, 5) : $cep_valor;
+
+        $stmt = $pdo->prepare("SELECT ID_CEP FROM cep WHERE CEP = ? AND LOGRADOURO = ? AND FK_BAIRRO = ?");
+        $stmt->execute([$cep_formatado, $logradouro_perfil, $bairro_id]);
         $cep_row = $stmt->fetch();
 
         if ($cep_row) {
           $cep_id = $cep_row['ID_CEP'];
         } else {
-          $stmt = $pdo->prepare("INSERT INTO cep (LOGRADOURO, FK_BAIRRO) VALUES (?, ?)");
-          $stmt->execute([$logradouro_perfil, $bairro_id]);
+          $stmt = $pdo->prepare("INSERT INTO cep (CEP, LOGRADOURO, FK_BAIRRO) VALUES (?, ?, ?)");
+          $stmt->execute([$cep_formatado, $logradouro_perfil, $bairro_id]);
           $cep_id = $pdo->lastInsertId();
         }
       }
 
-      $stmt = $pdo->prepare("UPDATE usuario SET NOME = ?, EMAIL = ?, CPF = ?, NUMERO_RESIDENCIA = ?, COMPLEMENTO_ENDERECO = ?, FK_ID_CEP = ? WHERE ID_USER = ?");
-      $stmt->execute([$nome, $email, $cpf, $numero, $complemento, $cep_id, $_SESSION['usuario_id']]);
+      $stmt = $pdo->prepare("UPDATE usuario SET NOME = ?, EMAIL = ?, CPF = ?, CEP = ?, NUMERO_RESIDENCIA = ?, COMPLEMENTO_ENDERECO = ?, FK_ID_CEP = ? WHERE ID_USER = ?");
+      $cep_formatado_usuario = strlen($cep_valor) === 8 ? substr($cep_valor, 0, 5) . '-' . substr($cep_valor, 5) : $cep_valor;
+      $stmt->execute([$nome, $email, $cpf, $cep_formatado_usuario, $numero, $complemento, $cep_id, $_SESSION['usuario_id']]);
 
       $_SESSION['usuario_nome'] = $nome;
 
@@ -369,20 +357,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
   }
 
-  // ALTERAR SENHA
-  // ALTERAR SENHA (CORRIGIDO COM password_verify)
+  // ALTERAR SENHA (permanece igual)
   if ($action === 'alterar_senha') {
     $senha_atual = $_POST['senha_atual'];
     $nova_senha = $_POST['nova_senha'];
     $confirmar = $_POST['confirmar_senha'];
 
     try {
-      // Buscar o hash da senha atual do banco
       $stmt = $pdo->prepare("SELECT SENHA FROM usuario WHERE ID_USER = ?");
       $stmt->execute([$_SESSION['usuario_id']]);
       $senha_hash_bd = $stmt->fetch()['SENHA'];
 
-      // **CORREÇÃO: Usar password_verify() para comparar com hash**
       if (!password_verify($senha_atual, $senha_hash_bd)) {
         $mensagem = 'Senha atual incorreta!';
         $tipo_mensagem = 'erro';
@@ -393,7 +378,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensagem = 'A nova senha deve ter pelo menos 6 caracteres!';
         $tipo_mensagem = 'erro';
       } else {
-        // **CORREÇÃO: Gerar hash da nova senha com password_hash()**
         $nova_senha_hash = password_hash($nova_senha, PASSWORD_DEFAULT);
 
         $stmt = $pdo->prepare("UPDATE usuario SET SENHA = ? WHERE ID_USER = ?");
@@ -412,7 +396,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // LOGOUT
 if (isset($_GET['logout'])) {
   session_destroy();
-  header('Location: ../HTML/landpage.html'); // Alterado para redirecionar para a landpage
+  header('Location: ../HTML/landpage.html');
   exit;
 }
 
@@ -444,7 +428,6 @@ if ($busca) {
   $params = array_merge($params, ["%$busca%", "%$busca%", "%$busca%"]);
 }
 
-// Filtro de status usando comparação exata
 if ($status_filtro) {
   $sql .= " AND sp.DESCRICAO = ?";
   $params[] = $status_filtro;
@@ -455,11 +438,11 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $pontos = $stmt->fetchAll();
 
-// Buscar Status para formulários
+// Buscar Status
 $status_lista = $pdo->query("SELECT * FROM status_ponto ORDER BY DESCRICAO")->fetchAll();
 
-// Buscar dados do usuário para perfil
-$stmt = $pdo->prepare("SELECT u.*, c.LOGRADOURO, b.NOME as bairro, ci.NOME as cidade, e.UF 
+// Buscar dados do usuário
+$stmt = $pdo->prepare("SELECT u.*, c.CEP as CEP_TABELA, c.LOGRADOURO, b.NOME as bairro, ci.NOME as cidade, e.UF 
                        FROM usuario u
                        LEFT JOIN cep c ON u.FK_ID_CEP = c.ID_CEP
                        LEFT JOIN bairro b ON c.FK_BAIRRO = b.ID_BAIRRO
@@ -474,7 +457,7 @@ $usuario = $stmt->fetch();
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale-1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="../../images/icon.png">
   <title>Dashboard do Administrador</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -486,6 +469,44 @@ $usuario = $stmt->fetch();
 
     .modal.active {
       display: flex;
+    }
+
+    .loading-container {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      color: #06b6d4;
+    }
+
+    .loading-container.show {
+      display: flex;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #06b6d4;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .cep-error {
+      display: none;
+      margin-top: 8px;
+      color: #dc3545;
+      font-size: 0.875rem;
+    }
+
+    .cep-error.show {
+      display: block;
     }
   </style>
 </head>
@@ -539,7 +560,7 @@ $usuario = $stmt->fetch();
       </div>
     <?php endif; ?>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
       <div
         class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 hover:scale-105">
         <div class="flex items-center justify-between mb-4">
@@ -547,7 +568,6 @@ $usuario = $stmt->fetch();
             class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
             <i data-lucide="map-pin" class="w-6 h-6 text-white"></i>
           </div>
-          <span class="text-green-400 text-sm font-semibold">+12%</span>
         </div>
         <h3 class="text-gray-400 text-sm mb-1">Meus Pontos</h3>
         <p class="text-3xl font-bold text-white"><?php echo $totalPontos; ?></p>
@@ -560,36 +580,9 @@ $usuario = $stmt->fetch();
             class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
             <i data-lucide="users" class="w-6 h-6 text-white"></i>
           </div>
-          <span class="text-green-400 text-sm font-semibold">+8%</span>
         </div>
         <h3 class="text-gray-400 text-sm mb-1">Usuários na Plataforma</h3>
         <p class="text-3xl font-bold text-white"><?php echo $totalUsuarios; ?></p>
-      </div>
-
-      <div
-        class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 hover:scale-105">
-        <div class="flex items-center justify-between mb-4">
-          <div
-            class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-            <i data-lucide="zap" class="w-6 h-6 text-white"></i>
-          </div>
-          <span class="text-green-400 text-sm font-semibold">+23%</span>
-        </div>
-        <h3 class="text-gray-400 text-sm mb-1">Carregamentos Hoje</h3>
-        <p class="text-3xl font-bold text-white">342</p>
-      </div>
-
-      <div
-        class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 hover:scale-105">
-        <div class="flex items-center justify-between mb-4">
-          <div
-            class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center">
-            <i data-lucide="trending-up" class="w-6 h-6 text-white"></i>
-          </div>
-          <span class="text-green-400 text-sm font-semibold">+5%</span>
-        </div>
-        <h3 class="text-gray-400 text-sm mb-1">Taxa de Ocupação</h3>
-        <p class="text-3xl font-bold text-white">68%</p>
       </div>
     </div>
 
@@ -631,7 +624,7 @@ $usuario = $stmt->fetch();
       <div class="p-6 border-b border-cyan-500/20">
         <h2 class="text-2xl font-bold text-white flex items-center gap-2">
           <i data-lucide="map-pin" class="w-6 h-6 text-cyan-400"></i>
-          Pontos de Recarga Cadastrados (Meus Pontos)
+          Pontos de Recarga Cadastrados
         </h2>
         <p class="text-gray-400 mt-1"><?php echo count($pontos); ?> pontos encontrados</p>
       </div>
@@ -669,11 +662,15 @@ $usuario = $stmt->fetch();
                       </div>
                       <div>
                         <p class="font-semibold"><?php echo htmlspecialchars($ponto['LOGRADOURO'] ?? 'Não informado'); ?>
+                          <?php if (!empty($ponto['NUMERO'])): ?>,
+                            <?php echo htmlspecialchars($ponto['NUMERO']); ?>     <?php endif; ?>
                         </p>
                         <p class="text-sm text-gray-400">
                           <?php echo htmlspecialchars($ponto['bairro'] ?? ''); ?> -
                           <?php echo htmlspecialchars($ponto['cidade'] ?? ''); ?> -
                           <?php echo htmlspecialchars($ponto['UF'] ?? ''); ?>
+                          <?php if (!empty($ponto['CEP'])): ?> - CEP:
+                            <?php echo htmlspecialchars($ponto['CEP']); ?>     <?php endif; ?>
                         </p>
                       </div>
                     </div>
@@ -692,7 +689,7 @@ $usuario = $stmt->fetch();
                       $status_class = 'bg-green-500/20 text-green-400 border-green-500/30';
                     } elseif ($ponto['status_desc'] === 'Inativo') {
                       $status_class = 'bg-red-500/20 text-red-400 border-red-500/30';
-                    } elseif ($ponto['status_desc'] === 'Manutenção') {
+                    } elseif ($ponto['status_desc'] === 'Em Manutenção') {
                       $status_class = 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
                     }
                     ?>
@@ -721,14 +718,15 @@ $usuario = $stmt->fetch();
     </div>
   </main>
 
+  <!-- Modal Criar Ponto -->
   <div id="modalCriarPonto"
     class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
     <div
-      class="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+      class="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
       <div class="p-6 border-b border-cyan-500/20 flex items-center justify-between sticky top-0 bg-slate-900/90">
         <h2 class="text-2xl font-bold text-white flex items-center gap-2">
           <i data-lucide="map-pin" class="w-6 h-6 text-cyan-400"></i>
-          <span id="tituloModalCriar">Cadastrar Ponto de Recarga</span>
+          <span>Cadastrar Ponto de Recarga</span>
         </h2>
         <button onclick="fecharModal('modalCriarPonto')" class="p-2 hover:bg-slate-700/50 rounded-lg transition-colors">
           <i data-lucide="x" class="w-6 h-6 text-gray-400"></i>
@@ -744,7 +742,26 @@ $usuario = $stmt->fetch();
             Endereço do Ponto
           </h3>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="md:col-span-2">
+              <label class="block text-gray-400 text-sm font-semibold mb-2">CEP *</label>
+              <input type="text" name="cep_ponto" id="cep_criar" required placeholder="Ex: 13610-100" maxlength="9"
+                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+              <div id="loadingCep_criar" class="loading-container">
+                <div class="spinner"></div>
+                <span>Buscando endereço...</span>
+              </div>
+              <div id="cepError_criar" class="cep-error">
+                ⚠ Erro ao buscar CEP. Preencha manualmente.
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-gray-400 text-sm font-semibold mb-2">UF *</label>
+              <input type="text" name="uf" id="uf_criar" required placeholder="Ex: SP" maxlength="2"
+                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors uppercase">
+            </div>
+
             <div class="md:col-span-2">
               <label class="block text-gray-400 text-sm font-semibold mb-2">Logradouro *</label>
               <input type="text" name="logradouro" id="logradouro_criar" required
@@ -756,12 +773,6 @@ $usuario = $stmt->fetch();
               <label class="block text-gray-400 text-sm font-semibold mb-2">Número</label>
               <input type="text" name="numero" id="numero_criar" placeholder="Ex: 2232"
                 oninput="this.value = this.value.replace(/\D/g, '')" inputmode="numeric"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
-            </div>
-
-            <div>
-              <label class="block text-gray-400 text-sm font-semibold mb-2">Complemento</label>
-              <input type="text" name="complemento" id="complemento_criar" placeholder="Ex: Sala 301"
                 class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
             </div>
 
@@ -778,9 +789,9 @@ $usuario = $stmt->fetch();
             </div>
 
             <div>
-              <label class="block text-gray-400 text-sm font-semibold mb-2">UF *</label>
-              <input type="text" name="uf" id="uf_criar" required placeholder="Ex: SP" maxlength="2"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors uppercase">
+              <label class="block text-gray-400 text-sm font-semibold mb-2">Complemento</label>
+              <input type="text" name="complemento" id="complemento_criar" placeholder="Ex: Sala 301"
+                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
             </div>
           </div>
 
@@ -830,15 +841,15 @@ $usuario = $stmt->fetch();
     </div>
   </div>
 
-
+  <!-- Modal Editar Ponto -->
   <div id="modalEditarPonto"
     class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
     <div
-      class="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+      class="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
       <div class="p-6 border-b border-cyan-500/20 flex items-center justify-between sticky top-0 bg-slate-900/90">
         <h2 class="text-2xl font-bold text-white flex items-center gap-2">
           <i data-lucide="map-pin" class="w-6 h-6 text-cyan-400"></i>
-          <span id="tituloModalEditar">Editar Ponto de Recarga</span>
+          <span>Editar Ponto de Recarga</span>
         </h2>
         <button onclick="fecharModal('modalEditarPonto')"
           class="p-2 hover:bg-slate-700/50 rounded-lg transition-colors">
@@ -855,7 +866,26 @@ $usuario = $stmt->fetch();
             Endereço do Ponto
           </h3>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="md:col-span-2">
+              <label class="block text-gray-400 text-sm font-semibold mb-2">CEP *</label>
+              <input type="text" name="cep_ponto" id="cep_editar" required placeholder="Ex: 13610-100" maxlength="9"
+                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+              <div id="loadingCep_editar" class="loading-container">
+                <div class="spinner"></div>
+                <span>Buscando endereço...</span>
+              </div>
+              <div id="cepError_editar" class="cep-error">
+                ⚠ Erro ao buscar CEP. Preencha manualmente.
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-gray-400 text-sm font-semibold mb-2">UF *</label>
+              <input type="text" name="uf" id="uf_editar" required placeholder="Ex: SP" maxlength="2"
+                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors uppercase">
+            </div>
+
             <div class="md:col-span-2">
               <label class="block text-gray-400 text-sm font-semibold mb-2">Logradouro *</label>
               <input type="text" name="logradouro" id="logradouro_editar" required
@@ -867,12 +897,6 @@ $usuario = $stmt->fetch();
               <label class="block text-gray-400 text-sm font-semibold mb-2">Número</label>
               <input type="text" name="numero" id="numero_editar" placeholder="Ex: 2232"
                 oninput="this.value = this.value.replace(/\D/g, '')" inputmode="numeric"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
-            </div>
-
-            <div>
-              <label class="block text-gray-400 text-sm font-semibold mb-2">Complemento</label>
-              <input type="text" name="complemento" id="complemento_editar" placeholder="Ex: Sala 301"
                 class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
             </div>
 
@@ -889,9 +913,9 @@ $usuario = $stmt->fetch();
             </div>
 
             <div>
-              <label class="block text-gray-400 text-sm font-semibold mb-2">UF *</label>
-              <input type="text" name="uf" id="uf_editar" required placeholder="Ex: SP" maxlength="2"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors uppercase">
+              <label class="block text-gray-400 text-sm font-semibold mb-2">Complemento</label>
+              <input type="text" name="complemento" id="complemento_editar" placeholder="Ex: Sala 301"
+                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
             </div>
           </div>
 
@@ -941,7 +965,7 @@ $usuario = $stmt->fetch();
     </div>
   </div>
 
-
+  <!-- Modal Perfil -->
   <div id="modalPerfil" class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
     <div
       class="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -977,7 +1001,6 @@ $usuario = $stmt->fetch();
       <div id="contentDadosPessoais" class="p-6">
         <form method="POST" action="">
           <input type="hidden" name="action" value="atualizar_perfil">
-          <!-- Campo oculto para enviar o CPF (não editável) -->
           <input type="hidden" name="cpf" value="<?php echo htmlspecialchars($usuario['CPF']); ?>">
 
           <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
@@ -996,26 +1019,12 @@ $usuario = $stmt->fetch();
               <label class="block text-gray-400 text-sm font-semibold mb-2">CPF *</label>
               <div class="relative">
                 <input type="text" value="<?php echo htmlspecialchars($usuario['CPF']); ?>" readonly disabled
-                  class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none"
-                  style="pointer-events: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;">
+                  class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none">
                 <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    class="text-gray-600">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                  </svg>
+                  <i data-lucide="lock" class="w-4 h-4 text-gray-600"></i>
                 </div>
               </div>
-              <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="16" x2="12" y2="12"></line>
-                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                </svg>
-                Não pode ser alterado por segurança
-              </p>
+              <p class="text-xs text-gray-500 mt-1">Não pode ser alterado por segurança</p>
             </div>
 
             <div class="md:col-span-2">
@@ -1030,19 +1039,54 @@ $usuario = $stmt->fetch();
             Endereço
           </h3>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="md:col-span-2">
+              <label class="block text-gray-400 text-sm font-semibold mb-2">CEP</label>
+              <input type="text" name="cep_perfil" id="cep_perfil" placeholder="Ex: 13610-100" maxlength="9"
+                value="<?php echo htmlspecialchars($usuario['CEP'] ?? $usuario['CEP_TABELA'] ?? ''); ?>"
+                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+              <div id="loadingCep_perfil" class="loading-container">
+                <div class="spinner"></div>
+                <span>Buscando endereço...</span>
+              </div>
+              <div id="cepError_perfil" class="cep-error">
+                ⚠ Erro ao buscar CEP. Preencha manualmente.
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-gray-400 text-sm font-semibold mb-2">UF</label>
+              <input type="text" name="uf_perfil" id="uf_perfil"
+                value="<?php echo htmlspecialchars($usuario['UF'] ?? ''); ?>" placeholder="Ex: SP" maxlength="2"
+                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors uppercase">
+            </div>
+
             <div class="md:col-span-2">
               <label class="block text-gray-400 text-sm font-semibold mb-2">Logradouro</label>
-              <input type="text" name="logradouro_perfil"
+              <input type="text" name="logradouro_perfil" id="logradouro_perfil"
                 value="<?php echo htmlspecialchars($usuario['LOGRADOURO'] ?? ''); ?>" placeholder="Ex: Av. Paulista"
                 class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
             </div>
 
             <div>
-              <label class="block text-gray-400 text-sm font-semibold mb-2">Número (Apenas Números)</label>
+              <label class="block text-gray-400 text-sm font-semibold mb-2">Número</label>
               <input type="text" name="numero_residencia"
                 value="<?php echo htmlspecialchars($usuario['NUMERO_RESIDENCIA'] ?? ''); ?>"
-                oninput="this.value = this.value.replace(/\D/g, '')" inputmode="numeric"
+                oninput="this.value = this.value.replace(/\D/g, '')" inputmode="numeric" placeholder="Ex: 123"
+                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+            </div>
+
+            <div>
+              <label class="block text-gray-400 text-sm font-semibold mb-2">Bairro</label>
+              <input type="text" name="bairro_perfil" id="bairro_perfil"
+                value="<?php echo htmlspecialchars($usuario['bairro'] ?? ''); ?>" placeholder="Ex: Bela Vista"
+                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+            </div>
+
+            <div>
+              <label class="block text-gray-400 text-sm font-semibold mb-2">Cidade</label>
+              <input type="text" name="cidade_perfil" id="cidade_perfil"
+                value="<?php echo htmlspecialchars($usuario['cidade'] ?? ''); ?>" placeholder="Ex: São Paulo"
                 class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
             </div>
 
@@ -1050,28 +1094,8 @@ $usuario = $stmt->fetch();
               <label class="block text-gray-400 text-sm font-semibold mb-2">Complemento</label>
               <input type="text" name="complemento"
                 value="<?php echo htmlspecialchars($usuario['COMPLEMENTO_ENDERECO'] ?? ''); ?>"
+                placeholder="Ex: Apto 10"
                 class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
-            </div>
-
-            <div>
-              <label class="block text-gray-400 text-sm font-semibold mb-2">Bairro</label>
-              <input type="text" name="bairro_perfil" value="<?php echo htmlspecialchars($usuario['bairro'] ?? ''); ?>"
-                placeholder="Ex: Bela Vista"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
-            </div>
-
-            <div>
-              <label class="block text-gray-400 text-sm font-semibold mb-2">Cidade</label>
-              <input type="text" name="cidade_perfil" value="<?php echo htmlspecialchars($usuario['cidade'] ?? ''); ?>"
-                placeholder="Ex: São Paulo"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
-            </div>
-
-            <div>
-              <label class="block text-gray-400 text-sm font-semibold mb-2">UF</label>
-              <input type="text" name="uf_perfil" value="<?php echo htmlspecialchars($usuario['UF'] ?? ''); ?>"
-                placeholder="Ex: SP" maxlength="2"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors uppercase">
             </div>
           </div>
 
@@ -1101,13 +1125,13 @@ $usuario = $stmt->fetch();
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <label class="block text-gray-400 text-sm font-semibold mb-2">Nova Senha *</label>
-              <input type="password" name="nova_senha" required
+              <input type="password" name="nova_senha" required minlength="6"
                 class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
             </div>
 
             <div>
               <label class="block text-gray-400 text-sm font-semibold mb-2">Confirmar Nova Senha *</label>
-              <input type="password" name="confirmar_senha" required
+              <input type="password" name="confirmar_senha" required minlength="6"
                 class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
             </div>
           </div>
@@ -1135,7 +1159,7 @@ $usuario = $stmt->fetch();
     }
 
     function limparFormPontoCriar() {
-      // Usado para garantir que o formulário de CRIAÇÃO esteja sempre limpo
+      document.getElementById('cep_criar').value = '';
       document.getElementById('logradouro_criar').value = '';
       document.getElementById('numero_criar').value = '';
       document.getElementById('complemento_criar').value = '';
@@ -1151,26 +1175,112 @@ $usuario = $stmt->fetch();
       if (id === 'modalCriarPonto') {
         limparFormPontoCriar();
       }
+
+      // Carregar dados do usuário quando abrir modal de perfil
+      if (id === 'modalPerfil') {
+        carregarDadosUsuario();
+      }
+
       lucide.createIcons();
     }
 
-    function editarPonto(ponto) {
-      console.log('Editando ponto:', ponto); // Debug
+    // Função para carregar dados completos do usuário no modal de perfil
+    async function carregarDadosUsuario() {
+      const userId = <?php echo $_SESSION['usuario_id']; ?>;
+      const loadingEl = document.getElementById('loadingCep_perfil');
 
-      // 1. CHAVE: Preencher o campo oculto ID_PONTO_EDITAR
+      try {
+        loadingEl.classList.add('show');
+        const response = await fetch(`get_cep_usuario.php?id_user=${userId}`);
+        const data = await response.json();
+
+        if (data.success) {
+          // Preencher CEP
+          if (data.cep) {
+            document.getElementById('cep_perfil').value = data.cep;
+          }
+
+          // Preencher número
+          if (data.numero) {
+            document.querySelector('input[name="numero_residencia"]').value = data.numero;
+          }
+
+          // Preencher complemento
+          if (data.complemento) {
+            document.querySelector('input[name="complemento"]').value = data.complemento;
+          }
+
+          // Preencher endereço
+          if (data.logradouro) {
+            document.getElementById('logradouro_perfil').value = data.logradouro;
+          }
+          if (data.bairro) {
+            document.getElementById('bairro_perfil').value = data.bairro;
+          }
+          if (data.cidade) {
+            document.getElementById('cidade_perfil').value = data.cidade;
+          }
+          if (data.uf) {
+            document.getElementById('uf_perfil').value = data.uf;
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dados do usuário:', error);
+      } finally {
+        loadingEl.classList.remove('show');
+      }
+    }
+
+    async function editarPonto(ponto) {
       document.getElementById('id_ponto_editar').value = parseInt(ponto.ID_PONTO) || '';
-
-      // 2. Preencher os campos do formulário de EDIÇÃO (IDs exclusivos)
       document.getElementById('logradouro_editar').value = ponto.LOGRADOURO || '';
       document.getElementById('bairro_editar').value = ponto.bairro || '';
       document.getElementById('cidade_editar').value = ponto.cidade || '';
       document.getElementById('uf_editar').value = ponto.UF || '';
-
-      // Campos opcionais/não mapeados
       document.getElementById('numero_editar').value = ponto.NUMERO || '';
       document.getElementById('complemento_editar').value = ponto.COMPLEMENTO || '';
 
-      // Preencher Valor kWh e Status
+      // Buscar e preencher o CEP, número e complemento
+      document.getElementById('cep_editar').value = ponto.CEP || '';
+
+      if (ponto.ID_PONTO) {
+        const loadingEl = document.getElementById('loadingCep_editar');
+        loadingEl.classList.add('show');
+
+        try {
+          const response = await fetch(`get_cep_ponto.php?id_ponto=${ponto.ID_PONTO}`);
+          const data = await response.json();
+
+          if (data.success) {
+            if (data.cep) {
+              document.getElementById('cep_editar').value = data.cep;
+            }
+            if (data.numero) {
+              document.getElementById('numero_editar').value = data.numero;
+            }
+            if (data.complemento) {
+              document.getElementById('complemento_editar').value = data.complemento;
+            }
+            if (data.logradouro) {
+              document.getElementById('logradouro_editar').value = data.logradouro;
+            }
+            if (data.bairro) {
+              document.getElementById('bairro_editar').value = data.bairro;
+            }
+            if (data.cidade) {
+              document.getElementById('cidade_editar').value = data.cidade;
+            }
+            if (data.uf) {
+              document.getElementById('uf_editar').value = data.uf;
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao buscar CEP:', error);
+        } finally {
+          loadingEl.classList.remove('show');
+        }
+      }
+
       let valorFormatado = '';
       if (ponto.VALOR_KWH) {
         valorFormatado = parseFloat(ponto.VALOR_KWH).toFixed(2).replace('.', ',');
@@ -1178,14 +1288,11 @@ $usuario = $stmt->fetch();
       document.getElementById('valor_kwh_editar').value = valorFormatado;
       document.getElementById('status_ponto_editar').value = ponto.FK_STATUS_PONTO || '';
 
-      // 3. Abrir o novo modal de Edição
       abrirModal('modalEditarPonto');
-
-      console.log('ID do ponto preenchido para edição:', document.getElementById('id_ponto_editar').value); // Debug
     }
 
     function confirmarExclusao(id) {
-      if (confirm('ATENÇÃO: Você tem certeza que deseja excluir este ponto de carregamento? Todos os dados de endereço não utilizados por outros registros também serão removidos.')) {
+      if (confirm('Tem certeza que deseja excluir este ponto de carregamento?')) {
         document.getElementById('id_ponto_deletar').value = id;
         document.getElementById('formDeletar').submit();
       }
@@ -1213,6 +1320,160 @@ $usuario = $stmt->fetch();
       lucide.createIcons();
     }
 
+    // Função de busca de CEP
+    async function buscarCEP(cep, contexto) {
+      const cleanCep = cep.replace(/\D/g, '');
+
+      if (cleanCep.length !== 8) {
+        mostrarErroCep(contexto, "CEP deve ter 8 dígitos");
+        return;
+      }
+
+      const loadingEl = document.getElementById(`loadingCep_${contexto}`);
+      const errorEl = document.getElementById(`cepError_${contexto}`);
+
+      loadingEl.classList.add('show');
+      errorEl.classList.remove('show');
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`, {
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error("Erro na resposta da API");
+        }
+
+        const data = await response.json();
+        loadingEl.classList.remove('show');
+
+        if (data.erro) {
+          mostrarErroCep(contexto, "CEP não encontrado!");
+          limparCamposEndereco(contexto);
+          return;
+        }
+
+        const logradouro = data.logradouro || "";
+        const bairro = data.bairro || "";
+        const cidade = data.localidade || "";
+        const estado = data.uf || "";
+
+        if (contexto === 'criar') {
+          document.getElementById('logradouro_criar').value = logradouro;
+          document.getElementById('bairro_criar').value = bairro;
+          document.getElementById('cidade_criar').value = cidade;
+          document.getElementById('uf_criar').value = estado;
+        } else if (contexto === 'editar') {
+          document.getElementById('logradouro_editar').value = logradouro;
+          document.getElementById('bairro_editar').value = bairro;
+          document.getElementById('cidade_editar').value = cidade;
+          document.getElementById('uf_editar').value = estado;
+        } else if (contexto === 'perfil') {
+          document.getElementById('logradouro_perfil').value = logradouro;
+          document.getElementById('bairro_perfil').value = bairro;
+          document.getElementById('cidade_perfil').value = cidade;
+          document.getElementById('uf_perfil').value = estado;
+        }
+
+        if (!logradouro || !bairro) {
+          mostrarAvisoCep(contexto, "Alguns dados não foram encontrados. Complete manualmente.");
+        }
+      } catch (error) {
+        loadingEl.classList.remove('show');
+        console.error("Erro ao buscar CEP:", error);
+
+        if (error.name === 'AbortError') {
+          mostrarErroCep(contexto, "Tempo esgotado. Tente novamente ou preencha manualmente.");
+        } else {
+          mostrarErroCep(contexto, "Não foi possível buscar o CEP. Preencha manualmente.");
+        }
+      }
+    }
+
+    function mostrarErroCep(contexto, mensagem) {
+      const errorEl = document.getElementById(`cepError_${contexto}`);
+      errorEl.textContent = "⚠ " + mensagem;
+      errorEl.style.color = "#dc3545";
+      errorEl.classList.add('show');
+    }
+
+    function mostrarAvisoCep(contexto, mensagem) {
+      const errorEl = document.getElementById(`cepError_${contexto}`);
+      errorEl.textContent = "ℹ️ " + mensagem;
+      errorEl.style.color = "#ffc107";
+      errorEl.classList.add('show');
+      setTimeout(() => {
+        errorEl.classList.remove('show');
+        errorEl.style.color = "#dc3545";
+      }, 5000);
+    }
+
+    function limparCamposEndereco(contexto) {
+      if (contexto === 'criar') {
+        document.getElementById('logradouro_criar').value = "";
+        document.getElementById('bairro_criar').value = "";
+        document.getElementById('cidade_criar').value = "";
+        document.getElementById('uf_criar').value = "";
+      } else if (contexto === 'editar') {
+        document.getElementById('logradouro_editar').value = "";
+        document.getElementById('bairro_editar').value = "";
+        document.getElementById('cidade_editar').value = "";
+        document.getElementById('uf_editar').value = "";
+      } else if (contexto === 'perfil') {
+        document.getElementById('logradouro_perfil').value = "";
+        document.getElementById('bairro_perfil').value = "";
+        document.getElementById('cidade_perfil').value = "";
+        document.getElementById('uf_perfil').value = "";
+      }
+    }
+
+    // Máscara de CEP e busca automática - Modal Criar
+    const cepCriar = document.getElementById('cep_criar');
+    cepCriar.addEventListener('input', () => {
+      let value = cepCriar.value.replace(/\D/g, '');
+      if (value.length > 5) value = value.replace(/(\d{5})(\d)/, '$1-$2');
+      cepCriar.value = value;
+
+      document.getElementById('cepError_criar').classList.remove('show');
+
+      if (value.length === 9) {
+        buscarCEP(value, 'criar');
+      }
+    });
+
+    // Máscara de CEP e busca automática - Modal Editar
+    const cepEditar = document.getElementById('cep_editar');
+    cepEditar.addEventListener('input', () => {
+      let value = cepEditar.value.replace(/\D/g, '');
+      if (value.length > 5) value = value.replace(/(\d{5})(\d)/, '$1-$2');
+      cepEditar.value = value;
+
+      document.getElementById('cepError_editar').classList.remove('show');
+
+      if (value.length === 9) {
+        buscarCEP(value, 'editar');
+      }
+    });
+
+    // Máscara de CEP e busca automática - Modal Perfil
+    const cepPerfil = document.getElementById('cep_perfil');
+    cepPerfil.addEventListener('input', () => {
+      let value = cepPerfil.value.replace(/\D/g, '');
+      if (value.length > 5) value = value.replace(/(\d{5})(\d)/, '$1-$2');
+      cepPerfil.value = value;
+
+      document.getElementById('cepError_perfil').classList.remove('show');
+
+      if (value.length === 9) {
+        buscarCEP(value, 'perfil');
+      }
+    });
+
     // Fechar modal ao clicar fora
     document.querySelectorAll('.modal').forEach(modal => {
       modal.addEventListener('click', function (e) {
@@ -1222,7 +1483,7 @@ $usuario = $stmt->fetch();
       });
     });
 
-    // Converter UF para maiúsculas automaticamente
+    // Converter UF para maiúsculas
     document.querySelectorAll('input[name="uf"], input[name="uf_perfil"]').forEach(input => {
       input.addEventListener('input', function (e) {
         this.value = this.value.toUpperCase();
@@ -1232,7 +1493,6 @@ $usuario = $stmt->fetch();
     // Recriar ícones após carregamento
     document.addEventListener('DOMContentLoaded', function () {
       lucide.createIcons();
-      // Garante que a primeira aba esteja ativa ao abrir o modalPerfil
       mudarTab('dadosPessoais');
     });
   </script>
