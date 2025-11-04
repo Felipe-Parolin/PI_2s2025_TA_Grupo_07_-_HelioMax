@@ -318,6 +318,19 @@ if (!$usuario_logado) {
                     </div>
                 </div>
 
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="capacidade_bateria" class="block text-sm font-medium text-cyan-300 mb-1">Capacidade da Bateria (kWh)</label>
+                        <input type="number" step="0.01" id="capacidade_bateria" name="capacidade_bateria" required placeholder="75.00"
+                            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                    <div>
+                        <label for="consumo_medio" class="block text-sm font-medium text-cyan-300 mb-1">Consumo Médio (kWh/100km)</label>
+                        <input type="number" step="0.01" id="consumo_medio" name="consumo_medio" required placeholder="15.50"
+                            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                </div>
+
                 <footer class="flex justify-end gap-3 pt-4 mt-2">
                     <button type="button" id="btn-cancelar-modal"
                         class="py-2 px-5 rounded-lg bg-slate-600 hover:bg-slate-500 text-white font-semibold transition-colors">

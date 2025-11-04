@@ -25,6 +25,7 @@ try {
                 $stmt = $pdo->prepare("
                     SELECT 
                         v.ID_VEICULO, v.PLACA, v.ANO_FAB,
+                        v.CAPACIDADE_BATERIA, v.CONSUMO_MEDIO, v.NIVEL_BATERIA,
                         m.ID_MODELO as modelo_id,
                         ma.ID_MARCA as marca_id,
                         c.ID_CONECTOR as conector_id,
@@ -46,7 +47,10 @@ try {
             } else {
                 // Se nenhum ID for passado, busca TODOS os veículos do usuário para a LISTA
                 $stmt = $pdo->prepare("
-                    SELECT v.ID_VEICULO, v.PLACA, v.ANO_FAB, m.NOME as MODELO_NOME, ma.NOME as MARCA_NOME, c.NOME as CONECTOR_NOME, co.NOME as COR_NOME
+                    SELECT v.ID_VEICULO, v.PLACA, v.ANO_FAB, 
+                           v.CAPACIDADE_BATERIA, v.CONSUMO_MEDIO, v.NIVEL_BATERIA,
+                           m.NOME as MODELO_NOME, ma.NOME as MARCA_NOME, 
+                           c.NOME as CONECTOR_NOME, co.NOME as COR_NOME
                     FROM veiculo v
                     JOIN modelo m ON v.MODELO = m.ID_MODELO
                     JOIN marca ma ON m.FK_MARCA = ma.ID_MARCA
@@ -64,8 +68,24 @@ try {
         // --- (CREATE) Adicionar um novo veículo ---
         case 'POST':
             $dados = json_decode(file_get_contents('php://input'));
-            if (!isset($dados->modelo_id, $dados->ano_fab, $dados->conector_id, $dados->placa, $dados->cor_id)) {
+            
+            // Validação de campos obrigatórios
+            if (!isset($dados->modelo_id, $dados->ano_fab, $dados->conector_id, 
+                       $dados->placa, $dados->cor_id, $dados->capacidade_bateria, 
+                       $dados->consumo_medio)) {
                 throw new Exception('Todos os campos são obrigatórios.');
+            }
+            
+            // Validação de capacidade da bateria (entre 10 kWh e 200 kWh)
+            $capacidade = (float)$dados->capacidade_bateria;
+            if ($capacidade < 10 || $capacidade > 200) {
+                throw new Exception('A capacidade da bateria deve estar entre 10 kWh e 200 kWh.');
+            }
+            
+            // Validação de consumo médio (entre 5 kWh/100km e 50 kWh/100km)
+            $consumo = (float)$dados->consumo_medio;
+            if ($consumo < 5 || $consumo > 50) {
+                throw new Exception('O consumo médio deve estar entre 5 kWh/100km e 50 kWh/100km.');
             }
             
             // Verifica se a placa já existe
@@ -76,12 +96,19 @@ try {
             }
 
             $stmt = $pdo->prepare(
-                "INSERT INTO veiculo (MODELO, ANO_FAB, FK_CONECTOR, PLACA, FK_COR, FK_USUARIO_ID_USER) 
-                 VALUES (?, ?, ?, ?, ?, ?)"
+                "INSERT INTO veiculo (MODELO, ANO_FAB, FK_CONECTOR, PLACA, FK_COR, 
+                                      CAPACIDADE_BATERIA, CONSUMO_MEDIO, FK_USUARIO_ID_USER) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
             );
             $stmt->execute([
-                (int)$dados->modelo_id, $dados->ano_fab, (int)$dados->conector_id, 
-                $dados->placa, (int)$dados->cor_id, $id_usuario_logado
+                (int)$dados->modelo_id, 
+                $dados->ano_fab, 
+                (int)$dados->conector_id, 
+                $dados->placa, 
+                (int)$dados->cor_id,
+                $capacidade,
+                $consumo,
+                $id_usuario_logado
             ]);
             
             $response = ['success' => true, 'message' => 'Veículo cadastrado!', 'new_id' => $pdo->lastInsertId()];
@@ -93,8 +120,23 @@ try {
             $id_veiculo = $_GET['id'] ?? null;
             $dados = json_decode(file_get_contents('php://input'));
 
-            if (!$id_veiculo || !isset($dados->modelo_id, $dados->ano_fab, $dados->conector_id, $dados->placa, $dados->cor_id)) {
+            // Validação de campos obrigatórios
+            if (!$id_veiculo || !isset($dados->modelo_id, $dados->ano_fab, 
+                                       $dados->conector_id, $dados->placa, $dados->cor_id,
+                                       $dados->capacidade_bateria, $dados->consumo_medio)) {
                 throw new Exception('Dados incompletos ou ID do veículo não fornecido.');
+            }
+            
+            // Validação de capacidade da bateria (entre 10 kWh e 200 kWh)
+            $capacidade = (float)$dados->capacidade_bateria;
+            if ($capacidade < 10 || $capacidade > 200) {
+                throw new Exception('A capacidade da bateria deve estar entre 10 kWh e 200 kWh.');
+            }
+            
+            // Validação de consumo médio (entre 5 kWh/100km e 50 kWh/100km)
+            $consumo = (float)$dados->consumo_medio;
+            if ($consumo < 5 || $consumo > 50) {
+                throw new Exception('O consumo médio deve estar entre 5 kWh/100km e 50 kWh/100km.');
             }
 
             // Verifica se a placa nova já pertence a OUTRO veículo
@@ -105,13 +147,20 @@ try {
             }
 
             $stmt = $pdo->prepare(
-                "UPDATE veiculo SET MODELO = ?, ANO_FAB = ?, FK_CONECTOR = ?, PLACA = ?, FK_COR = ?
+                "UPDATE veiculo SET MODELO = ?, ANO_FAB = ?, FK_CONECTOR = ?, PLACA = ?, FK_COR = ?,
+                                    CAPACIDADE_BATERIA = ?, CONSUMO_MEDIO = ?
                  WHERE ID_VEICULO = ? AND FK_USUARIO_ID_USER = ?"
             );
             $stmt->execute([
-                (int)$dados->modelo_id, $dados->ano_fab, (int)$dados->conector_id,
-                $dados->placa, (int)$dados->cor_id,
-                $id_veiculo, $id_usuario_logado
+                (int)$dados->modelo_id, 
+                $dados->ano_fab, 
+                (int)$dados->conector_id,
+                $dados->placa, 
+                (int)$dados->cor_id,
+                $capacidade,
+                $consumo,
+                $id_veiculo, 
+                $id_usuario_logado
             ]);
 
             if ($stmt->rowCount() > 0) {

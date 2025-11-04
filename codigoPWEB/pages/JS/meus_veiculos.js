@@ -53,6 +53,9 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('ano_fab').value = parseInt(veiculo.ANO_FAB);
             document.getElementById('cor').value = veiculo.cor_id;
             document.getElementById('conector').value = veiculo.conector_id;
+            document.getElementById('capacidade_bateria').value = veiculo.CAPACIDADE_BATERIA;
+            document.getElementById('consumo_medio').value = veiculo.CONSUMO_MEDIO;
+            document.getElementById('nivel_bateria').value = veiculo.NIVEL_BATERIA;
             
             // 3. Lógica complexa para preencher os <select> dependentes
             // Seta a marca
@@ -186,6 +189,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function criarCardVeiculo(veiculo) {
+
+        const capacidadeBateria = veiculo.CAPACIDADE_BATERIA || 'N/A';
+        const consumoMedio = veiculo.CONSUMO_MEDIO || 'N/A';
+        const nivelBateria = veiculo.NIVEL_BATERIA || 'N/A';
+
         return `
         <article class="vehicle-card bg-slate-700/50 p-4 sm:p-6 rounded-xl shadow-lg border border-slate-700 hover:shadow-cyan-500/20" data-veiculo-id="${veiculo.ID_VEICULO}">
             <div class="flex items-center mb-4 border-b border-slate-600 pb-3">
@@ -199,7 +207,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p class="flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4 text-green-400"></i><span>Ano: <span class="font-semibold text-white">${parseInt(veiculo.ANO_FAB)}</span></span></p>
                 <p class="flex items-center gap-2"><i data-lucide="palette" class="w-4 h-4 text-blue-400"></i><span>Cor: <span class="font-semibold text-white">${veiculo.COR_NOME}</span></span></p>
                 <p class="flex items-center gap-2"><i data-lucide="bolt" class="w-4 h-4 text-yellow-400"></i><span>Plug: <span class="font-semibold text-white">${veiculo.CONECTOR_NOME}</span></span></p>
-            </div>
+                <p class="flex items-center gap-2"><i data-lucide="battery" class="w-4 h-4 text-green-500"></i><span>Bateria: <span class="font-semibold text-white">${capacidadeBateria}${capacidadeBateria !== 'N/A' ? ' kWh' : ''}</span></span></p>
+                <p class="flex items-center gap-2"><i data-lucide="gauge" class="w-4 h-4 text-blue-500"></i><span>Consumo: <span class="font-semibold text-white">${consumoMedio}${consumoMedio !== 'N/A' ? ' kWh/100km' : ''}</span></span></p>
+                ${nivelBateria !== 'N/A' ? `<p class="flex items-center gap-2"><i data-lucide="percent" class="w-4 h-4 text-purple-400"></i><span>Nível: <span class="font-semibold text-white">${nivelBateria}%</span></span></p>` : ''}
+        </div>
             <div class="flex justify-end gap-2 sm:gap-3 mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-slate-700">
                 <button class="btn-editar bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white py-1.5 sm:py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1" data-id="${veiculo.ID_VEICULO}"><i data-lucide="edit" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i> Editar</button>
                 <button class="btn-excluir bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white py-1.5 sm:py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1" data-id="${veiculo.ID_VEICULO}"><i data-lucide="trash-2" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i> Excluir</button>
@@ -207,35 +218,39 @@ document.addEventListener('DOMContentLoaded', () => {
         </article>`;
     }
 
-    async function carregarVeiculos() {
-        const placeholder = vehicleList.querySelector('article.xl\\:flex');
-        try {
-            const response = await fetch('../PHP/api_veiculos.php');
-            if (response.status === 401) {
-                alert('Sessão expirada. Por favor, faça login novamente.');
-                window.location.href = 'login.php'; // Ajuste o caminho se necessário
-                return;
-            }
-            const result = await response.json();
-            
-            // Limpa apenas os cards de veículo, mantendo o placeholder
-            vehicleList.querySelectorAll('.vehicle-card').forEach(card => card.remove());
-            
-            if (result.success && result.data.length > 0) {
-                result.data.forEach(veiculo => {
-                    const cardHTML = criarCardVeiculo(veiculo);
-                    placeholder.insertAdjacentHTML('beforebegin', cardHTML);
-                });
-            }
-        } catch (error) {
-            console.error('Erro ao carregar veículos:', error);
-        } finally {
-            checkEmptyState();
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
+        async function carregarVeiculos() {
+            const placeholder = vehicleList.querySelector('article.xl\\:flex');
+            try {
+                const response = await fetch('../PHP/api_veiculos.php');
+                if (response.status === 401) {
+                    alert('Sessão expirada. Por favor, faça login novamente.');
+                    window.location.href = 'login.php';
+                    return;
+                }
+                const result = await response.json();
+                
+                // ✅ ADICIONE ESTE CONSOLE.LOG PARA VER OS DADOS
+                console.log('Dados dos veículos:', result.data);
+                
+                vehicleList.querySelectorAll('.vehicle-card').forEach(card => card.remove());
+                
+                if (result.success && result.data.length > 0) {
+                    result.data.forEach(veiculo => {
+                        // ✅ ADICIONE ESTE CONSOLE.LOG TAMBÉM
+                        console.log('Veículo individual:', veiculo);
+                        const cardHTML = criarCardVeiculo(veiculo);
+                        placeholder.insertAdjacentHTML('beforebegin', cardHTML);
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao carregar veículos:', error);
+            } finally {
+                checkEmptyState();
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
             }
         }
-    }
 
     // --- INICIALIZAÇÃO E EVENTOS GLOBAIS ---
     
