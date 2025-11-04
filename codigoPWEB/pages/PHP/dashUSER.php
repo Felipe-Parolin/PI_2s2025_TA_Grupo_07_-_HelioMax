@@ -118,7 +118,7 @@ $historico_recargas = [
         .sidebar-mobile-hidden {
             transform: translateX(-100%);
         }
-        
+
         @keyframes slideInFromRight {
             from {
                 transform: translateX(400px);
@@ -136,36 +136,36 @@ $historico_recargas = [
             aside#sidebar {
                 width: 5rem !important;
             }
-            
+
             aside#sidebar .sidebar-text {
                 display: none !important;
             }
-            
+
             aside#sidebar .sidebar-item {
                 justify-content: center !important;
                 padding: 0.75rem !important;
             }
-            
+
             aside#sidebar h1,
             aside#sidebar p {
                 display: none !important;
             }
-            
+
             aside#sidebar .flex.items-center.gap-3.mb-10 {
                 justify-content: center;
                 margin-bottom: 2rem;
             }
-            
+
             aside#sidebar .w-12 {
                 width: 2.5rem !important;
                 height: 2.5rem !important;
             }
-            
+
             aside#sidebar .mt-auto {
                 border-top: 1px solid rgba(6, 182, 212, 0.2);
             }
         }
-        
+
         @media (min-width: 1280px) {
             aside#sidebar {
                 width: 16rem !important;
@@ -190,14 +190,14 @@ $historico_recargas = [
 
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex">
 
-    <aside id="sidebar"
-        class="fixed inset-y-0 left-0 w-64 bg-slate-900/50 backdrop-blur-xl border-r border-cyan-500/20 p-4 
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900/50 backdrop-blur-xl border-r border-cyan-500/20 p-4 
                flex flex-col flex-shrink-0 z-50 
                md:relative md:translate-x-0 
                transition-all duration-300 sidebar-mobile-hidden">
-        
+
         <div class="flex items-center gap-3 mb-10">
-            <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div
+                class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
                 <i data-lucide="zap" class="w-7 h-7 text-white"></i>
             </div>
             <div class="sidebar-text">
@@ -210,47 +210,46 @@ $historico_recargas = [
             <a href="#"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item active"
                 title="Dashboard">
-                <i data-lucide="layout-dashboard" class="flex-shrink-0"></i> 
+                <i data-lucide="layout-dashboard" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Dashboard</span>
             </a>
             <a href="javascript:abrirModal('modalHistorico')"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
                 title="Histórico">
-                <i data-lucide="history" class="flex-shrink-0"></i> 
+                <i data-lucide="history" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Histórico</span>
             </a>
             <a href="veiculos.php"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
                 title="Meus Veículos">
-                <i data-lucide="car" class="flex-shrink-0"></i> 
+                <i data-lucide="car" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Meus Veículos</span>
             </a>
             <a href="../PHP/avaliacoes.php"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
                 title="Avaliação">
-                <i data-lucide="star" class="flex-shrink-0"></i> 
+                <i data-lucide="star" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Avaliação</span>
             </a>
         </nav>
 
         <div class="mt-auto pt-4 border-t border-cyan-500/20">
-            <a href="javascript:abrirModal('modalPerfil')"
+            <a href="perfil.php"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item"
                 title="Minha Conta">
-                <i data-lucide="user-cog" class="flex-shrink-0"></i> 
+                <i data-lucide="user-cog" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Minha Conta</span>
             </a>
             <a href="?logout=1"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/30 transition-colors sidebar-item mt-2"
                 title="Sair">
-                <i data-lucide="log-out" class="flex-shrink-0"></i> 
+                <i data-lucide="log-out" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Sair</span>
             </a>
         </div>
     </aside>
 
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" 
-        onclick="toggleSidebar()"></div>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" onclick="toggleSidebar()"></div>
 
     <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
         <header class="flex justify-between items-center mb-6 lg:mb-8 flex-wrap gap-4">
@@ -258,7 +257,8 @@ $historico_recargas = [
                 <h1 class="text-2xl sm:text-3xl font-bold text-white">Olá,
                     <?php echo htmlspecialchars(explode(' ', $_SESSION['usuario_nome'])[0]); ?>!
                 </h1>
-                <p class="text-gray-400 text-sm sm:text-base">Pronto para encontrar o melhor ponto de recarga para sua viagem?</p>
+                <p class="text-gray-400 text-sm sm:text-base">Pronto para encontrar o melhor ponto de recarga para sua
+                    viagem?</p>
             </div>
 
             <div class="flex items-center gap-3">
@@ -287,8 +287,7 @@ $historico_recargas = [
         <?php endif; ?>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-            <div
-                class="lg:col-span-2 bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 flex flex-col"
+            <div class="lg:col-span-2 bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 flex flex-col"
                 style="min-height: 400px; height: calc(100vh - 250px);">
                 <div
                     class="w-full h-full bg-slate-900 rounded-lg flex items-center justify-center text-center text-gray-500">
@@ -299,18 +298,20 @@ $historico_recargas = [
                 </div>
             </div>
 
-            <div
-                class="flex flex-col bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 sm:p-6"
+            <div class="flex flex-col bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 sm:p-6"
                 style="min-height: 400px; max-height: calc(100vh - 250px);">
                 <h2 class="text-xl sm:text-2xl font-bold mb-4">Pontos Disponíveis</h2>
                 <div class="overflow-y-auto flex-1">
                     <?php if (empty($pontos_disponiveis)): ?>
-                        <p class="text-gray-400 text-center py-10 text-sm sm:text-base">Nenhum ponto ativo encontrado no momento.</p>
+                        <p class="text-gray-400 text-center py-10 text-sm sm:text-base">Nenhum ponto ativo encontrado no
+                            momento.</p>
                     <?php else: ?>
                         <?php foreach ($pontos_disponiveis as $ponto): ?>
                             <div class="p-3 sm:p-4 rounded-lg hover:bg-slate-700/50 transition-colors mb-2">
                                 <div class="flex justify-between items-center">
-                                    <p class="font-semibold text-sm sm:text-base"><?php echo htmlspecialchars($ponto['LOGRADOURO']); ?></p>
+                                    <p class="font-semibold text-sm sm:text-base">
+                                        <?php echo htmlspecialchars($ponto['LOGRADOURO']); ?>
+                                    </p>
                                     <span class="text-xs font-bold text-green-400">Ativo</span>
                                 </div>
                                 <p class="text-xs sm:text-sm text-gray-400"><?php echo htmlspecialchars($ponto['cidade']); ?> -
@@ -326,36 +327,6 @@ $historico_recargas = [
             </div>
         </div>
     </main>
-
-    <!-- Modal de Perfil -->
-    <div id="modalPerfil" class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
-        <div
-            class="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="p-6 border-b border-cyan-500/20 flex items-center justify-between sticky top-0 bg-slate-900/90">
-                <div class="flex items-center gap-4">
-                    <div
-                        class="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center">
-                        <i data-lucide="user" class="w-8 h-8 text-white"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-bold text-white">
-                            <?php echo htmlspecialchars($usuario_logado['NOME']); ?>
-                        </h2>
-                        <p class="text-gray-400"><?php echo htmlspecialchars($usuario_logado['EMAIL']); ?></p>
-                    </div>
-                </div>
-                <button onclick="fecharModal('modalPerfil')"
-                    class="p-2 hover:bg-slate-700/50 rounded-lg transition-colors">
-                    <i data-lucide="x" class="w-6 h-6 text-gray-400"></i>
-                </button>
-            </div>
-            
-            <!-- Conteúdo adicional do modal pode ser adicionado aqui -->
-            <div class="p-6">
-                <p class="text-gray-400">Informações adicionais do perfil...</p>
-            </div>
-        </div>
-    </div>
 
     <!-- Modal de Veículos -->
     <div id="modalVeiculos"
@@ -438,7 +409,7 @@ $historico_recargas = [
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            
+
             sidebar.classList.toggle('sidebar-mobile-hidden');
             overlay.classList.toggle('hidden');
         }

@@ -48,13 +48,15 @@ if (!$usuario_logado) {
     <style>
         /* Estilos para o modal de perfil (da resposta anterior) */
         .modal {
-            display: none; /* Escondido por padrão */
+            display: none;
+            /* Escondido por padrão */
             opacity: 0;
             transition: opacity 0.3s ease-in-out;
         }
 
         .modal.active {
-            display: flex; /* Visível quando 'active' (flex para centralizar) */
+            display: flex;
+            /* Visível quando 'active' (flex para centralizar) */
             opacity: 1;
         }
 
@@ -62,26 +64,36 @@ if (!$usuario_logado) {
         .tab-link {
             padding: 0.75rem 1.25rem;
             border-bottom: 3px solid transparent;
-            color: #94a3b8; /* slate-400 */
+            color: #94a3b8;
+            /* slate-400 */
             transition: all 0.2s;
         }
+
         .tab-link:hover {
-            color: #e2e8f0; /* slate-200 */
+            color: #e2e8f0;
+            /* slate-200 */
         }
+
         .tab-link.active {
-            color: #22d3ee; /* cyan-400 */
-            border-bottom-color: #22d3ee; /* cyan-400 */
+            color: #22d3ee;
+            /* cyan-400 */
+            border-bottom-color: #22d3ee;
+            /* cyan-400 */
         }
+
         .tab-content {
-            display: none; /* Esconde todas as abas */
+            display: none;
+            /* Esconde todas as abas */
         }
+
         .tab-content.active {
-            display: block; /* Mostra a aba ativa */
+            display: block;
+            /* Mostra a aba ativa */
         }
 
         /* Estilos customizados */
         .sidebar-item.active {
-            background-color: #0284c7; 
+            background-color: #0284c7;
             color: white;
         }
 
@@ -93,7 +105,7 @@ if (!$usuario_logado) {
         .vehicle-card {
             transition: all 0.3s ease-in-out;
             cursor: pointer;
-            position: relative; 
+            position: relative;
         }
 
         .vehicle-card:hover {
@@ -106,36 +118,36 @@ if (!$usuario_logado) {
             aside#sidebar {
                 width: 5rem !important;
             }
-            
+
             aside#sidebar .sidebar-text {
                 display: none !important;
             }
-            
+
             aside#sidebar .sidebar-item {
                 justify-content: center !important;
                 padding: 0.75rem !important;
             }
-            
+
             aside#sidebar h1,
             aside#sidebar p {
                 display: none !important;
             }
-            
+
             aside#sidebar .flex.items-center.gap-3.mb-10 {
                 justify-content: center;
                 margin-bottom: 2rem;
             }
-            
+
             aside#sidebar .w-12 {
                 width: 2.5rem !important;
                 height: 2.5rem !important;
             }
-            
+
             aside#sidebar .mt-auto {
                 border-top: 1px solid rgba(6, 182, 212, 0.2);
             }
         }
-        
+
         @media (min-width: 1280px) {
             aside#sidebar {
                 width: 16rem !important;
@@ -146,14 +158,14 @@ if (!$usuario_logado) {
 
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex">
 
-    <aside id="sidebar"
-        class="fixed inset-y-0 left-0 w-64 bg-slate-900/50 backdrop-blur-xl border-r border-cyan-500/20 p-4 
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900/50 backdrop-blur-xl border-r border-cyan-500/20 p-4 
                flex flex-col flex-shrink-0 z-50 
                md:relative md:translate-x-0 
                transition-all duration-300 sidebar-mobile-hidden">
-        
+
         <div class="flex items-center gap-3 mb-10">
-            <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div
+                class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
                 <i data-lucide="zap" class="w-7 h-7 text-white"></i>
             </div>
             <div class="sidebar-text">
@@ -166,46 +178,45 @@ if (!$usuario_logado) {
             <a href="../PHP/dashUSER.php"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item"
                 id="sidebar-dashboard" title="Dashboard">
-                <i data-lucide="layout-dashboard" class="flex-shrink-0"></i> 
+                <i data-lucide="layout-dashboard" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Dashboard</span>
             </a>
             <a href="#"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
                 id="sidebar-historico" title="Histórico">
-                <i data-lucide="history" class="flex-shrink-0"></i> 
+                <i data-lucide="history" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Histórico</span>
             </a>
             <a href="#"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item active mt-2"
                 id="sidebar-veiculos" title="Meus Veículos">
-                <i data-lucide="car" class="flex-shrink-0"></i> 
+                <i data-lucide="car" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Meus Veículos</span>
             </a>
             <a href="../PHP/avaliacoes.php"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
                 id="sidebar-avaliacoes" title="Avaliações">
-                <i data-lucide="star" class="flex-shrink-0"></i> 
+                <i data-lucide="star" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Avaliações</span>
         </nav>
 
         <div class="mt-auto pt-4 border-t border-cyan-500/20">
-            <a href="javascript:abrirModal('modalPerfil')"
+            <a href="perfil.php"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item"
                 title="Minha Conta">
-                <i data-lucide="user-cog" class="flex-shrink-0"></i> 
+                <i data-lucide="user-cog" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Minha Conta</span>
             </a>
             <a href="../PHP/dashUSER.php?logout=1"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/30 transition-colors sidebar-item mt-2"
                 title="Sair">
-                <i data-lucide="log-out" class="flex-shrink-0"></i> 
+                <i data-lucide="log-out" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Sair</span>
             </a>
         </div>
     </aside>
 
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" 
-        onclick="toggleSidebar()"></div>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" onclick="toggleSidebar()"></div>
 
     <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
         <header class="flex justify-between items-center mb-6 lg:mb-8 flex-wrap gap-4">
@@ -228,7 +239,8 @@ if (!$usuario_logado) {
             </div>
         </header>
 
-        <section class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 sm:p-6">
+        <section
+            class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 sm:p-6">
             <div class="flex justify-between items-center mb-4 border-b border-cyan-500/10 pb-3 flex-wrap gap-3">
                 <h2 class="text-xl sm:text-2xl font-semibold">Lista de Veículos</h2>
                 <button id="btn-cadastrar-veiculo-mobile"
@@ -237,7 +249,7 @@ if (!$usuario_logado) {
                     Cadastrar
                 </button>
             </div>
-            
+
             <div id="vehicle-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                 <article onclick="document.getElementById('btn-cadastrar-veiculo').click()"
                     class="hidden xl:flex bg-slate-800/20 p-6 rounded-xl border-2 border-dashed border-cyan-500/50 text-center text-gray-500 flex-col items-center justify-center cursor-pointer hover:border-cyan-400/80 hover:bg-slate-800/30 transition-all duration-300">
@@ -246,7 +258,7 @@ if (!$usuario_logado) {
                     <p class="text-sm text-gray-500">Clique para cadastrar um novo veículo elétrico.</p>
                 </article>
             </div>
-            
+
             <div id="empty-state" class="text-center py-12 sm:py-20 hidden">
                 <i data-lucide="circle-slash" class="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-gray-600"></i>
                 <p class="mt-4 text-lg sm:text-xl text-gray-400">Você ainda não possui veículos cadastrados.</p>
@@ -256,10 +268,11 @@ if (!$usuario_logado) {
     </main>
 
     <!-- Modal de Cadastro/Edição de Veículo -->
-    <div id="modal-veiculo" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[99] hidden transition-opacity duration-300">
+    <div id="modal-veiculo"
+        class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[99] hidden transition-opacity duration-300">
         <div id="modal-content"
             class="bg-slate-800 border border-cyan-500/30 rounded-2xl shadow-xl w-full max-w-lg transition-all duration-300 opacity-0 scale-95 transform">
-            
+
             <header class="flex justify-between items-center p-4 sm:p-5 border-b border-slate-700">
                 <h2 id="modal-title" class="text-lg sm:text-xl font-bold text-white">Cadastrar Novo Veículo</h2>
                 <button id="btn-fechar-modal" class="text-gray-400 hover:text-white transition-colors">
@@ -269,7 +282,8 @@ if (!$usuario_logado) {
 
             <form id="form-veiculo" class="p-4 sm:p-6 space-y-4">
                 <input type="hidden" id="veiculo-id" name="veiculo_id">
-                <div id="modal-error-message" class="hidden p-3 bg-red-500/20 border border-red-500 text-red-300 text-sm rounded-lg"></div>
+                <div id="modal-error-message"
+                    class="hidden p-3 bg-red-500/20 border border-red-500 text-red-300 text-sm rounded-lg"></div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -282,7 +296,8 @@ if (!$usuario_logado) {
                     <div>
                         <label for="modelo" class="block text-sm font-medium text-cyan-300 mb-1">Modelo</label>
                         <select id="modelo" name="modelo_id" required
-                            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500" disabled>
+                            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                            disabled>
                             <option value="">Selecione a marca primeiro</option>
                         </select>
                     </div>
@@ -296,7 +311,8 @@ if (!$usuario_logado) {
                     </div>
                     <div>
                         <label for="ano_fab" class="block text-sm font-medium text-cyan-300 mb-1">Ano Fabricação</label>
-                        <input type="number" id="ano_fab" name="ano_fab" required min="1990" max="2099" placeholder="2024"
+                        <input type="number" id="ano_fab" name="ano_fab" required min="1990" max="2099"
+                            placeholder="2024"
                             class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500">
                     </div>
                 </div>
@@ -310,7 +326,8 @@ if (!$usuario_logado) {
                         </select>
                     </div>
                     <div>
-                        <label for="conector" class="block text-sm font-medium text-cyan-300 mb-1">Tipo de Conector</label>
+                        <label for="conector" class="block text-sm font-medium text-cyan-300 mb-1">Tipo de
+                            Conector</label>
                         <select id="conector" name="conector_id" required
                             class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500">
                             <option value="">Selecione...</option>
@@ -336,8 +353,7 @@ if (!$usuario_logado) {
                         class="py-2 px-5 rounded-lg bg-slate-600 hover:bg-slate-500 text-white font-semibold transition-colors">
                         Cancelar
                     </button>
-                    <button type="submit" id="btn-salvar-veiculo"
-                        class="py-2 px-5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold transition-colors flex items-center gap-2
+                    <button type="submit" id="btn-salvar-veiculo" class="py-2 px-5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold transition-colors flex items-center gap-2
                                disabled:bg-slate-500 disabled:cursor-not-allowed">
                         Salvar Veículo
                     </button>
@@ -348,10 +364,12 @@ if (!$usuario_logado) {
 
     <!-- Modal de Perfil -->
     <div id="modalPerfil" class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
-        <div class="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div
+            class="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-6 border-b border-cyan-500/20 flex items-center justify-between sticky top-0 bg-slate-900/90">
                 <div class="flex items-center gap-4">
-                    <div class="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center">
+                    <div
+                        class="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center">
                         <i data-lucide="user" class="w-8 h-8 text-white"></i>
                     </div>
                     <div>
@@ -366,13 +384,13 @@ if (!$usuario_logado) {
                     <i data-lucide="x" class="w-6 h-6 text-gray-400"></i>
                 </button>
             </div>
-            
+
             <!-- Conteúdo adicional do modal pode ser adicionado aqui -->
         </div>
     </div>
 
     <script src="../JS/meus_veiculos.js"></script>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof lucide !== 'undefined') {
@@ -383,7 +401,7 @@ if (!$usuario_logado) {
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            
+
             sidebar.classList.toggle('sidebar-mobile-hidden');
             overlay.classList.toggle('hidden');
         }

@@ -286,36 +286,36 @@ foreach ($avaliacoes as $av) {
             aside#sidebar {
                 width: 5rem !important;
             }
-            
+
             aside#sidebar .sidebar-text {
                 display: none !important;
             }
-            
+
             aside#sidebar .sidebar-item {
                 justify-content: center !important;
                 padding: 0.75rem !important;
             }
-            
+
             aside#sidebar h1,
             aside#sidebar p {
                 display: none !important;
             }
-            
+
             aside#sidebar .flex.items-center.gap-3.mb-10 {
                 justify-content: center;
                 margin-bottom: 2rem;
             }
-            
+
             aside#sidebar .w-12 {
                 width: 2.5rem !important;
                 height: 2.5rem !important;
             }
-            
+
             aside#sidebar .mt-auto {
                 border-top: 1px solid rgba(6, 182, 212, 0.2);
             }
         }
-        
+
         @media (min-width: 1280px) {
             aside#sidebar {
                 width: 16rem !important;
@@ -327,14 +327,14 @@ foreach ($avaliacoes as $av) {
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex">
 
     <!-- SIDEBAR -->
-    <aside id="sidebar"
-        class="fixed inset-y-0 left-0 w-64 bg-slate-900/50 backdrop-blur-xl border-r border-cyan-500/20 p-4 
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900/50 backdrop-blur-xl border-r border-cyan-500/20 p-4 
                flex flex-col flex-shrink-0 z-50 
                md:relative md:translate-x-0 
                transition-all duration-300 sidebar-mobile-hidden">
-        
+
         <div class="flex items-center gap-3 mb-10">
-            <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div
+                class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
                 <i data-lucide="zap" class="w-7 h-7 text-white"></i>
             </div>
             <div class="sidebar-text">
@@ -347,54 +347,54 @@ foreach ($avaliacoes as $av) {
             <a href="../PHP/dashUSER.php"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item"
                 title="Dashboard">
-                <i data-lucide="layout-dashboard" class="flex-shrink-0"></i> 
+                <i data-lucide="layout-dashboard" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Dashboard</span>
             </a>
             <a href="#"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
                 title="Histórico">
-                <i data-lucide="history" class="flex-shrink-0"></i> 
+                <i data-lucide="history" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Histórico</span>
             </a>
             <a href="../PHP/veiculos.php"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
                 title="Meus Veículos">
-                <i data-lucide="car" class="flex-shrink-0"></i> 
+                <i data-lucide="car" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Meus Veículos</span>
             </a>
             <a href="#"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item active mt-2"
                 title="Avaliações">
-                <i data-lucide="star" class="flex-shrink-0"></i> 
+                <i data-lucide="star" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Avaliações</span>
             </a>
         </nav>
 
         <div class="mt-auto pt-4 border-t border-cyan-500/20">
-            <a href="javascript:abrirModal('modalPerfil')"
+            <a href="perfil.php"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item"
                 title="Minha Conta">
-                <i data-lucide="user-cog" class="flex-shrink-0"></i> 
+                <i data-lucide="user-cog" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Minha Conta</span>
             </a>
             <a href="?logout=1"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/30 transition-colors sidebar-item mt-2"
                 title="Sair">
-                <i data-lucide="log-out" class="flex-shrink-0"></i> 
+                <i data-lucide="log-out" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Sair</span>
             </a>
         </div>
     </aside>
 
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" 
-        onclick="toggleSidebar()"></div>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" onclick="toggleSidebar()"></div>
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
         <header class="flex justify-between items-center mb-6 lg:mb-8 flex-wrap gap-4">
             <div class="flex-1 min-w-0">
                 <h1 class="text-2xl sm:text-3xl font-bold text-white">Avaliações dos Pontos</h1>
-                <p class="text-gray-400 text-sm sm:text-base">Veja o que os usuários estão dizendo sobre os pontos de recarga</p>
+                <p class="text-gray-400 text-sm sm:text-base">Veja o que os usuários estão dizendo sobre os pontos de
+                    recarga</p>
             </div>
 
             <div class="flex items-center gap-3">
@@ -446,7 +446,9 @@ foreach ($avaliacoes as $av) {
                 </div>
                 <h3 class="text-gray-400 text-xs sm:text-sm mb-1">Média Geral</h3>
                 <div class="flex items-center gap-2">
-                    <p class="text-2xl sm:text-3xl font-bold text-white"><?php echo number_format($media_geral, 1, ',', '.'); ?></p>
+                    <p class="text-2xl sm:text-3xl font-bold text-white">
+                        <?php echo number_format($media_geral, 1, ',', '.'); ?>
+                    </p>
                     <i data-lucide="star" class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400 fill-yellow-400"></i>
                 </div>
             </div>
@@ -515,13 +517,15 @@ foreach ($avaliacoes as $av) {
                     <i data-lucide="star" class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400"></i>
                     Avaliações Recentes
                 </h2>
-                <p class="text-gray-400 mt-1 text-sm sm:text-base"><?php echo count($avaliacoes); ?> avaliações encontradas</p>
+                <p class="text-gray-400 mt-1 text-sm sm:text-base"><?php echo count($avaliacoes); ?> avaliações
+                    encontradas</p>
             </div>
 
             <div class="p-4 sm:p-6">
                 <?php if (empty($avaliacoes)): ?>
                     <div class="text-center py-12">
-                        <i data-lucide="message-square-off" class="w-12 h-12 sm:w-16 sm:h-16 text-gray-600 mx-auto mb-4"></i>
+                        <i data-lucide="message-square-off"
+                            class="w-12 h-12 sm:w-16 sm:h-16 text-gray-600 mx-auto mb-4"></i>
                         <p class="text-gray-400 text-base sm:text-lg">Nenhuma avaliação encontrada.</p>
                     </div>
                 <?php else: ?>
@@ -563,11 +567,14 @@ foreach ($avaliacoes as $av) {
                                                 <i data-lucide="star"
                                                     class="w-4 h-4 sm:w-5 sm:h-5 <?php echo $i <= $av['NOTA'] ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'; ?>"></i>
                                             <?php endfor; ?>
-                                            <span class="ml-2 text-white font-semibold text-sm sm:text-base"><?php echo $av['NOTA']; ?>/5</span>
+                                            <span
+                                                class="ml-2 text-white font-semibold text-sm sm:text-base"><?php echo $av['NOTA']; ?>/5</span>
                                         </div>
 
                                         <?php if (!empty($av['COMENTARIO'])): ?>
-                                            <p class="text-gray-300 mb-3 text-sm sm:text-base"><?php echo htmlspecialchars($av['COMENTARIO']); ?></p>
+                                            <p class="text-gray-300 mb-3 text-sm sm:text-base">
+                                                <?php echo htmlspecialchars($av['COMENTARIO']); ?>
+                                            </p>
                                         <?php endif; ?>
 
                                         <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-400">
@@ -604,10 +611,12 @@ foreach ($avaliacoes as $av) {
 
     <!-- Modal de Perfil -->
     <div id="modalPerfil" class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
-        <div class="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div
+            class="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-6 border-b border-cyan-500/20 flex items-center justify-between sticky top-0 bg-slate-900/90">
                 <div class="flex items-center gap-4">
-                    <div class="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center">
+                    <div
+                        class="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center">
                         <i data-lucide="user" class="w-8 h-8 text-white"></i>
                     </div>
                     <div>
@@ -622,7 +631,7 @@ foreach ($avaliacoes as $av) {
                     <i data-lucide="x" class="w-6 h-6 text-gray-400"></i>
                 </button>
             </div>
-            
+
             <div class="p-6">
                 <p class="text-gray-400">Informações adicionais do perfil...</p>
             </div>
@@ -790,7 +799,8 @@ foreach ($avaliacoes as $av) {
                                         d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                 </svg>
                             </span>
-                            <span id="nota_texto_editar" class="ml-2 text-white font-semibold">Clique para avaliar</span>
+                            <span id="nota_texto_editar" class="ml-2 text-white font-semibold">Clique para
+                                avaliar</span>
                         </div>
                     </div>
 
@@ -835,7 +845,7 @@ foreach ($avaliacoes as $av) {
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            
+
             sidebar.classList.toggle('sidebar-mobile-hidden');
             overlay.classList.toggle('hidden');
         }
