@@ -158,7 +158,7 @@ if (!$usuario_logado) {
             </div>
             <div class="sidebar-text">
                 <h1 class="text-xl font-bold text-white">HelioMax</h1>
-                <p class="text-xs text-cyan-400">Desenvolvimento</p>
+                <p class="text-xs text-cyan-400">Meus veículos</p>
             </div>
         </div>
 
@@ -181,6 +181,11 @@ if (!$usuario_logado) {
                 <i data-lucide="car" class="flex-shrink-0"></i> 
                 <span class="sidebar-text">Meus Veículos</span>
             </a>
+            <a href="../PHP/avaliacoes.php"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
+                id="sidebar-avaliacoes" title="Avaliações">
+                <i data-lucide="star" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Avaliações</span>
         </nav>
 
         <div class="mt-auto pt-4 border-t border-cyan-500/20">

@@ -225,6 +225,12 @@ $historico_recargas = [
                 <i data-lucide="car" class="flex-shrink-0"></i> 
                 <span class="sidebar-text">Meus Veículos</span>
             </a>
+            <a href="../PHP/avaliacoes.php"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
+                title="Avaliação">
+                <i data-lucide="star" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Avaliação</span>
+            </a>
         </nav>
 
         <div class="mt-auto pt-4 border-t border-cyan-500/20">

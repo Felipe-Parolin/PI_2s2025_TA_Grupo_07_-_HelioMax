@@ -16,7 +16,6 @@ try {
         $result = $pdo->query("SHOW COLUMNS FROM avaliacao LIKE 'EDITADO'");
         if ($result->rowCount() == 0) {
             $pdo->exec("ALTER TABLE avaliacao ADD COLUMN EDITADO TINYINT(1) NOT NULL DEFAULT 0 AFTER DATA_AVALIACAO");
-            // Atualizar registros existentes
             $pdo->exec("UPDATE avaliacao SET EDITADO = 0 WHERE EDITADO IS NULL");
         }
     } catch (Exception $e) {
@@ -42,6 +41,21 @@ if (isset($_GET['logout'])) {
     exit;
 }
 
+// Buscar dados do usuário logado
+$stmt_user = $pdo->prepare("SELECT u.*, c.LOGRADOURO, b.NOME as bairro, ci.NOME as cidade, e.UF 
+                       FROM usuario u
+                       LEFT JOIN cep c ON u.FK_ID_CEP = c.ID_CEP
+                       LEFT JOIN bairro b ON c.FK_BAIRRO = b.ID_BAIRRO
+                       LEFT JOIN cidade ci ON b.FK_CIDADE = ci.ID_CIDADE
+                       LEFT JOIN estado e ON ci.FK_ESTADO = e.ID_ESTADO
+                       WHERE u.ID_USER = ?");
+$stmt_user->execute([$usuario_id]);
+$usuario_logado = $stmt_user->fetch(PDO::FETCH_ASSOC);
+
+if (!$usuario_logado) {
+    $usuario_logado = ['NOME' => 'Visitante', 'EMAIL' => 'email@exemplo.com'];
+}
+
 // Variáveis de controle
 $mensagem = '';
 $tipo_mensagem = '';
@@ -57,12 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $comentario = trim($_POST['comentario']);
 
         try {
-            // Verificar se o ponto existe
             $stmt = $pdo->prepare("SELECT ID_PONTO FROM ponto_carregamento WHERE ID_PONTO = ?");
             $stmt->execute([$ponto_id]);
 
             if ($stmt->fetch()) {
-                // Verificar se o usuário já avaliou este ponto
                 $stmt = $pdo->prepare("SELECT ID_AVALIACAO FROM avaliacao WHERE FK_ID_USUARIO = ? AND FK_PONTO_CARRRGAMENTO = ?");
                 $stmt->execute([$usuario_id, $ponto_id]);
 
@@ -70,7 +82,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $mensagem = 'Você já avaliou este ponto de carregamento!';
                     $tipo_mensagem = 'erro';
                 } else {
-                    // Inserir avaliação com EDITADO = 0 (não editado)
                     $stmt = $pdo->prepare("INSERT INTO avaliacao (COMENTARIO, NOTA, DATA_AVALIACAO, FK_ID_USUARIO, FK_PONTO_CARRRGAMENTO) VALUES (?, ?, NOW(), ?, ?)");
                     $stmt->execute([$comentario, $nota, $usuario_id, $ponto_id]);
 
@@ -94,21 +105,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $comentario = trim($_POST['comentario']);
 
         try {
-            // IMPORTANTE: Primeiro verifica se a avaliação pertence ao usuário
             $stmt = $pdo->prepare("SELECT ID_AVALIACAO FROM avaliacao WHERE ID_AVALIACAO = ? AND FK_ID_USUARIO = ?");
             $stmt->execute([$avaliacao_id, $usuario_id]);
 
             if ($stmt->fetch()) {
-                // Atualiza APENAS a avaliação específica do usuário e marca como editada
                 $stmt = $pdo->prepare("UPDATE avaliacao SET NOTA = ?, COMENTARIO = ?, DATA_AVALIACAO = NOW(), EDITADO = 1 WHERE ID_AVALIACAO = ? AND FK_ID_USUARIO = ?");
                 $result = $stmt->execute([$nota, $comentario, $avaliacao_id, $usuario_id]);
 
                 if ($result) {
-                    // Verificar se realmente atualizou
-                    $stmt_verify = $pdo->prepare("SELECT EDITADO FROM avaliacao WHERE ID_AVALIACAO = ?");
-                    $stmt_verify->execute([$avaliacao_id]);
-                    $verify = $stmt_verify->fetch();
-
                     $mensagem = 'Avaliação atualizada com sucesso!';
                     $tipo_mensagem = 'sucesso';
                 } else {
@@ -130,7 +134,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $avaliacao_id = $_POST['avaliacao_id'];
 
         try {
-            // Verificar se a avaliação pertence ao usuário logado
             $stmt = $pdo->prepare("DELETE FROM avaliacao WHERE ID_AVALIACAO = ? AND FK_ID_USUARIO = ?");
             $stmt->execute([$avaliacao_id, $usuario_id]);
 
@@ -221,15 +224,22 @@ foreach ($avaliacoes as $av) {
     <style>
         .modal {
             display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
         }
 
         .modal.active {
             display: flex;
+            opacity: 1;
         }
 
         .sidebar-item.active {
             background-color: #0284c7;
             color: white;
+        }
+
+        .sidebar-mobile-hidden {
+            transform: translateX(-100%);
         }
 
         .star-rating {
@@ -270,55 +280,135 @@ foreach ($avaliacoes as $av) {
         .star-icon-editar:hover svg {
             transform: scale(1.15);
         }
+
+        /* Breakpoints customizados para tablets */
+        @media (min-width: 768px) and (max-width: 1279px) {
+            aside#sidebar {
+                width: 5rem !important;
+            }
+            
+            aside#sidebar .sidebar-text {
+                display: none !important;
+            }
+            
+            aside#sidebar .sidebar-item {
+                justify-content: center !important;
+                padding: 0.75rem !important;
+            }
+            
+            aside#sidebar h1,
+            aside#sidebar p {
+                display: none !important;
+            }
+            
+            aside#sidebar .flex.items-center.gap-3.mb-10 {
+                justify-content: center;
+                margin-bottom: 2rem;
+            }
+            
+            aside#sidebar .w-12 {
+                width: 2.5rem !important;
+                height: 2.5rem !important;
+            }
+            
+            aside#sidebar .mt-auto {
+                border-top: 1px solid rgba(6, 182, 212, 0.2);
+            }
+        }
+        
+        @media (min-width: 1280px) {
+            aside#sidebar {
+                width: 16rem !important;
+            }
+        }
     </style>
 </head>
 
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex">
 
     <!-- SIDEBAR -->
-    <aside class="w-64 bg-slate-900/50 backdrop-blur-xl border-r border-cyan-500/20 p-4 flex flex-col">
+    <aside id="sidebar"
+        class="fixed inset-y-0 left-0 w-64 bg-slate-900/50 backdrop-blur-xl border-r border-cyan-500/20 p-4 
+               flex flex-col flex-shrink-0 z-50 
+               md:relative md:translate-x-0 
+               transition-all duration-300 sidebar-mobile-hidden">
+        
         <div class="flex items-center gap-3 mb-10">
-            <div
-                class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
+            <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
                 <i data-lucide="zap" class="w-7 h-7 text-white"></i>
             </div>
-            <div>
+            <div class="sidebar-text">
                 <h1 class="text-xl font-bold text-white">HelioMax</h1>
                 <p class="text-xs text-cyan-400">Avaliações</p>
             </div>
         </div>
 
         <nav class="flex-grow">
-            <a href="dashUSER.php"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item">
-                <i data-lucide="layout-dashboard"></i> <span>Dashboard</span>
+            <a href="../PHP/dashUSER.php"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item"
+                title="Dashboard">
+                <i data-lucide="layout-dashboard" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Dashboard</span>
             </a>
-            <a href="avaliacoes.php"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item active mt-2">
-                <i data-lucide="star"></i> <span>Avaliações</span>
+            <a href="#"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
+                title="Histórico">
+                <i data-lucide="history" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Histórico</span>
+            </a>
+            <a href="../PHP/veiculos.php"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
+                title="Meus Veículos">
+                <i data-lucide="car" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Meus Veículos</span>
+            </a>
+            <a href="#"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item active mt-2"
+                title="Avaliações">
+                <i data-lucide="star" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Avaliações</span>
             </a>
         </nav>
 
-        <div class="mt-auto">
+        <div class="mt-auto pt-4 border-t border-cyan-500/20">
+            <a href="javascript:abrirModal('modalPerfil')"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item"
+                title="Minha Conta">
+                <i data-lucide="user-cog" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Minha Conta</span>
+            </a>
             <a href="?logout=1"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/30 transition-colors sidebar-item mt-2">
-                <i data-lucide="log-out"></i> <span>Sair</span>
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/30 transition-colors sidebar-item mt-2"
+                title="Sair">
+                <i data-lucide="log-out" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Sair</span>
             </a>
         </div>
     </aside>
 
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" 
+        onclick="toggleSidebar()"></div>
+
     <!-- MAIN CONTENT -->
-    <main class="flex-1 p-8 overflow-y-auto">
-        <header class="flex justify-between items-center mb-8">
-            <div>
-                <h1 class="text-3xl font-bold text-white">Avaliações dos Pontos</h1>
-                <p class="text-gray-400">Veja o que os usuários estão dizendo sobre os pontos de recarga</p>
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <header class="flex justify-between items-center mb-6 lg:mb-8 flex-wrap gap-4">
+            <div class="flex-1 min-w-0">
+                <h1 class="text-2xl sm:text-3xl font-bold text-white">Avaliações dos Pontos</h1>
+                <p class="text-gray-400 text-sm sm:text-base">Veja o que os usuários estão dizendo sobre os pontos de recarga</p>
             </div>
-            <button onclick="abrirModal('modalCriarAvaliacao')"
-                class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 shadow-lg shadow-yellow-500/30 hover:shadow-yellow-500/50 transition-all duration-300 hover:scale-105">
-                <i data-lucide="star"></i>
-                <span>Nova Avaliação</span>
-            </button>
+
+            <div class="flex items-center gap-3">
+                <button id="toggle-sidebar-btn" class="p-2 md:hidden text-white" onclick="toggleSidebar()">
+                    <i data-lucide="menu" class="w-7 h-7"></i>
+                </button>
+
+                <button onclick="abrirModal('modalCriarAvaliacao')"
+                    class="hidden sm:flex bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl items-center gap-2 shadow-lg shadow-yellow-500/30 hover:shadow-yellow-500/50 transition-all duration-300 hover:scale-[1.02] text-sm sm:text-base">
+                    <i data-lucide="star" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                    <span class="hidden lg:inline">Nova Avaliação</span>
+                    <span class="lg:hidden">Avaliar</span>
+                </button>
+            </div>
         </header>
 
         <?php if ($mensagem): ?>
@@ -333,56 +423,56 @@ foreach ($avaliacoes as $av) {
         <?php endif; ?>
 
         <!-- CARDS DE ESTATÍSTICAS -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 lg:mb-8">
             <div
-                class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 hover:scale-105">
+                class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 hover:scale-105">
                 <div class="flex items-center justify-between mb-4">
                     <div
-                        class="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
-                        <i data-lucide="star" class="w-6 h-6 text-white"></i>
+                        class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
+                        <i data-lucide="star" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-400 text-sm mb-1">Total de Avaliações</h3>
-                <p class="text-3xl font-bold text-white"><?php echo $total_avaliacoes; ?></p>
+                <h3 class="text-gray-400 text-xs sm:text-sm mb-1">Total de Avaliações</h3>
+                <p class="text-2xl sm:text-3xl font-bold text-white"><?php echo $total_avaliacoes; ?></p>
             </div>
 
             <div
-                class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 hover:scale-105">
+                class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 hover:scale-105">
                 <div class="flex items-center justify-between mb-4">
                     <div
-                        class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                        <i data-lucide="trending-up" class="w-6 h-6 text-white"></i>
+                        class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                        <i data-lucide="trending-up" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-400 text-sm mb-1">Média Geral</h3>
+                <h3 class="text-gray-400 text-xs sm:text-sm mb-1">Média Geral</h3>
                 <div class="flex items-center gap-2">
-                    <p class="text-3xl font-bold text-white"><?php echo number_format($media_geral, 1, ',', '.'); ?></p>
-                    <i data-lucide="star" class="w-6 h-6 text-yellow-400 fill-yellow-400"></i>
+                    <p class="text-2xl sm:text-3xl font-bold text-white"><?php echo number_format($media_geral, 1, ',', '.'); ?></p>
+                    <i data-lucide="star" class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400 fill-yellow-400"></i>
                 </div>
             </div>
 
             <div
-                class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 hover:scale-105">
+                class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 hover:scale-105">
                 <div class="flex items-center justify-between mb-4">
                     <div
-                        class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                        <i data-lucide="thumbs-up" class="w-6 h-6 text-white"></i>
+                        class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                        <i data-lucide="thumbs-up" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-400 text-sm mb-1">Avaliações 5 Estrelas</h3>
-                <p class="text-3xl font-bold text-white"><?php echo $avaliacoes_por_nota[5]; ?></p>
+                <h3 class="text-gray-400 text-xs sm:text-sm mb-1">Avaliações 5 Estrelas</h3>
+                <p class="text-2xl sm:text-3xl font-bold text-white"><?php echo $avaliacoes_por_nota[5]; ?></p>
             </div>
 
             <div
-                class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 hover:scale-105">
+                class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 hover:scale-105">
                 <div class="flex items-center justify-between mb-4">
                     <div
-                        class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                        <i data-lucide="message-square" class="w-6 h-6 text-white"></i>
+                        class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <i data-lucide="message-square" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-400 text-sm mb-1">Com Comentários</h3>
-                <p class="text-3xl font-bold text-white">
+                <h3 class="text-gray-400 text-xs sm:text-sm mb-1">Com Comentários</h3>
+                <p class="text-2xl sm:text-3xl font-bold text-white">
                     <?php echo count(array_filter($avaliacoes, fn($a) => !empty($a['COMENTARIO']))); ?>
                 </p>
             </div>
@@ -390,18 +480,18 @@ foreach ($avaliacoes as $av) {
 
         <!-- FILTROS -->
         <div
-            class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-cyan-500/20 mb-6">
+            class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-cyan-500/20 mb-6">
             <form method="GET" action="" class="flex flex-col sm:flex-row gap-4">
                 <div class="flex-1 relative">
                     <i data-lucide="search"
                         class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5"></i>
                     <input type="text" name="busca" value="<?php echo htmlspecialchars($busca); ?>"
                         placeholder="Buscar por endereço ou comentário..."
-                        class="w-full pl-12 pr-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors" />
+                        class="w-full pl-12 pr-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors text-sm sm:text-base" />
                 </div>
 
                 <select name="nota"
-                    class="px-6 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 transition-colors cursor-pointer">
+                    class="px-4 sm:px-6 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 transition-colors cursor-pointer text-sm sm:text-base">
                     <option value="">Todas as Notas</option>
                     <option value="5" <?php echo $nota_filtro == '5' ? 'selected' : ''; ?>>⭐⭐⭐⭐⭐ (5)</option>
                     <option value="4" <?php echo $nota_filtro == '4' ? 'selected' : ''; ?>>⭐⭐⭐⭐ (4)</option>
@@ -411,7 +501,7 @@ foreach ($avaliacoes as $av) {
                 </select>
 
                 <button type="submit"
-                    class="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-semibold transition-colors">
+                    class="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-semibold transition-colors text-sm sm:text-base">
                     Filtrar
                 </button>
             </form>
@@ -420,34 +510,34 @@ foreach ($avaliacoes as $av) {
         <!-- LISTA DE AVALIAÇÕES -->
         <div
             class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 overflow-hidden">
-            <div class="p-6 border-b border-cyan-500/20">
-                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
-                    <i data-lucide="star" class="w-6 h-6 text-yellow-400"></i>
+            <div class="p-4 sm:p-6 border-b border-cyan-500/20">
+                <h2 class="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="star" class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400"></i>
                     Avaliações Recentes
                 </h2>
-                <p class="text-gray-400 mt-1"><?php echo count($avaliacoes); ?> avaliações encontradas</p>
+                <p class="text-gray-400 mt-1 text-sm sm:text-base"><?php echo count($avaliacoes); ?> avaliações encontradas</p>
             </div>
 
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
                 <?php if (empty($avaliacoes)): ?>
                     <div class="text-center py-12">
-                        <i data-lucide="message-square-off" class="w-16 h-16 text-gray-600 mx-auto mb-4"></i>
-                        <p class="text-gray-400 text-lg">Nenhuma avaliação encontrada.</p>
+                        <i data-lucide="message-square-off" class="w-12 h-12 sm:w-16 sm:h-16 text-gray-600 mx-auto mb-4"></i>
+                        <p class="text-gray-400 text-base sm:text-lg">Nenhuma avaliação encontrada.</p>
                     </div>
                 <?php else: ?>
                     <div class="grid grid-cols-1 gap-4">
                         <?php foreach ($avaliacoes as $av): ?>
                             <div
-                                class="bg-slate-900/50 border border-cyan-500/20 rounded-xl p-6 hover:border-cyan-500/40 transition-all">
+                                class="bg-slate-900/50 border border-cyan-500/20 rounded-xl p-4 sm:p-6 hover:border-cyan-500/40 transition-all">
                                 <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                                     <div class="flex-1">
                                         <div class="flex items-center gap-3 mb-2">
                                             <div
-                                                class="w-10 h-10 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-full flex items-center justify-center border border-cyan-500/30">
+                                                class="w-10 h-10 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-full flex items-center justify-center border border-cyan-500/30 flex-shrink-0">
                                                 <i data-lucide="user" class="w-5 h-5 text-cyan-400"></i>
                                             </div>
                                             <div>
-                                                <p class="text-white font-semibold">
+                                                <p class="text-white font-semibold text-sm sm:text-base">
                                                     <?php echo htmlspecialchars($av['usuario_nome']); ?>
                                                 </p>
                                                 <div class="flex items-center gap-2">
@@ -455,7 +545,6 @@ foreach ($avaliacoes as $av) {
                                                         <?php echo date('d/m/Y H:i', strtotime($av['DATA_AVALIACAO'])); ?>
                                                     </p>
                                                     <?php
-                                                    // Debug: verificar se campo existe e valor
                                                     $editado = isset($av['EDITADO']) ? $av['EDITADO'] : 0;
                                                     if ($editado == 1):
                                                         ?>
@@ -472,17 +561,17 @@ foreach ($avaliacoes as $av) {
                                         <div class="flex items-center gap-1 mb-3">
                                             <?php for ($i = 1; $i <= 5; $i++): ?>
                                                 <i data-lucide="star"
-                                                    class="w-5 h-5 <?php echo $i <= $av['NOTA'] ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'; ?>"></i>
+                                                    class="w-4 h-4 sm:w-5 sm:h-5 <?php echo $i <= $av['NOTA'] ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'; ?>"></i>
                                             <?php endfor; ?>
-                                            <span class="ml-2 text-white font-semibold"><?php echo $av['NOTA']; ?>/5</span>
+                                            <span class="ml-2 text-white font-semibold text-sm sm:text-base"><?php echo $av['NOTA']; ?>/5</span>
                                         </div>
 
                                         <?php if (!empty($av['COMENTARIO'])): ?>
-                                            <p class="text-gray-300 mb-3"><?php echo htmlspecialchars($av['COMENTARIO']); ?></p>
+                                            <p class="text-gray-300 mb-3 text-sm sm:text-base"><?php echo htmlspecialchars($av['COMENTARIO']); ?></p>
                                         <?php endif; ?>
 
-                                        <div class="flex items-center gap-2 text-sm text-gray-400">
-                                            <i data-lucide="map-pin" class="w-4 h-4 text-cyan-400"></i>
+                                        <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-400">
+                                            <i data-lucide="map-pin" class="w-4 h-4 text-cyan-400 flex-shrink-0"></i>
                                             <span>
                                                 <?php echo htmlspecialchars($av['LOGRADOURO'] ?? 'Não informado'); ?> -
                                                 <?php echo htmlspecialchars($av['bairro'] ?? ''); ?>,
@@ -493,13 +582,13 @@ foreach ($avaliacoes as $av) {
                                     </div>
 
                                     <?php if ($av['FK_ID_USUARIO'] == $usuario_id): ?>
-                                        <div class="flex gap-2">
+                                        <div class="flex gap-2 justify-end sm:justify-start">
                                             <button onclick='editarAvaliacao(<?php echo json_encode($av); ?>)'
-                                                class="p-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg border border-blue-500/30 hover:border-blue-500/50 transition-colors self-start">
+                                                class="p-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg border border-blue-500/30 hover:border-blue-500/50 transition-colors">
                                                 <i data-lucide="edit" class="w-4 h-4"></i>
                                             </button>
                                             <button onclick="confirmarExclusao(<?php echo $av['ID_AVALIACAO']; ?>)"
-                                                class="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg border border-red-500/30 hover:border-red-500/50 transition-colors self-start">
+                                                class="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg border border-red-500/30 hover:border-red-500/50 transition-colors">
                                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
                                         </div>
@@ -512,6 +601,33 @@ foreach ($avaliacoes as $av) {
             </div>
         </div>
     </main>
+
+    <!-- Modal de Perfil -->
+    <div id="modalPerfil" class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
+        <div class="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-cyan-500/20 flex items-center justify-between sticky top-0 bg-slate-900/90">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center">
+                        <i data-lucide="user" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">
+                            <?php echo htmlspecialchars($usuario_logado['NOME']); ?>
+                        </h2>
+                        <p class="text-gray-400"><?php echo htmlspecialchars($usuario_logado['EMAIL']); ?></p>
+                    </div>
+                </div>
+                <button onclick="fecharModal('modalPerfil')"
+                    class="p-2 hover:bg-slate-700/50 rounded-lg transition-colors">
+                    <i data-lucide="x" class="w-6 h-6 text-gray-400"></i>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <p class="text-gray-400">Informações adicionais do perfil...</p>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL CRIAR AVALIAÇÃO -->
     <div id="modalCriarAvaliacao"
@@ -674,8 +790,7 @@ foreach ($avaliacoes as $av) {
                                         d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                 </svg>
                             </span>
-                            <span id="nota_texto_editar" class="ml-2 text-white font-semibold">Clique para
-                                avaliar</span>
+                            <span id="nota_texto_editar" class="ml-2 text-white font-semibold">Clique para avaliar</span>
                         </div>
                     </div>
 
@@ -717,6 +832,14 @@ foreach ($avaliacoes as $av) {
         let notaSelecionada = 0;
         let notaSelecionadaEdicao = 0;
 
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            sidebar.classList.toggle('sidebar-mobile-hidden');
+            overlay.classList.toggle('hidden');
+        }
+
         function abrirModal(id) {
             document.getElementById(id).classList.add('active');
             if (id === 'modalCriarAvaliacao') {
@@ -738,7 +861,6 @@ foreach ($avaliacoes as $av) {
             document.getElementById('nota_texto').classList.remove('text-yellow-400');
             atualizarEstrelas();
 
-            // Reset contador
             const counter = document.querySelector('#comentario + p');
             if (counter) counter.textContent = '0/200 caracteres';
         }
@@ -770,22 +892,15 @@ foreach ($avaliacoes as $av) {
         }
 
         function editarAvaliacao(avaliacao) {
-            // Preencher o ID da avaliação
             document.getElementById('avaliacao_id_editar').value = avaliacao.ID_AVALIACAO;
-
-            // Preencher nome do ponto (readonly)
             const nomePonto = `#${avaliacao.ID_PONTO} - ${avaliacao.LOGRADOURO} - ${avaliacao.cidade}, ${avaliacao.UF}`;
             document.getElementById('ponto_nome_editar').value = nomePonto;
-
-            // Preencher comentário
             document.getElementById('comentario_editar').value = avaliacao.COMENTARIO || '';
 
-            // Atualizar contador
             const contador = document.getElementById('contador_editar');
             const length = (avaliacao.COMENTARIO || '').length;
             contador.textContent = `${length}/200 caracteres`;
 
-            // Preencher nota
             notaSelecionadaEdicao = parseInt(avaliacao.NOTA);
             document.getElementById('nota_valor_editar').value = notaSelecionadaEdicao;
 
@@ -827,7 +942,6 @@ foreach ($avaliacoes as $av) {
             }
         }
 
-        // Sistema de avaliação por estrelas (CRIAR)
         document.addEventListener('DOMContentLoaded', function () {
             const stars = document.querySelectorAll('.star-icon');
             const notaInput = document.getElementById('nota_valor');
@@ -874,7 +988,6 @@ foreach ($avaliacoes as $av) {
                 });
             }
 
-            // Sistema de avaliação por estrelas (EDITAR)
             const starsEditar = document.querySelectorAll('.star-icon-editar');
             const notaInputEditar = document.getElementById('nota_valor_editar');
             const notaTextoEditar = document.getElementById('nota_texto_editar');
@@ -920,7 +1033,6 @@ foreach ($avaliacoes as $av) {
                 });
             }
 
-            // Contador de caracteres (CRIAR)
             const comentarioInput = document.getElementById('comentario');
             if (comentarioInput) {
                 comentarioInput.addEventListener('input', function () {
@@ -939,7 +1051,6 @@ foreach ($avaliacoes as $av) {
                 });
             }
 
-            // Contador de caracteres (EDITAR)
             const comentarioInputEditar = document.getElementById('comentario_editar');
             if (comentarioInputEditar) {
                 comentarioInputEditar.addEventListener('input', function () {
@@ -961,7 +1072,7 @@ foreach ($avaliacoes as $av) {
             lucide.createIcons();
         });
 
-        // Fechar modal ao clicar fora
+        // Fecha modal ao clicar fora
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', function (e) {
                 if (e.target === this) {
@@ -977,4 +1088,3 @@ foreach ($avaliacoes as $av) {
 </body>
 
 </html>
-index
