@@ -101,10 +101,13 @@ $historico_recargas = [
     <style>
         .modal {
             display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
         }
 
         .modal.active {
             display: flex;
+            opacity: 1;
         }
 
         .sidebar-item.active {
@@ -112,36 +115,10 @@ $historico_recargas = [
             color: white;
         }
 
-        .fixed-notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(255, 193, 7, 0.95);
-            color: #333;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            z-index: 9999;
-            max-width: 350px;
-            border-left: 4px solid #ff9800;
-            animation: slideInFromRight 0.5s ease;
+        .sidebar-mobile-hidden {
+            transform: translateX(-100%);
         }
-
-        .fixed-notification-icon {
-            font-size: 1.5rem;
-            flex-shrink: 0;
-            color: #666;
-        }
-
-        .fixed-notification-text {
-            font-weight: 600;
-            font-size: 0.95rem;
-            line-height: 1.4;
-        }
-
+        
         @keyframes slideInFromRight {
             from {
                 transform: translateX(400px);
@@ -151,6 +128,47 @@ $historico_recargas = [
             to {
                 transform: translateX(0);
                 opacity: 1;
+            }
+        }
+
+        /* Breakpoints customizados para tablets */
+        @media (min-width: 768px) and (max-width: 1279px) {
+            aside#sidebar {
+                width: 5rem !important;
+            }
+            
+            aside#sidebar .sidebar-text {
+                display: none !important;
+            }
+            
+            aside#sidebar .sidebar-item {
+                justify-content: center !important;
+                padding: 0.75rem !important;
+            }
+            
+            aside#sidebar h1,
+            aside#sidebar p {
+                display: none !important;
+            }
+            
+            aside#sidebar .flex.items-center.gap-3.mb-10 {
+                justify-content: center;
+                margin-bottom: 2rem;
+            }
+            
+            aside#sidebar .w-12 {
+                width: 2.5rem !important;
+                height: 2.5rem !important;
+            }
+            
+            aside#sidebar .mt-auto {
+                border-top: 1px solid rgba(6, 182, 212, 0.2);
+            }
+        }
+        
+        @media (min-width: 1280px) {
+            aside#sidebar {
+                width: 16rem !important;
             }
         }
 
@@ -172,13 +190,17 @@ $historico_recargas = [
 
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex">
 
-    <aside class="w-64 bg-slate-900/50 backdrop-blur-xl border-r border-cyan-500/20 p-4 flex flex-col">
+    <aside id="sidebar"
+        class="fixed inset-y-0 left-0 w-64 bg-slate-900/50 backdrop-blur-xl border-r border-cyan-500/20 p-4 
+               flex flex-col flex-shrink-0 z-50 
+               md:relative md:translate-x-0 
+               transition-all duration-300 sidebar-mobile-hidden">
+        
         <div class="flex items-center gap-3 mb-10">
-            <div
-                class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
+            <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
                 <i data-lucide="zap" class="w-7 h-7 text-white"></i>
             </div>
-            <div>
+            <div class="sidebar-text">
                 <h1 class="text-xl font-bold text-white">HelioMax</h1>
                 <p class="text-xs text-cyan-400">Bem-vindo(a)!</p>
             </div>
@@ -186,45 +208,65 @@ $historico_recargas = [
 
         <nav class="flex-grow">
             <a href="#"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item active">
-                <i data-lucide="layout-dashboard"></i> <span>Dashboard</span>
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item active"
+                title="Dashboard">
+                <i data-lucide="layout-dashboard" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Dashboard</span>
             </a>
             <a href="javascript:abrirModal('modalHistorico')"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2">
-                <i data-lucide="history"></i> <span>Histórico</span>
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
+                title="Histórico">
+                <i data-lucide="history" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Histórico</span>
             </a>
             <a href="veiculos.php"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2">
-                <i data-lucide="car"></i> <span>Meus Veículos</span>
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
+                title="Meus Veículos">
+                <i data-lucide="car" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Meus Veículos</span>
             </a>
         </nav>
 
-        <div class="mt-auto">
+        <div class="mt-auto pt-4 border-t border-cyan-500/20">
             <a href="javascript:abrirModal('modalPerfil')"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item">
-                <i data-lucide="user-cog"></i> <span>Minha Conta</span>
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item"
+                title="Minha Conta">
+                <i data-lucide="user-cog" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Minha Conta</span>
             </a>
             <a href="?logout=1"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/30 transition-colors sidebar-item mt-2">
-                <i data-lucide="log-out"></i> <span>Sair</span>
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/30 transition-colors sidebar-item mt-2"
+                title="Sair">
+                <i data-lucide="log-out" class="flex-shrink-0"></i> 
+                <span class="sidebar-text">Sair</span>
             </a>
         </div>
     </aside>
 
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" 
+        onclick="toggleSidebar()"></div>
 
-    <main class="flex-1 p-8 overflow-y-auto">
-        <header class="flex justify-between items-center mb-8">
-            <div>
-                <h1 class="text-3xl font-bold text-white">Olá,
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <header class="flex justify-between items-center mb-6 lg:mb-8 flex-wrap gap-4">
+            <div class="flex-1 min-w-0">
+                <h1 class="text-2xl sm:text-3xl font-bold text-white">Olá,
                     <?php echo htmlspecialchars(explode(' ', $_SESSION['usuario_nome'])[0]); ?>!
                 </h1>
-                <p class="text-gray-400">Pronto para encontrar o melhor ponto de recarga para sua viagem?</p>
+                <p class="text-gray-400 text-sm sm:text-base">Pronto para encontrar o melhor ponto de recarga para sua viagem?</p>
             </div>
-            <button
-                class="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 hover:scale-105">
-                <i data-lucide="route"></i>
-                <span>Planejar Rota</span>
-            </button>
+
+            <div class="flex items-center gap-3">
+                <button id="toggle-sidebar-btn" class="p-2 md:hidden text-white" onclick="toggleSidebar()">
+                    <i data-lucide="menu" class="w-7 h-7"></i>
+                </button>
+
+                <button
+                    class="hidden sm:flex bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl items-center gap-2 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 hover:scale-[1.02] text-sm sm:text-base">
+                    <i data-lucide="route" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                    <span class="hidden lg:inline">Planejar Rota</span>
+                    <span class="lg:hidden">Planejar</span>
+                </button>
+            </div>
         </header>
 
         <?php if ($mensagem): ?>
@@ -238,35 +280,37 @@ $historico_recargas = [
             </div>
         <?php endif; ?>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" style="height: calc(100vh - 150px);">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             <div
-                class="lg:col-span-2 bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 flex flex-col">
+                class="lg:col-span-2 bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 flex flex-col"
+                style="min-height: 400px; height: calc(100vh - 250px);">
                 <div
                     class="w-full h-full bg-slate-900 rounded-lg flex items-center justify-center text-center text-gray-500">
                     <div>
-                        <i data-lucide="map" class="w-24 h-24 mx-auto"></i>
-                        <p class="mt-4 text-lg">Mapa Interativo dos Pontos de Recarga</p>
+                        <i data-lucide="map" class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mx-auto"></i>
+                        <p class="mt-4 text-base sm:text-lg">Mapa Interativo dos Pontos de Recarga</p>
                     </div>
                 </div>
             </div>
 
             <div
-                class="flex flex-col bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-6">
-                <h2 class="text-2xl font-bold mb-4">Pontos Disponíveis</h2>
-                <div class="overflow-y-auto">
+                class="flex flex-col bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 sm:p-6"
+                style="min-height: 400px; max-height: calc(100vh - 250px);">
+                <h2 class="text-xl sm:text-2xl font-bold mb-4">Pontos Disponíveis</h2>
+                <div class="overflow-y-auto flex-1">
                     <?php if (empty($pontos_disponiveis)): ?>
-                        <p class="text-gray-400 text-center py-10">Nenhum ponto ativo encontrado no momento.</p>
+                        <p class="text-gray-400 text-center py-10 text-sm sm:text-base">Nenhum ponto ativo encontrado no momento.</p>
                     <?php else: ?>
                         <?php foreach ($pontos_disponiveis as $ponto): ?>
-                            <div class="p-4 rounded-lg hover:bg-slate-700/50 transition-colors mb-2">
+                            <div class="p-3 sm:p-4 rounded-lg hover:bg-slate-700/50 transition-colors mb-2">
                                 <div class="flex justify-between items-center">
-                                    <p class="font-semibold"><?php echo htmlspecialchars($ponto['LOGRADOURO']); ?></p>
+                                    <p class="font-semibold text-sm sm:text-base"><?php echo htmlspecialchars($ponto['LOGRADOURO']); ?></p>
                                     <span class="text-xs font-bold text-green-400">Ativo</span>
                                 </div>
-                                <p class="text-sm text-gray-400"><?php echo htmlspecialchars($ponto['cidade']); ?> -
+                                <p class="text-xs sm:text-sm text-gray-400"><?php echo htmlspecialchars($ponto['cidade']); ?> -
                                     <?php echo htmlspecialchars($ponto['UF']); ?>
                                 </p>
-                                <p class="text-sm font-semibold text-cyan-400 mt-1">R$
+                                <p class="text-xs sm:text-sm font-semibold text-cyan-400 mt-1">R$
                                     <?php echo number_format($ponto['VALOR_KWH'], 2, ',', '.'); ?> / kWh
                                 </p>
                             </div>
@@ -277,15 +321,7 @@ $historico_recargas = [
         </div>
     </main>
 
-    <!-- Notificação Fixa -->
-    <div class="fixed-notification">
-        <i class="fas fa-exclamation-triangle fixed-notification-icon"></i>
-        <div class="fixed-notification-text">
-            Este página está em produção. Apenas o visual está disponível no momento.
-        </div>
-    </div>
-
-
+    <!-- Modal de Perfil -->
     <div id="modalPerfil" class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
         <div
             class="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -307,9 +343,15 @@ $historico_recargas = [
                     <i data-lucide="x" class="w-6 h-6 text-gray-400"></i>
                 </button>
             </div>
+            
+            <!-- Conteúdo adicional do modal pode ser adicionado aqui -->
+            <div class="p-6">
+                <p class="text-gray-400">Informações adicionais do perfil...</p>
+            </div>
         </div>
     </div>
 
+    <!-- Modal de Veículos -->
     <div id="modalVeiculos"
         class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
         <div
@@ -346,6 +388,7 @@ $historico_recargas = [
         </div>
     </div>
 
+    <!-- Modal de Histórico -->
     <div id="modalHistorico"
         class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
         <div
@@ -357,7 +400,7 @@ $historico_recargas = [
                         data-lucide="x" class="w-6 h-6 text-gray-400"></i></button>
             </div>
             <div class="p-6 max-h-[60vh] overflow-y-auto">
-                <table class="w-full text-left">
+                <table class="w-full text-left text-sm sm:text-base">
                     <thead class="border-b border-cyan-500/20">
                         <tr>
                             <th class="p-2">Data</th>
@@ -383,28 +426,40 @@ $historico_recargas = [
         </div>
     </div>
 
-
     <script>
         lucide.createIcons();
 
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            sidebar.classList.toggle('sidebar-mobile-hidden');
+            overlay.classList.toggle('hidden');
+        }
+
         function abrirModal(id) {
             document.getElementById(id).classList.add('active');
-            lucide.createIcons();
+            setTimeout(() => lucide.createIcons(), 100);
         }
 
         function fecharModal(id) {
             document.getElementById(id).classList.remove('active');
         }
 
-        function mudarTab(tab) {
-        }
-
+        // Fecha modal ao clicar fora
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', function (e) {
                 if (e.target === this) {
                     this.classList.remove('active');
                 }
             });
+        });
+
+        // Inicializa ícones após carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
         });
     </script>
 </body>
