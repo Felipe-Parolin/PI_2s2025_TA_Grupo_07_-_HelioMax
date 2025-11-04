@@ -193,7 +193,7 @@ $historico_recargas = [
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2">
                 <i data-lucide="history"></i> <span>Histórico</span>
             </a>
-            <a href="javascript:abrirModal('modalVeiculos')"
+            <a href="veiculos.php"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2">
                 <i data-lucide="car"></i> <span>Meus Veículos</span>
             </a>
