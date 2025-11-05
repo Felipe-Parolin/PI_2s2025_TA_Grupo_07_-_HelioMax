@@ -38,7 +38,7 @@ try {
                     WHERE v.ID_VEICULO = ? AND v.FK_USUARIO_ID_USER = ?
                 ");
                 $stmt->execute([$_GET['id'], $id_usuario_logado]);
-                $veiculo = $stmt->fetch();
+                $veiculo = $stmt->fetch(PDO::FETCH_ASSOC);
                 if ($veiculo) {
                     $response = ['success' => true, 'data' => $veiculo];
                 } else {
@@ -60,7 +60,7 @@ try {
                     ORDER BY ma.NOME, m.NOME
                 ");
                 $stmt->execute([$id_usuario_logado]);
-                $veiculos = $stmt->fetchAll();
+                $veiculos = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 $response = ['success' => true, 'data' => $veiculos];
             }
             break;
