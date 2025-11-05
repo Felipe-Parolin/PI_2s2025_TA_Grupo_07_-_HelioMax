@@ -409,16 +409,16 @@ $captcha_resultado = $num1 + $num2;
                                    <label class="block text-gray-400 text-sm font-semibold mb-2">UF</label>
                                    <input type="text" name="uf_perfil" id="uf_perfil"
                                         value="<?php echo htmlspecialchars($usuario['UF'] ?? ''); ?>"
-                                        placeholder="Ex: SP" maxlength="2"
-                                        class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors uppercase">
+                                        placeholder="Ex: SP" maxlength="2" readonly
+                                        class="w-full px-4 py-3 bg-slate-900/70 border border-cyan-500/20 rounded-xl text-gray-400 placeholder-gray-500 focus:outline-none cursor-not-allowed uppercase">
                               </div>
 
                               <div class="md:col-span-2">
                                    <label class="block text-gray-400 text-sm font-semibold mb-2">Logradouro</label>
                                    <input type="text" name="logradouro_perfil" id="logradouro_perfil"
                                         value="<?php echo htmlspecialchars($usuario['LOGRADOURO'] ?? ''); ?>"
-                                        placeholder="Ex: Av. Paulista"
-                                        class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+                                        placeholder="Ex: Av. Paulista" readonly
+                                        class="w-full px-4 py-3 bg-slate-900/70 border border-cyan-500/20 rounded-xl text-gray-400 placeholder-gray-500 focus:outline-none cursor-not-allowed">
                               </div>
 
                               <div>
@@ -434,16 +434,16 @@ $captcha_resultado = $num1 + $num2;
                                    <label class="block text-gray-400 text-sm font-semibold mb-2">Bairro</label>
                                    <input type="text" name="bairro_perfil" id="bairro_perfil"
                                         value="<?php echo htmlspecialchars($usuario['bairro'] ?? ''); ?>"
-                                        placeholder="Ex: Bela Vista"
-                                        class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+                                        placeholder="Ex: Bela Vista" readonly
+                                        class="w-full px-4 py-3 bg-slate-900/70 border border-cyan-500/20 rounded-xl text-gray-400 placeholder-gray-500 focus:outline-none cursor-not-allowed">
                               </div>
 
                               <div>
                                    <label class="block text-gray-400 text-sm font-semibold mb-2">Cidade</label>
                                    <input type="text" name="cidade_perfil" id="cidade_perfil"
                                         value="<?php echo htmlspecialchars($usuario['cidade'] ?? ''); ?>"
-                                        placeholder="Ex: São Paulo"
-                                        class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+                                        placeholder="Ex: São Paulo" readonly
+                                        class="w-full px-4 py-3 bg-slate-900/70 border border-cyan-500/20 rounded-xl text-gray-400 placeholder-gray-500 focus:outline-none cursor-not-allowed">
                               </div>
 
                               <div>
@@ -706,11 +706,6 @@ $captcha_resultado = $num1 + $num2;
                if (value.length === 9) {
                     buscarCEP(value, 'perfil');
                }
-          });
-
-          // Converter UF para maiúsculas
-          document.getElementById('uf_perfil').addEventListener('input', function (e) {
-               this.value = this.value.toUpperCase();
           });
 
           // Inicializar - os dados já estão preenchidos pelo PHP
