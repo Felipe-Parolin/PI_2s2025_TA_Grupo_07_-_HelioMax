@@ -344,7 +344,6 @@ $captcha_resultado = $num1 + $num2;
                     </div>
                </div>
 
-               <!-- TAB: Dados Pessoais -->
                <div id="contentDadosPessoais" class="p-6">
                     <form method="POST" action="">
                          <input type="hidden" name="action" value="atualizar_perfil">
@@ -407,18 +406,28 @@ $captcha_resultado = $num1 + $num2;
 
                               <div>
                                    <label class="block text-gray-400 text-sm font-semibold mb-2">UF</label>
-                                   <input type="text" name="uf_perfil" id="uf_perfil"
-                                        value="<?php echo htmlspecialchars($usuario['UF'] ?? ''); ?>"
-                                        placeholder="Ex: SP" maxlength="2" readonly
-                                        class="w-full px-4 py-3 bg-slate-900/70 border border-cyan-500/20 rounded-xl text-gray-400 placeholder-gray-500 focus:outline-none cursor-not-allowed uppercase">
+                                   <div class="relative">
+                                        <input type="text" name="uf_perfil" id="uf_perfil"
+                                             value="<?php echo htmlspecialchars($usuario['UF'] ?? ''); ?>"
+                                             placeholder="Ex: SP" maxlength="2" readonly
+                                             class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none uppercase">
+                                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                             <i data-lucide="lock" class="w-4 h-4 text-gray-600"></i>
+                                        </div>
+                                   </div>
                               </div>
 
                               <div class="md:col-span-2">
                                    <label class="block text-gray-400 text-sm font-semibold mb-2">Logradouro</label>
-                                   <input type="text" name="logradouro_perfil" id="logradouro_perfil"
-                                        value="<?php echo htmlspecialchars($usuario['LOGRADOURO'] ?? ''); ?>"
-                                        placeholder="Ex: Av. Paulista" readonly
-                                        class="w-full px-4 py-3 bg-slate-900/70 border border-cyan-500/20 rounded-xl text-gray-400 placeholder-gray-500 focus:outline-none cursor-not-allowed">
+                                   <div class="relative">
+                                        <input type="text" name="logradouro_perfil" id="logradouro_perfil"
+                                             value="<?php echo htmlspecialchars($usuario['LOGRADOURO'] ?? ''); ?>"
+                                             placeholder="Ex: Av. Paulista" readonly
+                                             class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none">
+                                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                             <i data-lucide="lock" class="w-4 h-4 text-gray-600"></i>
+                                        </div>
+                                   </div>
                               </div>
 
                               <div>
@@ -432,18 +441,28 @@ $captcha_resultado = $num1 + $num2;
 
                               <div>
                                    <label class="block text-gray-400 text-sm font-semibold mb-2">Bairro</label>
-                                   <input type="text" name="bairro_perfil" id="bairro_perfil"
-                                        value="<?php echo htmlspecialchars($usuario['bairro'] ?? ''); ?>"
-                                        placeholder="Ex: Bela Vista" readonly
-                                        class="w-full px-4 py-3 bg-slate-900/70 border border-cyan-500/20 rounded-xl text-gray-400 placeholder-gray-500 focus:outline-none cursor-not-allowed">
+                                   <div class="relative">
+                                        <input type="text" name="bairro_perfil" id="bairro_perfil"
+                                             value="<?php echo htmlspecialchars($usuario['bairro'] ?? ''); ?>"
+                                             placeholder="Ex: Bela Vista" readonly
+                                             class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none">
+                                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                             <i data-lucide="lock" class="w-4 h-4 text-gray-600"></i>
+                                        </div>
+                                   </div>
                               </div>
 
                               <div>
                                    <label class="block text-gray-400 text-sm font-semibold mb-2">Cidade</label>
-                                   <input type="text" name="cidade_perfil" id="cidade_perfil"
-                                        value="<?php echo htmlspecialchars($usuario['cidade'] ?? ''); ?>"
-                                        placeholder="Ex: São Paulo" readonly
-                                        class="w-full px-4 py-3 bg-slate-900/70 border border-cyan-500/20 rounded-xl text-gray-400 placeholder-gray-500 focus:outline-none cursor-not-allowed">
+                                   <div class="relative">
+                                        <input type="text" name="cidade_perfil" id="cidade_perfil"
+                                             value="<?php echo htmlspecialchars($usuario['cidade'] ?? ''); ?>"
+                                             placeholder="Ex: São Paulo" readonly
+                                             class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none">
+                                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                             <i data-lucide="lock" class="w-4 h-4 text-gray-600"></i>
+                                        </div>
+                                   </div>
                               </div>
 
                               <div>
@@ -463,7 +482,6 @@ $captcha_resultado = $num1 + $num2;
                     </form>
                </div>
 
-               <!-- TAB: Alterar Senha -->
                <div id="contentAlterarSenha" class="p-6 hidden">
                     <form method="POST" action="">
                          <input type="hidden" name="action" value="alterar_senha">
@@ -502,7 +520,6 @@ $captcha_resultado = $num1 + $num2;
                     </form>
                </div>
 
-               <!-- TAB: Tornar-se Administrador (só aparece se for usuário comum) -->
                <?php if ($usuario['TIPO_USUARIO'] == 0): ?>
                     <div id="contentTornarAdmin" class="p-6 hidden">
                          <div
