@@ -718,7 +718,6 @@ $usuario = $stmt->fetch();
     </div>
   </main>
 
-  <!-- Modal Criar Ponto -->
   <div id="modalCriarPonto"
     class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
     <div
@@ -752,7 +751,7 @@ $usuario = $stmt->fetch();
                 <span>Buscando endereço...</span>
               </div>
               <div id="cepError_criar" class="cep-error">
-                ⚠ Erro ao buscar CEP. Preencha manualmente.
+                ⚠ Erro ao buscar CEP. Preencha manually.
               </div>
             </div>
 
@@ -841,7 +840,6 @@ $usuario = $stmt->fetch();
     </div>
   </div>
 
-  <!-- Modal Editar Ponto -->
   <div id="modalEditarPonto"
     class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
     <div
@@ -882,15 +880,27 @@ $usuario = $stmt->fetch();
 
             <div>
               <label class="block text-gray-400 text-sm font-semibold mb-2">UF *</label>
-              <input type="text" name="uf" id="uf_editar" required placeholder="Ex: SP" maxlength="2"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors uppercase">
+              <div class="relative">
+                <input type="text" name="uf" id="uf_editar" required placeholder="Ex: SP" maxlength="2"
+                  class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none uppercase"
+                  readonly>
+                <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <i data-lucide="lock" class="w-4 h-4 text-gray-600"></i>
+                </div>
+              </div>
             </div>
 
             <div class="md:col-span-2">
               <label class="block text-gray-400 text-sm font-semibold mb-2">Logradouro *</label>
-              <input type="text" name="logradouro" id="logradouro_editar" required
-                placeholder="Ex: Av. Brigadeiro Faria Lima"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+              <div class="relative">
+                <input type="text" name="logradouro" id="logradouro_editar" required
+                  placeholder="Ex: Av. Brigadeiro Faria Lima"
+                  class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none"
+                  readonly>
+                <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <i data-lucide="lock" class="w-4 h-4 text-gray-600"></i>
+                </div>
+              </div>
             </div>
 
             <div>
@@ -902,14 +912,26 @@ $usuario = $stmt->fetch();
 
             <div>
               <label class="block text-gray-400 text-sm font-semibold mb-2">Bairro *</label>
-              <input type="text" name="bairro" id="bairro_editar" required placeholder="Ex: Pinheiros"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+              <div class="relative">
+                <input type="text" name="bairro" id="bairro_editar" required placeholder="Ex: Pinheiros"
+                  class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none"
+                  readonly>
+                <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <i data-lucide="lock" class="w-4 h-4 text-gray-600"></i>
+                </div>
+              </div>
             </div>
 
             <div>
               <label class="block text-gray-400 text-sm font-semibold mb-2">Cidade *</label>
-              <input type="text" name="cidade" id="cidade_editar" required placeholder="Ex: São Paulo"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+              <div class="relative">
+                <input type="text" name="cidade" id="cidade_editar" required placeholder="Ex: São Paulo"
+                  class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none"
+                  readonly>
+                <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <i data-lucide="lock" class="w-4 h-4 text-gray-600"></i>
+                </div>
+              </div>
             </div>
 
             <div>
@@ -965,7 +987,6 @@ $usuario = $stmt->fetch();
     </div>
   </div>
 
-  <!-- Modal Perfil -->
   <div id="modalPerfil" class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
     <div
       class="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -1056,16 +1077,28 @@ $usuario = $stmt->fetch();
 
             <div>
               <label class="block text-gray-400 text-sm font-semibold mb-2">UF</label>
-              <input type="text" name="uf_perfil" id="uf_perfil"
-                value="<?php echo htmlspecialchars($usuario['UF'] ?? ''); ?>" placeholder="Ex: SP" maxlength="2"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors uppercase">
+              <div class="relative">
+                <input type="text" name="uf_perfil" id="uf_perfil"
+                  value="<?php echo htmlspecialchars($usuario['UF'] ?? ''); ?>" placeholder="Ex: SP" maxlength="2"
+                  class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none uppercase"
+                  readonly>
+                <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <i data-lucide="lock" class="w-4 h-4 text-gray-600"></i>
+                </div>
+              </div>
             </div>
 
             <div class="md:col-span-2">
               <label class="block text-gray-400 text-sm font-semibold mb-2">Logradouro</label>
-              <input type="text" name="logradouro_perfil" id="logradouro_perfil"
-                value="<?php echo htmlspecialchars($usuario['LOGRADOURO'] ?? ''); ?>" placeholder="Ex: Av. Paulista"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+              <div class="relative">
+                <input type="text" name="logradouro_perfil" id="logradouro_perfil"
+                  value="<?php echo htmlspecialchars($usuario['LOGRADOURO'] ?? ''); ?>" placeholder="Ex: Av. Paulista"
+                  class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none"
+                  readonly>
+                <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <i data-lucide="lock" class="w-4 h-4 text-gray-600"></i>
+                </div>
+              </div>
             </div>
 
             <div>
@@ -1078,16 +1111,28 @@ $usuario = $stmt->fetch();
 
             <div>
               <label class="block text-gray-400 text-sm font-semibold mb-2">Bairro</label>
-              <input type="text" name="bairro_perfil" id="bairro_perfil"
-                value="<?php echo htmlspecialchars($usuario['bairro'] ?? ''); ?>" placeholder="Ex: Bela Vista"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+              <div class="relative">
+                <input type="text" name="bairro_perfil" id="bairro_perfil"
+                  value="<?php echo htmlspecialchars($usuario['bairro'] ?? ''); ?>" placeholder="Ex: Bela Vista"
+                  class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none"
+                  readonly>
+                <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <i data-lucide="lock" class="w-4 h-4 text-gray-600"></i>
+                </div>
+              </div>
             </div>
 
             <div>
               <label class="block text-gray-400 text-sm font-semibold mb-2">Cidade</label>
-              <input type="text" name="cidade_perfil" id="cidade_perfil"
-                value="<?php echo htmlspecialchars($usuario['cidade'] ?? ''); ?>" placeholder="Ex: São Paulo"
-                class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+              <div class="relative">
+                <input type="text" name="cidade_perfil" id="cidade_perfil"
+                  value="<?php echo htmlspecialchars($usuario['cidade'] ?? ''); ?>" placeholder="Ex: São Paulo"
+                  class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none"
+                  readonly>
+                <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <i data-lucide="lock" class="w-4 h-4 text-gray-600"></i>
+                </div>
+              </div>
             </div>
 
             <div>
