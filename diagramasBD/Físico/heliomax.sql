@@ -6,6 +6,9 @@
 -- Tempo de geração: 05/11/2025 às 14:46
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
+CREATE DATABASE IF NOT EXISTS `heliomax` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `heliomax`;
+
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
