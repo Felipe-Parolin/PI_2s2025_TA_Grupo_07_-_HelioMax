@@ -49,7 +49,7 @@
                         <span class="checkmark"></span>
                         Guardar Senha
                     </label>
-                    <a href="#" class="forgot-password">Esqueceu a senha?</a>
+                    <a href="#" class="forgot-password" onclick="abrirModalRecuperacao(event)">Esqueceu a senha?</a>
                 </div>
 
                 <button type="submit" class="login-button">

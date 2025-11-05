@@ -30,7 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      if ($action === 'atualizar_perfil') {
           $nome = $_POST['nome'];
           $email = $_POST['email'];
-          $cpf = preg_replace('/\D/', '', $_POST['cpf']);
+          // CPF vem do hidden field, não pode ser alterado
+          $cpf = $_POST['cpf'];
           $cep_valor = preg_replace('/\D/', '', $_POST['cep_perfil']);
           $numero = trim($_POST['numero_residencia']);
           $complemento = trim($_POST['complemento']);
@@ -41,14 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
           try {
                $pdo->beginTransaction();
-
-               $stmt = $pdo->prepare("SELECT ID_USER FROM usuario WHERE CPF = ? AND ID_USER != ?");
-               $stmt->execute([$cpf, $user_id]);
-               $cpf_existente = $stmt->fetch();
-
-               if ($cpf_existente) {
-                    throw new Exception("Este CPF já está cadastrado para outro usuário!");
-               }
 
                $stmt = $pdo->prepare("SELECT ID_USER FROM usuario WHERE EMAIL = ? AND ID_USER != ?");
                $stmt->execute([$email, $user_id]);
@@ -112,9 +105,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                }
 
-               $stmt = $pdo->prepare("UPDATE usuario SET NOME = ?, EMAIL = ?, CPF = ?, CEP = ?, NUMERO_RESIDENCIA = ?, COMPLEMENTO_ENDERECO = ?, FK_ID_CEP = ? WHERE ID_USER = ?");
+               $stmt = $pdo->prepare("UPDATE usuario SET NOME = ?, EMAIL = ?, CEP = ?, NUMERO_RESIDENCIA = ?, COMPLEMENTO_ENDERECO = ?, FK_ID_CEP = ? WHERE ID_USER = ?");
                $cep_formatado_usuario = strlen($cep_valor) === 8 ? substr($cep_valor, 0, 5) . '-' . substr($cep_valor, 5) : $cep_valor;
-               $stmt->execute([$nome, $email, $cpf, $cep_formatado_usuario, $numero, $complemento, $cep_id, $user_id]);
+               $stmt->execute([$nome, $email, $cep_formatado_usuario, $numero, $complemento, $cep_id, $user_id]);
 
                $_SESSION['usuario_nome'] = $nome;
 
@@ -355,6 +348,7 @@ $captcha_resultado = $num1 + $num2;
                <div id="contentDadosPessoais" class="p-6">
                     <form method="POST" action="">
                          <input type="hidden" name="action" value="atualizar_perfil">
+                         <input type="hidden" name="cpf" value="<?php echo htmlspecialchars($usuario['CPF']); ?>">
 
                          <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
                               <i data-lucide="edit-3" class="w-5 h-5 text-cyan-400"></i>
@@ -371,9 +365,15 @@ $captcha_resultado = $num1 + $num2;
 
                               <div>
                                    <label class="block text-gray-400 text-sm font-semibold mb-2">CPF *</label>
-                                   <input type="text" name="cpf" required
-                                        value="<?php echo htmlspecialchars($usuario['CPF']); ?>" maxlength="14"
-                                        class="w-full px-4 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors">
+                                   <div class="relative">
+                                        <input type="text" value="<?php echo htmlspecialchars($usuario['CPF']); ?>"
+                                             readonly disabled
+                                             class="w-full px-4 py-3 bg-slate-900/30 border border-cyan-500/10 rounded-xl text-gray-500 cursor-not-allowed focus:outline-none">
+                                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                             <i data-lucide="lock" class="w-4 h-4 text-gray-600"></i>
+                                        </div>
+                                   </div>
+                                   <p class="text-xs text-gray-500 mt-1">Não pode ser alterado por segurança</p>
                               </div>
 
                               <div class="md:col-span-2">
