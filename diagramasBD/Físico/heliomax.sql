@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 04/11/2025 às 00:28
+-- Tempo de geração: 05/11/2025 às 14:46
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -20,9 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Banco de dados: `heliomax`
 --
-DROP DATABASE IF EXISTS `heliomax`;
-CREATE DATABASE IF NOT EXISTS `heliomax` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `heliomax`;
 
 -- --------------------------------------------------------
 
@@ -35,6 +32,7 @@ CREATE TABLE `avaliacao` (
   `COMENTARIO` varchar(200) DEFAULT NULL,
   `NOTA` tinyint(4) NOT NULL,
   `DATA_AVALIACAO` datetime NOT NULL,
+  `EDITADO` tinyint(1) NOT NULL DEFAULT 0,
   `FK_ID_USUARIO` int(11) NOT NULL,
   `FK_PONTO_CARRRGAMENTO` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -113,6 +111,16 @@ CREATE TABLE `conector` (
   `NOME` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Despejando dados para a tabela `conector`
+--
+
+INSERT INTO `conector` (`ID_CONECTOR`, `NOME`) VALUES
+(2, 'CCS Combo 2'),
+(4, 'CHAdeMO'),
+(3, 'Tipo 1 (SAE J1772)'),
+(1, 'Tipo 2 (Mennekes)');
+
 -- --------------------------------------------------------
 
 --
@@ -129,9 +137,16 @@ CREATE TABLE `cor` (
 --
 
 INSERT INTO `cor` (`ID_COR`, `NOME`) VALUES
-(5, 'Branco'),
-(2, 'Cinza'),
-(1, 'Preto');
+(8, 'Amarelo'),
+(5, 'Azul'),
+(2, 'Branco'),
+(4, 'Cinza'),
+(9, 'Laranja'),
+(3, 'Prata'),
+(1, 'Preto'),
+(10, 'Roxo'),
+(7, 'Verde'),
+(6, 'Vermelho');
 
 -- --------------------------------------------------------
 
@@ -162,6 +177,22 @@ CREATE TABLE `marca` (
   `NOME` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Despejando dados para a tabela `marca`
+--
+
+INSERT INTO `marca` (`ID_MARCA`, `NOME`) VALUES
+(1, 'Tesla'),
+(2, 'BYD'),
+(3, 'Volkswagen'),
+(4, 'Renault'),
+(5, 'Nissan'),
+(6, 'Chevrolet'),
+(7, 'Volvo'),
+(8, 'BMW'),
+(9, 'Audi'),
+(10, 'Peugeot');
+
 -- --------------------------------------------------------
 
 --
@@ -171,8 +202,36 @@ CREATE TABLE `marca` (
 CREATE TABLE `modelo` (
   `ID_MODELO` int(11) NOT NULL,
   `FK_MARCA` int(11) NOT NULL,
-  `NOME` varchar(255) NOT NULL
+  `NOME` varchar(255) NOT NULL,
+  `CAPACIDADE_BATERIA` decimal(6,2) NOT NULL,
+  `CONSUMO_MEDIO` decimal(5,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `modelo`
+--
+
+INSERT INTO `modelo` (`ID_MODELO`, `FK_MARCA`, `NOME`, `CAPACIDADE_BATERIA`, `CONSUMO_MEDIO`) VALUES
+(1, 1, 'Model 3', 57.50, 14.00),
+(2, 1, 'Model Y', 75.00, 15.50),
+(3, 2, 'Dolphin', 44.90, 13.50),
+(4, 2, 'Seal', 82.50, 15.80),
+(5, 3, 'ID.4', 77.00, 16.00),
+(6, 3, 'e-up!', 36.80, 12.00),
+(7, 4, 'Zoe', 52.00, 13.50),
+(8, 4, 'Megane E-Tech', 60.00, 15.00),
+(9, 5, 'Leaf', 40.00, 15.00),
+(10, 5, 'Ariya', 87.00, 17.00),
+(11, 6, 'Bolt EV', 66.00, 15.70),
+(12, 6, 'Bolt EUV', 66.00, 16.50),
+(13, 7, 'XC40 Recharge', 78.00, 18.00),
+(14, 7, 'EX30', 64.00, 16.80),
+(15, 8, 'i4', 83.90, 17.00),
+(16, 8, 'iX', 111.50, 19.50),
+(17, 9, 'Q4 e-tron', 82.00, 17.50),
+(18, 9, 'Q8 e-tron', 114.00, 21.00),
+(19, 10, 'e-208', 50.00, 13.00),
+(20, 10, 'e-2008', 54.00, 14.00);
 
 -- --------------------------------------------------------
 
@@ -373,8 +432,16 @@ CREATE TABLE `veiculo` (
   `FK_CONECTOR` int(11) NOT NULL,
   `PLACA` varchar(10) NOT NULL,
   `FK_COR` int(11) NOT NULL,
+  `NIVEL_BATERIA` int(11) NOT NULL DEFAULT 100,
   `FK_USUARIO_ID_USER` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `veiculo`
+--
+
+INSERT INTO `veiculo` (`ID_VEICULO`, `MODELO`, `ANO_FAB`, `FK_CONECTOR`, `PLACA`, `FK_COR`, `NIVEL_BATERIA`, `FK_USUARIO_ID_USER`) VALUES
+(7, 3, 2025.000000, 2, 'FMR5J82', 7, 100, 3);
 
 -- --------------------------------------------------------
 
@@ -596,13 +663,13 @@ ALTER TABLE `cidade`
 -- AUTO_INCREMENT de tabela `conector`
 --
 ALTER TABLE `conector`
-  MODIFY `ID_CONECTOR` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `ID_CONECTOR` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de tabela `cor`
 --
 ALTER TABLE `cor`
-  MODIFY `ID_COR` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `ID_COR` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de tabela `estado`
@@ -614,13 +681,13 @@ ALTER TABLE `estado`
 -- AUTO_INCREMENT de tabela `marca`
 --
 ALTER TABLE `marca`
-  MODIFY `ID_MARCA` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `ID_MARCA` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de tabela `modelo`
 --
 ALTER TABLE `modelo`
-  MODIFY `ID_MODELO` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `ID_MODELO` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT de tabela `parada_rota`
@@ -668,7 +735,7 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de tabela `veiculo`
 --
 ALTER TABLE `veiculo`
-  MODIFY `ID_VEICULO` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `ID_VEICULO` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Restrições para tabelas despejadas
@@ -781,11 +848,6 @@ ALTER TABLE `veiculo_ponto_carregamento`
   ADD CONSTRAINT `FK_VEICULO_PONTO_CARREGAMENTO_1` FOREIGN KEY (`FK_PONTO_CARREGAMENTO_ID_PONTO`) REFERENCES `ponto_carregamento` (`ID_PONTO`) ON DELETE SET NULL,
   ADD CONSTRAINT `FK_VEICULO_PONTO_CARREGAMENTO_2` FOREIGN KEY (`FK_VEICULO`) REFERENCES `veiculo` (`ID_VEICULO`) ON DELETE SET NULL;
 COMMIT;
-
-ALTER TABLE `veiculo`
-  ADD `CAPACIDADE_BATERIA` DECIMAL(6,2) NOT NULL AFTER `FK_COR`,
-  ADD `CONSUMO_MEDIO` DECIMAL(5,2) NOT NULL AFTER `CAPACIDADE_BATERIA`,
-  ADD `NIVEL_BATERIA` INT NOT NULL DEFAULT 100 AFTER `CONSUMO_MEDIO`;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
