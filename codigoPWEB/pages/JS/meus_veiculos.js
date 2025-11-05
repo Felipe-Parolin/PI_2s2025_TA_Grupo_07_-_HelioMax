@@ -53,8 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('ano_fab').value = parseInt(veiculo.ANO_FAB);
             document.getElementById('cor').value = veiculo.cor_id;
             document.getElementById('conector').value = veiculo.conector_id;
-            document.getElementById('capacidade_bateria').value = veiculo.CAPACIDADE_BATERIA;
-            document.getElementById('consumo_medio').value = veiculo.CONSUMO_MEDIO;
             document.getElementById('nivel_bateria').value = veiculo.NIVEL_BATERIA;
             
             // 3. Lógica complexa para preencher os <select> dependentes
