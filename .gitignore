@@ -52,7 +52,5 @@ node_modules/
 error.log
 access.log
 
-# Configurações locais (caso tenham arquivos de config com senhas)
-config/local.php
-.env
-pages/PHP/config.php
+# Arquivo contendo as chaves da API
+codigoPWEB/pages/PHP/config.php
