@@ -51,3 +51,8 @@ node_modules/
 # Arquivos de log do XAMPP
 error.log
 access.log
+
+# Configurações locais (caso tenham arquivos de config com senhas)
+config/local.php
+.env
+pages/PHP/config.php
