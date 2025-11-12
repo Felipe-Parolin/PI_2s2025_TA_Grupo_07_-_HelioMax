@@ -1,5 +1,13 @@
 <?php
-// simulate_route.php - Versão Híbrida (OCM + Google) com Modo Planejamento
+
+session_start();
+
+// Debug: Verificar se usuário está logado
+if (!isset($_SESSION['usuario_id'])) {
+    die('<script>alert("Você precisa estar logado para acessar o simulador!"); window.location.href = "../index.php";</script>');
+}
+
+// simulate_route.php - Versão com Suporte a Veículos Personalizados
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
@@ -16,101 +24,100 @@ if (!file_exists($configPath)) {
 }
 include $configPath;
 
-// --- Verificação de Chaves (Google E OpenChargeMap) ---
 if (
-    !defined('GOOGLE_MAPS_API_KEY') || 
-    !defined('OPEN_CHARGE_MAP_API_KEY') || 
+    !defined('GOOGLE_MAPS_API_KEY') ||
+    !defined('OPEN_CHARGE_MAP_API_KEY') ||
     !defined('TARIFA_MEDIA_KWH')
 ) {
     ob_end_clean();
-    echo json_encode(['success' => false, 'message' => 'GOOGLE_MAPS_API_KEY, OPEN_CHARGE_MAP_API_KEY ou TARIFA_MEDIA_KWH não configuradas no config.php.']);
+    echo json_encode(['success' => false, 'message' => 'Chaves de API não configuradas no config.php.']);
     exit;
 }
 
 if (!function_exists('curl_init')) {
     ob_end_clean();
-    echo json_encode(['success' => false, 'message' => 'A extensão cURL do PHP não está habilitada no servidor.']);
+    echo json_encode(['success' => false, 'message' => 'A extensão cURL do PHP não está habilitada.']);
     exit;
 }
 
-// Classe de Exception customizada
-class EVSimulationException extends Exception {
+// Conexão com banco de dados
+$host = '127.0.0.1';
+$dbname = 'heliomax';
+$username = 'root';
+$password = '';
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    ob_end_clean();
+    echo json_encode(['success' => false, 'message' => 'Erro ao conectar ao banco de dados: ' . $e->getMessage()]);
+    exit;
+}
+
+class EVSimulationException extends Exception
+{
     private $debugInfo;
-    public function __construct($message, $debugInfo = []) {
+    public function __construct($message, $debugInfo = [])
+    {
         parent::__construct($message);
         $this->debugInfo = $debugInfo;
     }
-    public function getDebugInfo() { return $this->debugInfo; }
+    public function getDebugInfo()
+    {
+        return $this->debugInfo;
+    }
 }
 
-// --- CONFIGURAÇÃO DO VEÍCULO ---
-$vehicle = [
-    'battery_capacity' => 75.0,
-    'initial_charge'   => 95.0,
-    'consumption'      => 17.0,
-    'min_charge_stop'  => 8.0,
-    'max_charge_stop'  => 100.0,
-    'min_charge_dest'  => 10.0,
-    'charging_power'   => 50.0, // Potência padrão
-    'connector_types'  => [1036, 33] // IDs da OCM: 1036 = CCS (Type 2), 33 = CCS (Type 1)
-];
-
-// --- FUNÇÕES DE CÁLCULO ---
+// FUNÇÕES DE CÁLCULO
 define('EARTH_RADIUS_KM', 6371);
 
-function calculateDistance($lat1, $lng1, $lat2, $lng2) {
+function calculateDistance($lat1, $lng1, $lat2, $lng2)
+{
     $dLat = deg2rad($lat2 - $lat1);
     $dLng = deg2rad($lng2 - $lng1);
-    $a = sin($dLat/2) * sin($dLat/2) +
-         cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-         sin($dLng/2) * sin($dLng/2);
-    $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+    $a = sin($dLat / 2) * sin($dLat / 2) +
+        cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+        sin($dLng / 2) * sin($dLng / 2);
+    $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
     return EARTH_RADIUS_KM * $c;
 }
 
-function calculateRange($charge_pct, $vehicle) {
+function calculateRange($charge_pct, $vehicle)
+{
     $energy_kwh = ($charge_pct / 100) * $vehicle['battery_capacity'];
     return ($energy_kwh / $vehicle['consumption']) * 100;
 }
 
-/**
- * NOVO: Calcula o "bearing" (direção) de um ponto a outro
- */
-function getBearing($lat1, $lng1, $lat2, $lng2) {
+function getBearing($lat1, $lng1, $lat2, $lng2)
+{
     $lat1 = deg2rad($lat1);
     $lng1 = deg2rad($lng1);
     $lat2 = deg2rad($lat2);
     $lng2 = deg2rad($lng2);
-
     $dLng = $lng2 - $lng1;
     $y = sin($dLng) * cos($lat2);
     $x = cos($lat1) * sin($lat2) - sin($lat1) * cos($lat2) * cos($dLng);
-    
     $brng = atan2($y, $x);
-    
-    return ($brng + 2 * M_PI) % (2 * M_PI); // Normaliza
+    return ($brng + 2 * M_PI) % (2 * M_PI);
 }
 
-/**
- * NOVO: Calcula um ponto de destino dado um início, direção e distância
- */
-function calculateSimulatedStop($lat, $lng, $bearing_rad, $distance_km) {
+function calculateSimulatedStop($lat, $lng, $bearing_rad, $distance_km)
+{
     $lat = deg2rad($lat);
     $lng = deg2rad($lng);
-    $d = $distance_km / EARTH_RADIUS_KM; // Distância angular
-
+    $d = $distance_km / EARTH_RADIUS_KM;
     $newLat = asin(sin($lat) * cos($d) + cos($lat) * sin($d) * cos($bearing_rad));
     $newLng = $lng + atan2(sin($bearing_rad) * sin($d) * cos($lat), cos($d) - sin($lat) * sin($newLat));
-
     return [
         'lat' => rad2deg($newLat),
         'lng' => rad2deg($newLng)
     ];
 }
 
-
-// --- FUNÇÕES GOOGLE MAPS API (Sem alterações) ---
-function google_api_request($url, $params, $timeout = 15) {
+// FUNÇÕES GOOGLE MAPS API
+function google_api_request($url, $params, $timeout = 15)
+{
     $params['key'] = GOOGLE_MAPS_API_KEY;
     $queryString = http_build_query($params);
     $apiUrl = $url . '?' . $queryString;
@@ -129,18 +136,24 @@ function google_api_request($url, $params, $timeout = 15) {
     }
     $data = json_decode($response, true);
     if ($data['status'] !== 'OK') {
-        if ($data['status'] == 'ZERO_RESULTS') { return $data; }
-        error_log("Erro API Google ({$url}): Status: {$data['status']} - Error: " . ($data['error_message'] ?? 'N/A'));
+        if ($data['status'] == 'ZERO_RESULTS') {
+            return $data;
+        }
+        error_log("Erro API Google ({$url}): Status: {$data['status']}");
         return null;
     }
     return $data;
 }
-function getGoogleDirections($originLat, $originLng, $destLat, $destLng, $waypointsList = []) {
+
+function getGoogleDirections($originLat, $originLng, $destLat, $destLng, $waypointsList = [])
+{
     $url = "https://maps.googleapis.com/maps/api/directions/json";
     $params = ['origin' => "{$originLat},{$originLng}", 'destination' => "{$destLat},{$destLng}", 'units' => 'metric'];
     if (!empty($waypointsList)) {
         $midpoints = array_slice($waypointsList, 1, -1);
-        if (!empty($midpoints)) { $params['waypoints'] = 'optimize:true|' . implode('|', $midpoints); }
+        if (!empty($midpoints)) {
+            $params['waypoints'] = 'optimize:true|' . implode('|', $midpoints);
+        }
     }
     $data = google_api_request($url, $params, 30);
     if (empty($data['routes'][0])) {
@@ -149,32 +162,48 @@ function getGoogleDirections($originLat, $originLng, $destLat, $destLng, $waypoi
     }
     return $data['routes'][0];
 }
-function getGoogleMatrixDistances($originLat, $originLng, $destinations) {
-    if (empty($destinations)) return [];
+
+function getGoogleMatrixDistances($originLat, $originLng, $destinations)
+{
+    if (empty($destinations))
+        return [];
     $url = "https://maps.googleapis.com/maps/api/distancematrix/json";
     $originString = "{$originLat},{$originLng}";
     $destCoords = [];
-    foreach ($destinations as $dest) { $destCoords[] = $dest['lat'] . ',' . $dest['lng']; }
+    foreach ($destinations as $dest) {
+        $destCoords[] = $dest['lat'] . ',' . $dest['lng'];
+    }
     $destString = implode('|', $destCoords);
     $params = ['origins' => $originString, 'destinations' => $destString, 'units' => 'metric'];
     $data = google_api_request($url, $params, 30);
     if (empty($data['rows'][0]['elements'])) {
-        error_log("Google Matrix falhou. Retornando null.");
+        error_log("Google Matrix falhou.");
         return null;
     }
     $distances = [];
     foreach ($data['rows'][0]['elements'] as $element) {
-        if ($element['status'] === 'OK') { $distances[] = $element['distance']['value'] / 1000; } 
-        else { $distances[] = null; }
+        if ($element['status'] === 'OK') {
+            $distances[] = $element['distance']['value'] / 1000;
+        } else {
+            $distances[] = null;
+        }
     }
     return $distances;
 }
-// --- FUNÇÃO OPENCHARGEMAP (OCM) (Sem alterações) ---
-function findOCMStations($lat, $lng, $radius_km = 100, $vehicle_connectors = []) {
+
+// FUNÇÃO OPENCHARGEMAP
+function findOCMStations($lat, $lng, $radius_km = 100, $vehicle_connectors = [])
+{
     $url = "https://api.openchargemap.io/v3/poi/";
     $params = [
-        'key' => OPEN_CHARGE_MAP_API_KEY, 'output' => 'json', 'latitude' => $lat, 'longitude' => $lng,
-        'distance' => $radius_km, 'distanceunit' => 'km', 'maxresults' => 100, 'compact' => true,
+        'key' => OPEN_CHARGE_MAP_API_KEY,
+        'output' => 'json',
+        'latitude' => $lat,
+        'longitude' => $lng,
+        'distance' => $radius_km,
+        'distanceunit' => 'km',
+        'maxresults' => 100,
+        'compact' => true,
         'connectiontypeid' => implode(',', $vehicle_connectors)
     ];
     $queryString = http_build_query($params);
@@ -195,32 +224,100 @@ function findOCMStations($lat, $lng, $radius_km = 100, $vehicle_connectors = [])
     return json_decode($response, true);
 }
 
-// --- FUNÇÕES PRINCIPAIS DE SIMULAÇÃO ---
+// BUSCAR PONTOS DO BANCO DE DADOS
+function findDatabaseStations($pdo, $lat, $lng, $radius_km = 100)
+{
+    try {
+        $sql = "SELECT 
+                    pc.ID_PONTO,
+                    pc.LATITUDE,
+                    pc.LONGITUDE,
+                    pc.VALOR_KWH,
+                    pc.NUMERO,
+                    pc.COMPLEMENTO,
+                    c.LOGRADOURO,
+                    b.NOME as BAIRRO,
+                    ci.NOME as CIDADE,
+                    e.UF,
+                    sp.DESCRICAO as STATUS,
+                    u.NOME as CADASTRADO_POR
+                FROM ponto_carregamento pc
+                LEFT JOIN cep c ON pc.LOCALIZACAO = c.ID_CEP
+                LEFT JOIN bairro b ON c.FK_BAIRRO = b.ID_BAIRRO
+                LEFT JOIN cidade ci ON b.FK_CIDADE = ci.ID_CIDADE
+                LEFT JOIN estado e ON ci.FK_ESTADO = e.ID_ESTADO
+                LEFT JOIN status_ponto sp ON pc.FK_STATUS_PONTO = sp.ID_STATUS_PONTO
+                LEFT JOIN usuario u ON pc.FK_ID_USUARIO_CADASTRO = u.ID_USER
+                WHERE pc.LATITUDE IS NOT NULL 
+                AND pc.LONGITUDE IS NOT NULL
+                AND pc.FK_STATUS_PONTO = 1";
 
-/**
- * findBestChargingStation (Lógica modificada na SOLUÇÃO 1 - aumentando para 15)
- */
-function findBestChargingStation($currentLat, $currentLng, $destLat, $destLng, $maxRange_km, $visitedStations, $vehicle) {
-    
-    // Usar a autonomia MÁXIMA para a busca Haversine da OCM.
-    $searchRadius = $maxRange_km;
-    
-    // 1. Encontrar estações com OpenChargeMap API
-    $stations = findOCMStations($currentLat, $currentLng, $searchRadius, $vehicle['connector_types']);
-    
-    if (empty($stations)) {
-        error_log("Nenhuma estação encontrada no raio de {$searchRadius}km via OpenChargeMap");
-        return null;
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute();
+        $pontos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $pontosNoRaio = [];
+
+        foreach ($pontos as $ponto) {
+            $distancia = calculateDistance($lat, $lng, floatval($ponto['LATITUDE']), floatval($ponto['LONGITUDE']));
+
+            if ($distancia <= $radius_km) {
+                $endereco = trim($ponto['LOGRADOURO'] ?? 'Endereço não informado');
+                if (!empty($ponto['NUMERO'])) {
+                    $endereco .= ', ' . $ponto['NUMERO'];
+                }
+                if (!empty($ponto['BAIRRO'])) {
+                    $endereco .= ' - ' . $ponto['BAIRRO'];
+                }
+                if (!empty($ponto['CIDADE']) && !empty($ponto['UF'])) {
+                    $endereco .= ', ' . $ponto['CIDADE'] . ' - ' . $ponto['UF'];
+                }
+
+                $pontosNoRaio[] = [
+                    'id' => 'db_' . $ponto['ID_PONTO'],
+                    'latitude' => floatval($ponto['LATITUDE']),
+                    'longitude' => floatval($ponto['LONGITUDE']),
+                    'name' => 'Ponto HelioMax #' . $ponto['ID_PONTO'],
+                    'address' => $endereco,
+                    'power_kw' => 50.0,
+                    'connector_type' => 'CCS Type 2',
+                    'rating' => 'Cadastrado por: ' . ($ponto['CADASTRADO_POR'] ?? 'Administrador'),
+                    'distance_km' => $distancia,
+                    'valor_kwh' => floatval($ponto['VALOR_KWH']),
+                    'source' => 'database'
+                ];
+            }
+        }
+
+        error_log("Encontrados " . count($pontosNoRaio) . " pontos do banco de dados no raio de {$radius_km}km");
+        return $pontosNoRaio;
+
+    } catch (PDOException $e) {
+        error_log("Erro ao buscar pontos do banco: " . $e->getMessage());
+        return [];
     }
+}
+
+// MESCLAR PONTOS OCM + BANCO DE DADOS
+function findBestChargingStation($pdo, $currentLat, $currentLng, $destLat, $destLng, $maxRange_km, $visitedStations, $vehicle)
+{
+    $searchRadius = $maxRange_km;
+    $ocmStations = findOCMStations($currentLat, $currentLng, $searchRadius, $vehicle['connector_types']);
+    $dbStations = findDatabaseStations($pdo, $currentLat, $currentLng, $searchRadius);
+
+    error_log("Total de estações: " . count($ocmStations) . " (OCM) + " . count($dbStations) . " (Banco)");
 
     $candidates = [];
 
-    // 2. Primeira filtragem (Haversine e visitados)
-    foreach ($stations as $station) {
-        if (!isset($station['AddressInfo']['Latitude']) || !isset($station['AddressInfo']['Longitude'])) continue;
-        $stationId = $station['ID'];
-        if (in_array($stationId, $visitedStations)) continue; 
-        if (empty($station['Connections'])) continue;
+    // Processar estações da OCM
+    foreach ($ocmStations as $station) {
+        if (!isset($station['AddressInfo']['Latitude']) || !isset($station['AddressInfo']['Longitude']))
+            continue;
+        $stationId = 'ocm_' . $station['ID'];
+        if (in_array($stationId, $visitedStations))
+            continue;
+        if (empty($station['Connections']))
+            continue;
 
         $bestConnection = null;
         foreach ($station['Connections'] as $conn) {
@@ -230,111 +327,172 @@ function findBestChargingStation($currentLat, $currentLng, $destLat, $destLng, $
                 }
             }
         }
-        if ($bestConnection == null) continue;
+        if ($bestConnection == null)
+            continue;
 
         $stationLat = $station['AddressInfo']['Latitude'];
         $stationLng = $station['AddressInfo']['Longitude'];
         $distToStation = calculateDistance($currentLat, $currentLng, $stationLat, $stationLng);
-        if ($distToStation < 10.0) continue; // Evitar loops
-        if ($distToStation > $maxRange_km) continue; // Filtro Haversine
-        
+        if ($distToStation < 10.0)
+            continue;
+        if ($distToStation > $maxRange_km)
+            continue;
+
         $distToDestination = calculateDistance($stationLat, $stationLng, $destLat, $destLng);
         $currentDistToDest = calculateDistance($currentLat, $currentLng, $destLat, $destLng);
         $score = $currentDistToDest - $distToDestination;
-        
+
         $candidates[] = [
-            'score' => $score, 'station_data' => $station, 'connection_info' => $bestConnection,
-            'haversine_dist_to_station' => $distToStation, 'haversine_dist_to_dest' => $distToDestination,
-            'id' => $stationId, 'lat' => $stationLat, 'lng' => $stationLng
+            'score' => $score,
+            'station_data' => $station,
+            'connection_info' => $bestConnection,
+            'haversine_dist_to_station' => $distToStation,
+            'haversine_dist_to_dest' => $distToDestination,
+            'id' => $stationId,
+            'lat' => $stationLat,
+            'lng' => $stationLng,
+            'source' => 'ocm'
+        ];
+    }
+
+    // Processar estações do banco de dados
+    foreach ($dbStations as $dbStation) {
+        $stationId = $dbStation['id'];
+        if (in_array($stationId, $visitedStations))
+            continue;
+
+        $stationLat = $dbStation['latitude'];
+        $stationLng = $dbStation['longitude'];
+        $distToStation = $dbStation['distance_km'];
+
+        if ($distToStation < 10.0)
+            continue;
+        if ($distToStation > $maxRange_km)
+            continue;
+
+        $distToDestination = calculateDistance($stationLat, $stationLng, $destLat, $destLng);
+        $currentDistToDest = calculateDistance($currentLat, $currentLng, $destLat, $destLng);
+        $score = $currentDistToDest - $distToDestination;
+
+        $candidates[] = [
+            'score' => $score,
+            'station_data' => [
+                'ID' => $stationId,
+                'AddressInfo' => [
+                    'Title' => $dbStation['name'],
+                    'AddressLine1' => $dbStation['address'],
+                    'Latitude' => $stationLat,
+                    'Longitude' => $stationLng
+                ],
+                'DataQualityLevel' => $dbStation['rating']
+            ],
+            'connection_info' => [
+                'PowerKW' => $dbStation['power_kw'],
+                'ConnectionType' => ['Title' => $dbStation['connector_type']]
+            ],
+            'haversine_dist_to_station' => $distToStation,
+            'haversine_dist_to_dest' => $distToDestination,
+            'id' => $stationId,
+            'lat' => $stationLat,
+            'lng' => $stationLng,
+            'source' => 'database',
+            'valor_kwh' => $dbStation['valor_kwh']
         ];
     }
 
     if (empty($candidates)) {
-        error_log("Nenhum candidato válido (OCM) após filtragem Haversine");
+        error_log("Nenhum candidato válido após filtragem Haversine");
         return null;
     }
 
-    usort($candidates, function($a, $b) { return $b['score'] <=> $a['score']; });
+    usort($candidates, function ($a, $b) {
+        return $b['score'] <=> $a['score'];
+    });
 
-    // 3. Pegar top 15 e verificar distância real com Google Matrix (SOLUÇÃO 1)
     $topCandidates = array_slice($candidates, 0, 15);
     $realDistances = getGoogleMatrixDistances($currentLat, $currentLng, $topCandidates);
-    
+
     if ($realDistances === null) {
-        error_log("ERRO CRÍTICO: Google Matrix falhou. Impossível calcular distâncias reais.");
-        return null; // Retorna null para o modo otimista poder pegar
+        error_log("ERRO CRÍTICO: Google Matrix falhou.");
+        return null;
     }
-    
-    // 4. Selecionar primeiro posto alcançável com distância real
+
     foreach ($topCandidates as $index => $candidate) {
         $realDistToStation = $realDistances[$index] ?? null;
-        if ($realDistToStation === null) continue;
-        
-        // Verificação de segurança (90%)
+        if ($realDistToStation === null)
+            continue;
+
         if ($realDistToStation <= $maxRange_km * 0.90) {
             $routeToDest = getGoogleDirections($candidate['lat'], $candidate['lng'], $destLat, $destLng);
             $realDistToDest = $routeToDest ? ($routeToDest['legs'][0]['distance']['value'] / 1000) : $candidate['haversine_dist_to_dest'];
-            
+
             return [
-                'data' => $candidate['station_data'], 'connection_info' => $candidate['connection_info'],
-                'distance_to_station_km' => $realDistToStation, 'distance_to_destination_km' => $realDistToDest,
-                'id' => $candidate['id'], 'lat' => $candidate['lat'], 'lng' => $candidate['lng']
+                'data' => $candidate['station_data'],
+                'connection_info' => $candidate['connection_info'],
+                'distance_to_station_km' => $realDistToStation,
+                'distance_to_destination_km' => $realDistToDest,
+                'id' => $candidate['id'],
+                'lat' => $candidate['lat'],
+                'lng' => $candidate['lng'],
+                'source' => $candidate['source'],
+                'valor_kwh' => $candidate['valor_kwh'] ?? null
             ];
         }
     }
-    
-    error_log("Nenhum posto (OCM) dos top 15 está dentro da autonomia real (Google Matrix)");
-    return null; // << IMPORTANTE: Retorna nulo se nada for encontrado
+
+    error_log("Nenhum posto dos top 15 está dentro da autonomia real");
+    return null;
 }
 
-/**
- * MODIFICADO: Função principal de simulação - (Aceita modo otimista)
- */
-function simulateEVRoute($startLat, $startLng, $endLat, $endLng, $vehicle, $optimisticMode = false) {
+// FUNÇÃO PRINCIPAL DE SIMULAÇÃO
+function simulateEVRoute($pdo, $startLat, $startLng, $endLat, $endLng, $vehicle, $optimisticMode = false)
+{
     $currentLat = $startLat;
     $currentLng = $startLng;
     $currentCharge = $vehicle['initial_charge'];
-    
+
     $chargeStops = [];
     $visitedStations = [];
     $totalDistance = 0;
     $totalChargingTime = 0;
     $totalEnergy = 0;
-    
+
     $debugInfo = [
         'start_position' => ['lat' => $startLat, 'lng' => $startLng],
         'end_position' => ['lat' => $endLat, 'lng' => $endLng],
         'optimistic_mode' => $optimisticMode,
+        'vehicle_info' => [
+            'name' => $vehicle['name'],
+            'battery_capacity' => $vehicle['battery_capacity'],
+            'consumption' => $vehicle['consumption']
+        ],
         'iterations' => []
     ];
-    
+
     $maxIterations = 20;
     $iteration = 0;
-    
-    // Calcular distância total da rota usando Google Directions
+
     $initialRoute = getGoogleDirections($startLat, $startLng, $endLat, $endLng);
     if ($initialRoute === null || empty($initialRoute['legs'][0]['distance'])) {
-        throw new EVSimulationException("Não foi possível calcular a rota inicial usando Google Directions.", $debugInfo);
+        throw new EVSimulationException("Não foi possível calcular a rota inicial.", $debugInfo);
     }
-    $totalRouteDistance = $initialRoute['legs'][0]['distance']['value'] / 1000; // em KM
-    
+    $totalRouteDistance = $initialRoute['legs'][0]['distance']['value'] / 1000;
+
     while ($iteration < $maxIterations) {
         $iteration++;
-        
+
         $currentRange = calculateRange($currentCharge, $vehicle);
-        
-        // Usar Google Directions para calcular distância real até destino
+
         $routeToDestination = getGoogleDirections($currentLat, $currentLng, $endLat, $endLng);
         if ($routeToDestination === null || empty($routeToDestination['legs'][0]['distance'])) {
-            throw new EVSimulationException("Não foi possível calcular distância até o destino (Google Directions).", $debugInfo);
+            throw new EVSimulationException("Não foi possível calcular distância até o destino.", $debugInfo);
         }
         $distToDestination = $routeToDestination['legs'][0]['distance']['value'] / 1000;
-        
-        $iterationInfo = [ 'iteration' => $iteration, /* ... (outros logs) ... */ ];
-        
-        // Verificar se pode chegar ao destino
-        $safeRangeToDest = $currentRange * 0.90; // (SOLUÇÃO 2: 0.95)
-        if ($distToDestination <= $safeRangeToDest) { 
+
+        $iterationInfo = ['iteration' => $iteration];
+
+        $safeRangeToDest = $currentRange * 0.90;
+        if ($distToDestination <= $safeRangeToDest) {
             $energyConsumed = ($distToDestination * $vehicle['consumption']) / 100;
             $chargeAtFinalDest = $currentCharge - (($energyConsumed / $vehicle['battery_capacity']) * 100);
 
@@ -343,51 +501,46 @@ function simulateEVRoute($startLat, $startLng, $endLat, $endLng, $vehicle, $opti
                 $totalDistance += $distToDestination;
                 $totalEnergy += $energyConsumed;
                 $debugInfo['iterations'][] = ['action' => 'reached_destination'];
-                break; // Sucesso!
+                break;
             }
             $iterationInfo['action'] = 'cannot_reach_destination_with_min_charge';
         }
 
-        // Encontrar melhor posto usando OCM
         $bestStation = findBestChargingStation(
-            $currentLat, $currentLng, $endLat, $endLng, 
-            $currentRange, $visitedStations, $vehicle
+            $pdo,
+            $currentLat,
+            $currentLng,
+            $endLat,
+            $endLng,
+            $currentRange,
+            $visitedStations,
+            $vehicle
         );
-        
-        // ===== LÓGICA DO MODO DE PLANEJAMENTO =====
+
         if ($bestStation === null) {
-            
             if (!$optimisticMode) {
-                // MODO REALISTA: Falha
                 $iterationInfo['action'] = 'no_station_found_realistic_mode';
                 $debugInfo['iterations'][] = $iterationInfo;
                 throw new EVSimulationException(
-                    "Não foi possível encontrar uma estação de recarga OCM alcançável a partir do Ponto {$iteration}. Autonomia atual: {$currentRange} km.",
+                    "Não foi possível encontrar uma estação de recarga alcançável. Autonomia atual: {$currentRange} km.",
                     $debugInfo
                 );
             } else {
-                // MODO PLANEJAMENTO: Cria um ponto simulado
                 $iterationInfo['action'] = 'creating_simulated_stop';
-                
-                $safeDistToSimulate = $currentRange * 0.90; // (SOLUÇÃO 2: 0.95)
-                
-                // Calcular direção (bearing) e o novo ponto
+
+                $safeDistToSimulate = $currentRange * 0.90;
                 $bearing = getBearing($currentLat, $currentLng, $endLat, $endLng);
                 $simulatedPoint = calculateSimulatedStop($currentLat, $currentLng, $bearing, $safeDistToSimulate);
-                
-                $distToStation = $safeDistToSimulate; // Distância é a autonomia segura
-                
-                // Simular viagem até o posto simulado
+
+                $distToStation = $safeDistToSimulate;
                 $energyToStation = ($distToStation * $vehicle['consumption']) / 100;
                 $chargeAtArrival = $currentCharge - (($energyToStation / $vehicle['battery_capacity']) * 100);
-                
-                // Abastecer (simulado)
+
                 $chargeAtDeparture = $vehicle['max_charge_stop'];
                 $energyCharged = (($chargeAtDeparture - $chargeAtArrival) / 100) * $vehicle['battery_capacity'];
-                $chargingPower = $vehicle['charging_power']; // Usa potência padrão
+                $chargingPower = $vehicle['charging_power'];
                 $chargingTime = ($energyCharged / $chargingPower) * 3600;
 
-                // Registrar parada simulada
                 $chargeStops[] = [
                     'stop_number' => count($chargeStops) + 1,
                     'distance_traveled_km' => round($totalDistance + $distToStation, 2),
@@ -398,7 +551,7 @@ function simulateEVRoute($startLat, $startLng, $endLat, $endLng, $vehicle, $opti
                     'charging_power_kw' => $chargingPower,
                     'latitude' => $simulatedPoint['lat'],
                     'longitude' => $simulatedPoint['lng'],
-                    'is_estimated' => true, // <<< FLAG IMPORTANTE
+                    'is_estimated' => true,
                     'station' => [
                         'id' => 'simulated_' . $iteration,
                         'name' => 'Parada Simulada (Planejamento)',
@@ -408,49 +561,42 @@ function simulateEVRoute($startLat, $startLng, $endLat, $endLng, $vehicle, $opti
                         'connector_type' => 'Simulado'
                     ]
                 ];
-                
-                // Atualizar posição e carga
+
                 $currentLat = $simulatedPoint['lat'];
                 $currentLng = $simulatedPoint['lng'];
                 $currentCharge = $chargeAtDeparture;
                 $totalDistance += $distToStation;
                 $totalEnergy += $energyToStation + $energyCharged;
                 $totalChargingTime += $chargingTime;
-                
+
                 $iterationInfo['charge_at_departure'] = round($chargeAtDeparture, 1);
                 $debugInfo['iterations'][] = $iterationInfo;
 
-                // Continua para a próxima iteração do loop
-                continue; 
+                continue;
             }
         }
-        // ===== FIM DA LÓGICA DO MODO DE PLANEJAMENTO =====
 
-        
-        // --- Processamento de ESTAÇÃO REAL (se $bestStation não for null) ---
         $iterationInfo['action'] = 'charging_at_real_station';
-        
+        $iterationInfo['station_source'] = $bestStation['source'];
+
         $distToStation = $bestStation['distance_to_station_km'];
-        
-        // Simular viagem até o posto
         $energyToStation = ($distToStation * $vehicle['consumption']) / 100;
         $chargeAtArrival = $currentCharge - (($energyToStation / $vehicle['battery_capacity']) * 100);
-        
-        // (Esta verificação é uma segurança extra, mas findBestStation já checa)
+
         if ($chargeAtArrival < $vehicle['min_charge_stop']) {
             $iterationInfo['action'] = 'station_too_far_min_charge';
             $debugInfo['iterations'][] = $iterationInfo;
             $visitedStations[] = $bestStation['id'];
-            continue; 
+            continue;
         }
-        
-        // Abastecer
+
         $chargeAtDeparture = $vehicle['max_charge_stop'];
         $energyCharged = (($chargeAtDeparture - $chargeAtArrival) / 100) * $vehicle['battery_capacity'];
         $chargingPower = $bestStation['connection_info']['PowerKW'] ?? $vehicle['charging_power'];
         $chargingTime = ($energyCharged / $chargingPower) * 3600;
-        
-        // Registrar parada REAL
+
+        $isFromDatabase = ($bestStation['source'] === 'database');
+
         $chargeStops[] = [
             'stop_number' => count($chargeStops) + 1,
             'distance_traveled_km' => round($totalDistance + $distToStation, 2),
@@ -461,18 +607,19 @@ function simulateEVRoute($startLat, $startLng, $endLat, $endLng, $vehicle, $opti
             'charging_power_kw' => $chargingPower,
             'latitude' => $bestStation['lat'],
             'longitude' => $bestStation['lng'],
-            'is_estimated' => false, // <<< FLAG IMPORTANTE
+            'is_estimated' => false,
+            'is_from_database' => $isFromDatabase,
             'station' => [
                 'id' => $bestStation['id'],
                 'name' => $bestStation['data']['AddressInfo']['Title'] ?? 'Estação de Recarga',
                 'address' => $bestStation['data']['AddressInfo']['AddressLine1'] ?? 'Endereço não disponível',
                 'rating' => $bestStation['data']['DataQualityLevel'] ?? 'N/A',
                 'distance_km' => round($distToStation, 2),
-                'connector_type' => $bestStation['connection_info']['ConnectionType']['Title'] ?? 'Desconhecido'
+                'connector_type' => $bestStation['connection_info']['ConnectionType']['Title'] ?? 'Desconhecido',
+                'source' => $bestStation['source']
             ]
         ];
-        
-        // Atualizar posição e carga
+
         $currentLat = $bestStation['lat'];
         $currentLng = $bestStation['lng'];
         $currentCharge = $chargeAtDeparture;
@@ -480,15 +627,15 @@ function simulateEVRoute($startLat, $startLng, $endLat, $endLng, $vehicle, $opti
         $totalEnergy += $energyToStation + $energyCharged;
         $totalChargingTime += $chargingTime;
         $visitedStations[] = $bestStation['id'];
-        
+
         $iterationInfo['charge_at_departure'] = round($chargeAtDeparture, 1);
         $debugInfo['iterations'][] = $iterationInfo;
     }
-    
+
     if ($iteration >= $maxIterations) {
-        throw new EVSimulationException("Número máximo de paradas excedido. Rota muito longa.", $debugInfo);
+        throw new EVSimulationException("Número máximo de paradas excedido.", $debugInfo);
     }
-    
+
     return [
         'charge_stops' => $chargeStops,
         'total_distance_km' => round($totalDistance, 2),
@@ -505,17 +652,71 @@ try {
     if (empty($_POST['start_coords']) || empty($_POST['end_coords'])) {
         throw new Exception('Coordenadas não fornecidas.');
     }
-    
+
     list($startLat, $startLng) = array_map('floatval', explode(',', str_replace(' ', '', $_POST['start_coords'])));
     list($endLat, $endLng) = array_map('floatval', explode(',', str_replace(' ', '', $_POST['end_coords'])));
-    
-    // NOVO: Ler a flag do modo otimista
+
     $optimisticMode = isset($_POST['optimistic_mode']) && $_POST['optimistic_mode'] === 'true';
 
-    // 1. Executar simulação (passando a flag)
-    $simulation = simulateEVRoute($startLat, $startLng, $endLat, $endLng, $vehicle, $optimisticMode);
-    
-    // 2. Montar waypoints para rota final
+    // NOVA LÓGICA: Verificar se um veículo foi selecionado
+    if (!empty($_POST['vehicle_id']) && $_POST['vehicle_id'] !== 'default') {
+        // Buscar dados do veículo no banco
+        $vehicleId = intval($_POST['vehicle_id']);
+        $sql = "SELECT 
+                    v.NIVEL_BATERIA,
+                    m.CAPACIDADE_BATERIA,
+                    m.CONSUMO_MEDIO,
+                    m.NOME as MODELO_NOME,
+                    ma.NOME as MARCA_NOME
+                FROM veiculo v
+                INNER JOIN modelo m ON v.MODELO = m.ID_MODELO
+                INNER JOIN marca ma ON m.FK_MARCA = ma.ID_MARCA
+                WHERE v.ID_VEICULO = ?";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$vehicleId]);
+        $vehicleData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$vehicleData) {
+            throw new Exception('Veículo não encontrado.');
+        }
+
+        // Configurar veículo com dados reais do banco
+        $vehicle = [
+            'name' => $vehicleData['MARCA_NOME'] . ' ' . $vehicleData['MODELO_NOME'],
+            'battery_capacity' => floatval($vehicleData['CAPACIDADE_BATERIA']),
+            'initial_charge' => floatval($vehicleData['NIVEL_BATERIA']),
+            'consumption' => floatval($vehicleData['CONSUMO_MEDIO']),
+            'min_charge_stop' => 8.0,
+            'max_charge_stop' => 100.0,
+            'min_charge_dest' => 10.0,
+            'charging_power' => 50.0,
+            'connector_types' => [1036, 33] // CCS e CHAdeMO
+        ];
+
+        error_log("Usando veículo do usuário: {$vehicle['name']} - Bateria: {$vehicle['battery_capacity']}kWh, Consumo: {$vehicle['consumption']}kWh/100km");
+
+    } else {
+        // Usar veículo padrão (Tesla Model 3)
+        $vehicle = [
+            'name' => 'Tesla Model 3 (Pré-definido)',
+            'battery_capacity' => 75.0,
+            'initial_charge' => 95.0,
+            'consumption' => 17.0,
+            'min_charge_stop' => 8.0,
+            'max_charge_stop' => 100.0,
+            'min_charge_dest' => 10.0,
+            'charging_power' => 50.0,
+            'connector_types' => [1036, 33]
+        ];
+
+        error_log("Usando veículo padrão: Tesla Model 3");
+    }
+
+    // Executar simulação
+    $simulation = simulateEVRoute($pdo, $startLat, $startLng, $endLat, $endLng, $vehicle, $optimisticMode);
+
+    // Montar waypoints para rota final
     $waypointsList = [];
     $waypointsList[] = "{$startLat},{$startLng}";
     if (isset($simulation['charge_stops']) && is_array($simulation['charge_stops'])) {
@@ -525,32 +726,39 @@ try {
     }
     $waypointsList[] = "{$endLat},{$endLng}";
 
-    // 3. Obter geometria completa com Google Directions
+    // Obter geometria completa
     $routeData = getGoogleDirections($startLat, $startLng, $endLat, $endLng, $waypointsList);
-    
+
     if ($routeData === null) {
-        throw new Exception('Erro ao obter geometria da rota final com Google Directions.');
+        throw new Exception('Erro ao obter geometria da rota final.');
     }
-    
-    // 4. Preparar resposta
-    $drivingTime = 0; $totalDistanceFromApi = 0;
+
+    // Preparar resposta
+    $drivingTime = 0;
+    $totalDistanceFromApi = 0;
     foreach ($routeData['legs'] as $leg) {
         $drivingTime += $leg['duration']['value'];
         $totalDistanceFromApi += $leg['distance']['value'];
     }
-    $totalDistanceFromApi /= 1000; // em KM
-    
+    $totalDistanceFromApi /= 1000;
+
     $totalChargingTimeSec = $simulation['total_charging_time_sec'];
-    $chargeStopsDetails = $simulation['charge_stops']; // Já contém a flag 'is_estimated'
+    $chargeStopsDetails = $simulation['charge_stops'];
     $finalChargePct = $simulation['final_charge_pct'];
     $totalEnergyKwh = $simulation['total_energy_kwh'];
     $custo = $totalEnergyKwh * TARIFA_MEDIA_KWH;
-    
+
     ob_end_clean();
     echo json_encode([
         'success' => true,
         'geometry_polyline' => $routeData['overview_polyline']['points'],
         'bounds' => $routeData['bounds'],
+        'vehicle_info' => [
+            'name' => $vehicle['name'],
+            'battery_capacity' => $vehicle['battery_capacity'],
+            'consumption' => $vehicle['consumption'],
+            'initial_charge' => $vehicle['initial_charge']
+        ],
         'report' => [
             'distancia_total_km' => round($totalDistanceFromApi, 2),
             'tempo_conducao_min' => round($drivingTime / 60),
@@ -559,10 +767,10 @@ try {
             'energia_consumida_total_kwh' => round($totalEnergyKwh, 2),
             'custo_total_estimado' => number_format($custo, 2, ',', '.'),
             'carga_final_pct' => round($finalChargePct, 1),
-            'charge_stops_details' => $chargeStopsDetails // Passa os detalhes com a flag
+            'charge_stops_details' => $chargeStopsDetails
         ]
     ], JSON_UNESCAPED_UNICODE);
-    
+
 } catch (EVSimulationException $e) {
     ob_end_clean();
     error_log("EVSimulationException: " . $e->getMessage());

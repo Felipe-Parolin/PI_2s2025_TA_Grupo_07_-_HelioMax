@@ -231,6 +231,11 @@ $historico_recargas = [
                 <i data-lucide="star" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Avaliação</span>
             </a>
+
+            <a href="pontos_favoritos.php"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2">
+                <i data-lucide="map-pin"></i> <span>Pontos Favoritos</span>
+            </a>
         </nav>
 
         <div class="mt-auto pt-4 border-t border-cyan-500/20">
@@ -266,7 +271,7 @@ $historico_recargas = [
                     <i data-lucide="menu" class="w-7 h-7"></i>
                 </button>
 
-                
+
             </div>
         </header>
 
@@ -282,26 +287,25 @@ $historico_recargas = [
         <?php endif; ?>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-    <div class="lg:col-span-2 bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 flex flex-col"
-        style="min-height: 400px; height: calc(100vh - 250px);">
+            <div class="lg:col-span-2 bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 flex flex-col"
+                style="min-height: 400px; height: calc(100vh - 250px);">
 
-        <div class="w-full h-full rounded-lg relative overflow-hidden">
+                <div class="w-full h-full rounded-lg relative overflow-hidden">
 
-            <img src="https://maps.geoapify.com/v1/staticmap?style=klokantech-basic&width=800&height=600&center=lonlat:-47.8825,-14.2350&zoom=4&apiKey=a94d6d7cd9de4604aea43f8e8a1d0a36"
-                alt="Mapa estático do Brasil"
-                class="absolute inset-0 w-full h-full object-cover">
+                    <img src="https://maps.geoapify.com/v1/staticmap?style=klokantech-basic&width=800&height=600&center=lonlat:-47.8825,-14.2350&zoom=4&apiKey=a94d6d7cd9de4604aea43f8e8a1d0a36"
+                        alt="Mapa estático do Brasil" class="absolute inset-0 w-full h-full object-cover">
 
-            <div class="absolute inset-0 bg-slate-900/70"></div>
+                    <div class="absolute inset-0 bg-slate-900/70"></div>
 
-            <div class="absolute inset-0 flex items-center justify-center p-4">
-                <a href="simulador.php"
-                    class="whitespace-nowrap bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 hover:scale-[1.03] text-base">
-                    <i data-lucide="route" class="w-5 h-5"></i>
-                    <span>Planejar Rota</span>
-                </a>
+                    <div class="absolute inset-0 flex items-center justify-center p-4">
+                        <a href="simulador.php"
+                            class="whitespace-nowrap bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 hover:scale-[1.03] text-base">
+                            <i data-lucide="route" class="w-5 h-5"></i>
+                            <span>Planejar Rota</span>
+                        </a>
+                    </div>
+                </div>
             </div>
-        </div>
-        </div>
 
             <div class="flex flex-col bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 sm:p-6"
                 style="min-height: 400px; max-height: calc(100vh - 250px);">

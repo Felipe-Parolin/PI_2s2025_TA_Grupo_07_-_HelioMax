@@ -198,6 +198,11 @@ if (!$usuario_logado) {
                 id="sidebar-avaliacoes" title="Avaliações">
                 <i data-lucide="star" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Avaliações</span>
+            </a>
+            <a href="pontos_favoritos.php"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2">
+                <i data-lucide="map-pin"></i> <span>Pontos Favoritos</span>
+            </a>
         </nav>
 
         <div class="mt-auto pt-4 border-t border-cyan-500/20">
@@ -337,10 +342,12 @@ if (!$usuario_logado) {
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                    <label for="nivel_bateria" class="block text-sm font-medium text-cyan-300 mb-1">Nível Bateria (%)</label>
-                    <input type="number" id="nivel_bateria" name="nivel_bateria" required min="0" max="100" placeholder="100"
-                        class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500">
-                </div>
+                        <label for="nivel_bateria" class="block text-sm font-medium text-cyan-300 mb-1">Nível Bateria
+                            (%)</label>
+                        <input type="number" id="nivel_bateria" name="nivel_bateria" required min="0" max="100"
+                            placeholder="100"
+                            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    </div>
                 </div>
 
                 <footer class="flex justify-end gap-3 pt-4 mt-2">

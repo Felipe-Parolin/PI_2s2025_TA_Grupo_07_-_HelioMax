@@ -368,6 +368,11 @@ foreach ($avaliacoes as $av) {
                 <i data-lucide="star" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Avaliações</span>
             </a>
+            <a href="pontos_favoritos.php"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2">
+                <i data-lucide="map-pin"></i> <span>Pontos Favoritos</span>
+            </a>
+
         </nav>
 
         <div class="mt-auto pt-4 border-t border-cyan-500/20">
