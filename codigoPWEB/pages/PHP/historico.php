@@ -46,7 +46,7 @@ if (!$usuario_logado) {
     <link rel="icon" type="image/png" href="../../images/icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="../CSS/style_historico.css">
+    <link rel="stylesheet" href="../../styles/style_historico.css">
 </head>
 
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex">
