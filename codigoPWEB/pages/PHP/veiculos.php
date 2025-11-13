@@ -181,7 +181,7 @@ if (!$usuario_logado) {
                 <i data-lucide="layout-dashboard" class="flex-shrink-0"></i>
                 <span class="sidebar-text">Dashboard</span>
             </a>
-            <a href="#"
+            <a href="historico.php"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
                 id="sidebar-historico" title="Histórico">
                 <i data-lucide="history" class="flex-shrink-0"></i>

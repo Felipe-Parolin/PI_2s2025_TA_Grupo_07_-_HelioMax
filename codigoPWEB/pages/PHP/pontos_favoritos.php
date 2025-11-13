@@ -100,7 +100,7 @@ if (!$usuario_logado) {
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item">
                 <i data-lucide="layout-dashboard"></i> <span>Dashboard</span>
             </a>
-            <a href="#"
+            <a href="historico.php"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
                 title="Histórico">
                 <i data-lucide="history" class="flex-shrink-0"></i>

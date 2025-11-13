@@ -748,6 +748,167 @@ try {
     $totalEnergyKwh = $simulation['total_energy_kwh'];
     $custo = $totalEnergyKwh * TARIFA_MEDIA_KWH;
 
+    // ====================================================================================
+// ADICIONE ESTE CÓDIGO NO FINAL DO simulate_route.php, ANTES DO echo json_encode()
+// ====================================================================================
+
+// Função para salvar no histórico
+function salvarNoHistorico($pdo, $userId, $vehicleId, $startLat, $startLng, $endLat, $endLng, 
+                          $simulation, $optimisticMode, $polyline) {
+    try {
+        // Geocodificação reversa para obter endereços legíveis
+        $origemEndereco = geocodeAddress($startLat, $startLng);
+        $destinoEndereco = geocodeAddress($endLat, $endLng);
+        
+        $stmt = $pdo->prepare("
+            INSERT INTO historico_rota (
+                FK_USUARIO, FK_VEICULO, ORIGEM_LAT, ORIGEM_LNG, ORIGEM_ENDERECO,
+                DESTINO_LAT, DESTINO_LNG, DESTINO_ENDERECO, DISTANCIA_TOTAL_KM,
+                TEMPO_CONDUCAO_MIN, TEMPO_CARREGAMENTO_MIN, PARADAS_TOTAIS,
+                ENERGIA_CONSUMIDA_KWH, CUSTO_TOTAL, CARGA_FINAL_PCT,
+                MODO_OTIMISTA, DADOS_PARADAS, POLYLINE
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        
+        $totalDistanceFromApi = 0;
+        $drivingTime = 0;
+        
+        $stmt->execute([
+            $userId,
+            $vehicleId !== 'default' ? $vehicleId : null,
+            $startLat,
+            $startLng,
+            $origemEndereco,
+            $endLat,
+            $endLng,
+            $destinoEndereco,
+            $simulation['total_route_distance'],
+            round($drivingTime / 60),
+            round($simulation['total_charging_time_sec'] / 60),
+            count($simulation['charge_stops']),
+            $simulation['total_energy_kwh'],
+            $simulation['total_energy_kwh'] * TARIFA_MEDIA_KWH,
+            $simulation['final_charge_pct'],
+            $optimisticMode ? 1 : 0,
+            json_encode($simulation['charge_stops']),
+            $polyline
+        ]);
+        
+        return true;
+    } catch (PDOException $e) {
+        error_log("Erro ao salvar histórico: " . $e->getMessage());
+        return false;
+    }
+}
+
+function geocodeAddress($lat, $lng) {
+    $url = "https://maps.googleapis.com/maps/api/geocode/json";
+    $params = [
+        'latlng' => "$lat,$lng",
+        'key' => GOOGLE_MAPS_API_KEY,
+        'language' => 'pt-BR'
+    ];
+    
+    $queryString = http_build_query($params);
+    $apiUrl = $url . '?' . $queryString;
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $apiUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    $response = curl_exec($ch);
+    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($response && $httpcode === 200) {
+        $data = json_decode($response, true);
+        if ($data['status'] === 'OK' && !empty($data['results'][0])) {
+            return $data['results'][0]['formatted_address'];
+        }
+    }
+    
+    return "Lat: $lat, Lng: $lng";
+}
+
+// ====================================================================================
+// NO FINAL DO try { } PRINCIPAL, LOGO APÓS A SIMULAÇÃO BEM-SUCEDIDA, ADICIONE:
+// ====================================================================================
+
+// Salvar no histórico
+$vehicleIdForHistory = !empty($_POST['vehicle_id']) && $_POST['vehicle_id'] !== 'default' 
+                       ? intval($_POST['vehicle_id']) 
+                       : null;
+
+salvarNoHistorico(
+    $pdo, 
+    $_SESSION['usuario_id'], 
+    $vehicleIdForHistory,
+    $startLat, 
+    $startLng, 
+    $endLat, 
+    $endLng, 
+    $simulation, 
+    $optimisticMode,
+    $routeData['overview_polyline']['points']
+);
+
+// ====================================================================================
+// EXEMPLO DE IMPLEMENTAÇÃO COMPLETA NO FINAL DO ARQUIVO:
+// ====================================================================================
+
+/*
+try {
+    // ... código existente de simulação ...
+    
+    // Preparar resposta
+    ob_end_clean();
+    
+    // Salvar no histórico ANTES de enviar resposta
+    $vehicleIdForHistory = !empty($_POST['vehicle_id']) && $_POST['vehicle_id'] !== 'default' 
+                           ? intval($_POST['vehicle_id']) 
+                           : null;
+    
+    salvarNoHistorico(
+        $pdo, 
+        $_SESSION['usuario_id'], 
+        $vehicleIdForHistory,
+        $startLat, 
+        $startLng, 
+        $endLat, 
+        $endLng, 
+        $simulation, 
+        $optimisticMode,
+        $routeData['overview_polyline']['points']
+    );
+    
+    // Enviar resposta JSON
+    echo json_encode([
+        'success' => true,
+        'geometry_polyline' => $routeData['overview_polyline']['points'],
+        'bounds' => $routeData['bounds'],
+        'vehicle_info' => [
+            'name' => $vehicle['name'],
+            'battery_capacity' => $vehicle['battery_capacity'],
+            'consumption' => $vehicle['consumption'],
+            'initial_charge' => $vehicle['initial_charge']
+        ],
+        'report' => [
+            'distancia_total_km' => round($totalDistanceFromApi, 2),
+            'tempo_conducao_min' => round($drivingTime / 60),
+            'tempo_carregamento_min' => round($totalChargingTimeSec / 60),
+            'paradas_totais' => count($chargeStopsDetails),
+            'energia_consumida_total_kwh' => round($totalEnergyKwh, 2),
+            'custo_total_estimado' => number_format($custo, 2, ',', '.'),
+            'carga_final_pct' => round($finalChargePct, 1),
+            'charge_stops_details' => $chargeStopsDetails
+        ]
+    ], JSON_UNESCAPED_UNICODE);
+    
+} catch (EVSimulationException $e) {
+    // ... tratamento de erro ...
+}
+*/
+
     ob_end_clean();
     echo json_encode([
         'success' => true,

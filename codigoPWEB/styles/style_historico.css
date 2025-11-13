@@ -1,0 +1,183 @@
+/*
+ * Arquivo: style_historico.css
+ * Estilos customizados para a tela de histórico de rotas
+ */
+
+/* Efeito de Destaque no Card ao Passar o Mouse */
+.route-card {
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    position: relative;
+}
+
+.route-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(34, 211, 238, 0.2);
+}
+
+/* Sidebar mobile hidden */
+.sidebar-mobile-hidden {
+    transform: translateX(-100%);
+}
+
+/* Sidebar active state */
+.sidebar-item.active {
+    background-color: #0284c7;
+    color: white;
+}
+
+/* Animação do spinner de loading */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Scrollbar customizada */
+.overflow-y-auto::-webkit-scrollbar {
+    width: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: rgba(34, 211, 238, 0.3);
+    border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: rgba(34, 211, 238, 0.5);
+}
+
+/* ============================================
+   RESPONSIVIDADE PARA TABLETS
+   ============================================ */
+
+/* Tablets - Portrait e Landscape (768px até 1279px) */
+@media (min-width: 768px) and (max-width: 1279px) {
+    /* Sidebar compacta em tablets */
+    aside#sidebar {
+        width: 5rem !important;
+        padding: 1rem 0.5rem;
+    }
+    
+    /* Esconde todos os textos da sidebar */
+    aside#sidebar .sidebar-text {
+        display: none !important;
+    }
+    
+    /* Centraliza os ícones */
+    aside#sidebar .sidebar-item {
+        justify-content: center !important;
+        padding: 0.75rem !important;
+    }
+    
+    /* Esconde título e subtítulo do logo */
+    aside#sidebar h1,
+    aside#sidebar p {
+        display: none !important;
+    }
+    
+    /* Centraliza o logo */
+    aside#sidebar .flex.items-center.gap-3.mb-10 {
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+    
+    /* Reduz tamanho do logo */
+    aside#sidebar .w-12 {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+    }
+    
+    /* Mantém borda superior da seção inferior */
+    aside#sidebar .mt-auto {
+        border-top: 1px solid rgba(6, 182, 212, 0.2);
+    }
+}
+
+/* Desktop Grande (1280px+) - Sidebar normal */
+@media (min-width: 1280px) {
+    aside#sidebar {
+        width: 16rem !important;
+    }
+}
+
+/* ============================================
+   AJUSTES ADICIONAIS DE RESPONSIVIDADE
+   ============================================ */
+
+/* Mobile - Garante que sidebar fique escondida */
+@media (max-width: 767px) {
+    aside#sidebar.sidebar-mobile-hidden {
+        transform: translateX(-100%);
+    }
+    
+    /* Ajustes nos cards para mobile */
+    .route-card {
+        padding: 1rem;
+    }
+    
+    /* Grid de estatísticas em coluna única no mobile */
+    .grid-cols-2 {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+}
+
+/* Tablet */
+@media (min-width: 768px) {
+    .grid-cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .lg\:grid-cols-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+/* Transições suaves */
+* {
+    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+button, a {
+    transition-duration: 200ms;
+}
+
+/* Estados de foco acessíveis */
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible {
+    outline: 2px solid rgba(34, 211, 238, 0.5);
+    outline-offset: 2px;
+}
+
+/* Truncate melhorado */
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
