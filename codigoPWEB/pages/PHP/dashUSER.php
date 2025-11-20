@@ -270,8 +270,6 @@ $historico_recargas = [
                 <button id="toggle-sidebar-btn" class="p-2 md:hidden text-white" onclick="toggleSidebar()">
                     <i data-lucide="menu" class="w-7 h-7"></i>
                 </button>
-
-
             </div>
         </header>
 
@@ -421,6 +419,15 @@ $historico_recargas = [
 
             sidebar.classList.toggle('sidebar-mobile-hidden');
             overlay.classList.toggle('hidden');
+            
+            // Alterna o ícone entre menu e X
+            const toggleBtn = document.getElementById('toggle-sidebar-btn');
+            if(toggleBtn) {
+                toggleBtn.innerHTML = sidebar.classList.contains('sidebar-mobile-hidden') 
+                    ? '<i data-lucide="menu" class="w-7 h-7"></i>' 
+                    : '<i data-lucide="x" class="w-7 h-7"></i>';
+                lucide.createIcons();
+            }
         }
 
         function abrirModal(id) {

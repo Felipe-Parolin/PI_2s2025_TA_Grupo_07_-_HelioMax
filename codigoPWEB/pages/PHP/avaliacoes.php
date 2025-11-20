@@ -326,7 +326,6 @@ foreach ($avaliacoes as $av) {
 
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex">
 
-    <!-- SIDEBAR -->
     <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900/50 backdrop-blur-xl border-r border-cyan-500/20 p-4 
                flex flex-col flex-shrink-0 z-50 
                md:relative md:translate-x-0 
@@ -393,7 +392,6 @@ foreach ($avaliacoes as $av) {
 
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" onclick="toggleSidebar()"></div>
 
-    <!-- MAIN CONTENT -->
     <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
         <header class="flex justify-between items-center mb-6 lg:mb-8 flex-wrap gap-4">
             <div class="flex-1 min-w-0">
@@ -404,7 +402,7 @@ foreach ($avaliacoes as $av) {
 
             <div class="flex items-center gap-3">
                 <button id="toggle-sidebar-btn" class="p-2 md:hidden text-white" onclick="toggleSidebar()">
-                    <i data-lucide="menu" class="w-7 h-7"></i>
+                    <i data-lucide="menu" id="sidebar-icon" class="w-7 h-7"></i>
                 </button>
 
                 <button onclick="abrirModal('modalCriarAvaliacao')"
@@ -427,7 +425,6 @@ foreach ($avaliacoes as $av) {
             </div>
         <?php endif; ?>
 
-        <!-- CARDS DE ESTATÍSTICAS -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 lg:mb-8">
             <div
                 class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 hover:scale-105">
@@ -485,7 +482,6 @@ foreach ($avaliacoes as $av) {
             </div>
         </div>
 
-        <!-- FILTROS -->
         <div
             class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-cyan-500/20 mb-6">
             <form method="GET" action="" class="flex flex-col sm:flex-row gap-4">
@@ -514,7 +510,6 @@ foreach ($avaliacoes as $av) {
             </form>
         </div>
 
-        <!-- LISTA DE AVALIAÇÕES -->
         <div
             class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 overflow-hidden">
             <div class="p-4 sm:p-6 border-b border-cyan-500/20">
@@ -614,7 +609,6 @@ foreach ($avaliacoes as $av) {
         </div>
     </main>
 
-    <!-- Modal de Perfil -->
     <div id="modalPerfil" class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
         <div
             class="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -643,7 +637,6 @@ foreach ($avaliacoes as $av) {
         </div>
     </div>
 
-    <!-- MODAL CRIAR AVALIAÇÃO -->
     <div id="modalCriarAvaliacao"
         class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
         <div
@@ -743,7 +736,6 @@ foreach ($avaliacoes as $av) {
         </div>
     </div>
 
-    <!-- MODAL EDITAR AVALIAÇÃO -->
     <div id="modalEditarAvaliacao"
         class="modal fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center z-50 p-4">
         <div
@@ -835,7 +827,6 @@ foreach ($avaliacoes as $av) {
         </div>
     </div>
 
-    <!-- FORM DELETAR (OCULTO) -->
     <form id="formDeletar" method="POST" action="" style="display:none;">
         <input type="hidden" name="action" value="deletar_avaliacao">
         <input type="hidden" name="avaliacao_id" id="avaliacao_id_deletar">
@@ -850,9 +841,17 @@ foreach ($avaliacoes as $av) {
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
+            const icon = document.getElementById('sidebar-icon');
 
             sidebar.classList.toggle('sidebar-mobile-hidden');
             overlay.classList.toggle('hidden');
+
+            // Alterna o ícone: 'menu' quando oculta, 'x' quando visível
+            const isHidden = sidebar.classList.contains('sidebar-mobile-hidden');
+            if (icon) {
+                icon.setAttribute('data-lucide', isHidden ? 'menu' : 'x');
+                lucide.createIcons();
+            }
         }
 
         function abrirModal(id) {

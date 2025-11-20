@@ -105,9 +105,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                }
 
-               $stmt = $pdo->prepare("UPDATE usuario SET NOME = ?, EMAIL = ?, CEP = ?, NUMERO_RESIDENCIA = ?, COMPLEMENTO_ENDERECO = ?, FK_ID_CEP = ? WHERE ID_USER = ?");
-               $cep_formatado_usuario = strlen($cep_valor) === 8 ? substr($cep_valor, 0, 5) . '-' . substr($cep_valor, 5) : $cep_valor;
-               $stmt->execute([$nome, $email, $cep_formatado_usuario, $numero, $complemento, $cep_id, $user_id]);
+               // CORREÇÃO LINHA 125: Removida a referência à coluna 'CEP' da tabela 'usuario'
+               $stmt = $pdo->prepare("UPDATE usuario SET NOME = ?, EMAIL = ?, NUMERO_RESIDENCIA = ?, COMPLEMENTO_ENDERECO = ?, FK_ID_CEP = ? WHERE ID_USER = ?");
+               // Removido $cep_formatado_usuario do array execute
+               $stmt->execute([$nome, $email, $numero, $complemento, $cep_id, $user_id]);
 
                $_SESSION['usuario_nome'] = $nome;
 
@@ -183,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Buscar dados do usuário
 $stmt = $pdo->prepare("SELECT u.*, 
-                       u.CEP as CEP_USUARIO,
+                       c.CEP as CEP_USUARIO, /* CORRIGIDO: Selecionando 'CEP' da tabela 'cep' (c) */
                        u.NUMERO_RESIDENCIA,
                        u.COMPLEMENTO_ENDERECO,
                        c.CEP as CEP_TABELA, 

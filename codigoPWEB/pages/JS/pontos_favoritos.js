@@ -154,6 +154,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 listaDiv.innerHTML = '';
                 if (emptyState) emptyState.classList.add('hidden');
                 
+                // CORREÇÃO 1: Remove a classe 'hidden' para exibir a lista.
+                listaDiv.classList.remove('hidden'); 
+                
                 result.data.forEach(fav => {
                     const favoritoElement = document.createElement('div');
                     favoritoElement.className = 'favorite-card bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 overflow-hidden'; 
@@ -214,13 +217,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 lucide.createIcons();
             } else if (result.success) {
                 listaDiv.innerHTML = '';
+                // CORREÇÃO 2: Adiciona a classe 'hidden' à lista e exibe o estado vazio.
+                listaDiv.classList.add('hidden');
                 if (emptyState) emptyState.classList.remove('hidden');
                 lucide.createIcons();
             } else {
                 listaDiv.innerHTML = `<div class="col-span-full bg-red-500/20 border border-red-500/30 rounded-2xl p-6"><p class="text-red-400">Erro ao carregar favoritos: ${result.message}</p></div>`;
+                // Se houver erro, exibe a div da lista para mostrar a mensagem de erro
+                listaDiv.classList.remove('hidden'); 
             }
         } catch (error) {
             listaDiv.innerHTML = '<div class="col-span-full bg-red-500/20 border border-red-500/30 rounded-2xl p-6"><p class="text-red-400">Erro de conexão ao carregar favoritos.</p></div>';
+            // Se houver erro, exibe a div da lista para mostrar a mensagem de erro
+            listaDiv.classList.remove('hidden'); 
             console.error('Erro ao carregar favoritos:', error);
         }
     }

@@ -7,7 +7,7 @@ if (!isset($_SESSION['usuario_id'])) {
     die('<script>alert("Você precisa estar logado para acessar o simulador!"); window.location.href = "../index.php";</script>');
 }
 
-// simulate_route.php - Versão com Suporte a Veículos Personalizados
+// simulate_route.php - Versão CORRIGIDA com Múltiplas Paradas
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
@@ -145,16 +145,24 @@ function google_api_request($url, $params, $timeout = 15)
     return $data;
 }
 
+// *** CORREÇÃO: Waypoints agora sempre usa optimize:false para respeitar a ordem ***
 function getGoogleDirections($originLat, $originLng, $destLat, $destLng, $waypointsList = [])
 {
     $url = "https://maps.googleapis.com/maps/api/directions/json";
-    $params = ['origin' => "{$originLat},{$originLng}", 'destination' => "{$destLat},{$destLng}", 'units' => 'metric'];
+    $params = [
+        'origin' => "{$originLat},{$originLng}", 
+        'destination' => "{$destLat},{$destLng}", 
+        'units' => 'metric'
+    ];
+    
     if (!empty($waypointsList)) {
         $midpoints = array_slice($waypointsList, 1, -1);
         if (!empty($midpoints)) {
-            $params['waypoints'] = 'optimize:true|' . implode('|', $midpoints);
+            // *** SEMPRE FORÇA A ORDEM (optimize:false) ***
+            $params['waypoints'] = 'optimize:false|' . implode('|', $midpoints);
         }
     }
+    
     $data = google_api_request($url, $params, 30);
     if (empty($data['routes'][0])) {
         error_log("Google Directions falhou: Nenhuma rota encontrada.");
@@ -423,7 +431,7 @@ function findBestChargingStation($pdo, $currentLat, $currentLng, $destLat, $dest
             continue;
 
         if ($realDistToStation <= $maxRange_km * 0.90) {
-            $routeToDest = getGoogleDirections($candidate['lat'], $candidate['lng'], $destLat, $destLng);
+            $routeToDest = getGoogleDirections($candidate['lat'], $candidate['lng'], $destLat, $destLng); 
             $realDistToDest = $routeToDest ? ($routeToDest['legs'][0]['distance']['value'] / 1000) : $candidate['haversine_dist_to_dest'];
 
             return [
@@ -628,7 +636,7 @@ function simulateEVRoute($pdo, $startLat, $startLng, $endLat, $endLng, $vehicle,
         $totalChargingTime += $chargingTime;
         $visitedStations[] = $bestStation['id'];
 
-        $iterationInfo['charge_at_departure'] = round($chargeAtDeparture, 1);
+        $iterationInfo['charge_at_departure'] = round($currentCharge, 1);
         $debugInfo['iterations'][] = $iterationInfo;
     }
 
@@ -647,161 +655,13 @@ function simulateEVRoute($pdo, $startLat, $startLng, $endLat, $endLng, $vehicle,
     ];
 }
 
-// ===== PROCESSAMENTO PRINCIPAL =====
-try {
-    if (empty($_POST['start_coords']) || empty($_POST['end_coords'])) {
-        throw new Exception('Coordenadas não fornecidas.');
-    }
-
-    list($startLat, $startLng) = array_map('floatval', explode(',', str_replace(' ', '', $_POST['start_coords'])));
-    list($endLat, $endLng) = array_map('floatval', explode(',', str_replace(' ', '', $_POST['end_coords'])));
-
-    $optimisticMode = isset($_POST['optimistic_mode']) && $_POST['optimistic_mode'] === 'true';
-
-    // NOVA LÓGICA: Verificar se um veículo foi selecionado
-    if (!empty($_POST['vehicle_id']) && $_POST['vehicle_id'] !== 'default') {
-        // Buscar dados do veículo no banco
-        $vehicleId = intval($_POST['vehicle_id']);
-        $sql = "SELECT 
-                    v.NIVEL_BATERIA,
-                    m.CAPACIDADE_BATERIA,
-                    m.CONSUMO_MEDIO,
-                    m.NOME as MODELO_NOME,
-                    ma.NOME as MARCA_NOME
-                FROM veiculo v
-                INNER JOIN modelo m ON v.MODELO = m.ID_MODELO
-                INNER JOIN marca ma ON m.FK_MARCA = ma.ID_MARCA
-                WHERE v.ID_VEICULO = ?";
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$vehicleId]);
-        $vehicleData = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$vehicleData) {
-            throw new Exception('Veículo não encontrado.');
-        }
-
-        // Configurar veículo com dados reais do banco
-        $vehicle = [
-            'name' => $vehicleData['MARCA_NOME'] . ' ' . $vehicleData['MODELO_NOME'],
-            'battery_capacity' => floatval($vehicleData['CAPACIDADE_BATERIA']),
-            'initial_charge' => floatval($vehicleData['NIVEL_BATERIA']),
-            'consumption' => floatval($vehicleData['CONSUMO_MEDIO']),
-            'min_charge_stop' => 8.0,
-            'max_charge_stop' => 100.0,
-            'min_charge_dest' => 10.0,
-            'charging_power' => 50.0,
-            'connector_types' => [1036, 33] // CCS e CHAdeMO
-        ];
-
-        error_log("Usando veículo do usuário: {$vehicle['name']} - Bateria: {$vehicle['battery_capacity']}kWh, Consumo: {$vehicle['consumption']}kWh/100km");
-
-    } else {
-        // Usar veículo padrão (Tesla Model 3)
-        $vehicle = [
-            'name' => 'Tesla Model 3 (Pré-definido)',
-            'battery_capacity' => 75.0,
-            'initial_charge' => 95.0,
-            'consumption' => 17.0,
-            'min_charge_stop' => 8.0,
-            'max_charge_stop' => 100.0,
-            'min_charge_dest' => 10.0,
-            'charging_power' => 50.0,
-            'connector_types' => [1036, 33]
-        ];
-
-        error_log("Usando veículo padrão: Tesla Model 3");
-    }
-
-    // Executar simulação
-    $simulation = simulateEVRoute($pdo, $startLat, $startLng, $endLat, $endLng, $vehicle, $optimisticMode);
-
-    // Montar waypoints para rota final
-    $waypointsList = [];
-    $waypointsList[] = "{$startLat},{$startLng}";
-    if (isset($simulation['charge_stops']) && is_array($simulation['charge_stops'])) {
-        foreach ($simulation['charge_stops'] as $stop) {
-            $waypointsList[] = "{$stop['latitude']},{$stop['longitude']}";
-        }
-    }
-    $waypointsList[] = "{$endLat},{$endLng}";
-
-    // Obter geometria completa
-    $routeData = getGoogleDirections($startLat, $startLng, $endLat, $endLng, $waypointsList);
-
-    if ($routeData === null) {
-        throw new Exception('Erro ao obter geometria da rota final.');
-    }
-
-    // Preparar resposta
-    $drivingTime = 0;
-    $totalDistanceFromApi = 0;
-    foreach ($routeData['legs'] as $leg) {
-        $drivingTime += $leg['duration']['value'];
-        $totalDistanceFromApi += $leg['distance']['value'];
-    }
-    $totalDistanceFromApi /= 1000;
-
-    $totalChargingTimeSec = $simulation['total_charging_time_sec'];
-    $chargeStopsDetails = $simulation['charge_stops'];
-    $finalChargePct = $simulation['final_charge_pct'];
-    $totalEnergyKwh = $simulation['total_energy_kwh'];
-    $custo = $totalEnergyKwh * TARIFA_MEDIA_KWH;
-
-    // ====================================================================================
-// ADICIONE ESTE CÓDIGO NO FINAL DO simulate_route.php, ANTES DO echo json_encode()
-// ====================================================================================
-
-// Função para salvar no histórico
-function salvarNoHistorico($pdo, $userId, $vehicleId, $startLat, $startLng, $endLat, $endLng, 
-                          $simulation, $optimisticMode, $polyline) {
-    try {
-        // Geocodificação reversa para obter endereços legíveis
-        $origemEndereco = geocodeAddress($startLat, $startLng);
-        $destinoEndereco = geocodeAddress($endLat, $endLng);
-        
-        $stmt = $pdo->prepare("
-            INSERT INTO historico_rota (
-                FK_USUARIO, FK_VEICULO, ORIGEM_LAT, ORIGEM_LNG, ORIGEM_ENDERECO,
-                DESTINO_LAT, DESTINO_LNG, DESTINO_ENDERECO, DISTANCIA_TOTAL_KM,
-                TEMPO_CONDUCAO_MIN, TEMPO_CARREGAMENTO_MIN, PARADAS_TOTAIS,
-                ENERGIA_CONSUMIDA_KWH, CUSTO_TOTAL, CARGA_FINAL_PCT,
-                MODO_OTIMISTA, DADOS_PARADAS, POLYLINE
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-        
-        $totalDistanceFromApi = 0;
-        $drivingTime = 0;
-        
-        $stmt->execute([
-            $userId,
-            $vehicleId !== 'default' ? $vehicleId : null,
-            $startLat,
-            $startLng,
-            $origemEndereco,
-            $endLat,
-            $endLng,
-            $destinoEndereco,
-            $simulation['total_route_distance'],
-            round($drivingTime / 60),
-            round($simulation['total_charging_time_sec'] / 60),
-            count($simulation['charge_stops']),
-            $simulation['total_energy_kwh'],
-            $simulation['total_energy_kwh'] * TARIFA_MEDIA_KWH,
-            $simulation['final_charge_pct'],
-            $optimisticMode ? 1 : 0,
-            json_encode($simulation['charge_stops']),
-            $polyline
-        ]);
-        
-        return true;
-    } catch (PDOException $e) {
-        error_log("Erro ao salvar histórico: " . $e->getMessage());
-        return false;
-    }
-}
+// ==================== FUNÇÕES DE HISTÓRICO ====================
 
 function geocodeAddress($lat, $lng) {
+    if (!defined('GOOGLE_MAPS_API_KEY')) {
+        return "Lat: $lat, Lng: $lng (API Key não definida)";
+    }
+    
     $url = "https://maps.googleapis.com/maps/api/geocode/json";
     $params = [
         'latlng' => "$lat,$lng",
@@ -830,44 +690,216 @@ function geocodeAddress($lat, $lng) {
     return "Lat: $lat, Lng: $lng";
 }
 
-// ====================================================================================
-// NO FINAL DO try { } PRINCIPAL, LOGO APÓS A SIMULAÇÃO BEM-SUCEDIDA, ADICIONE:
-// ====================================================================================
+function salvarNoHistorico($pdo, $userId, $vehicleId, $startLat, $startLng, $endLat, $endLng, 
+                          $simulation, $optimisticMode, $polyline, $drivingTimeSec, $totalDistanceFromApi, $manualStopovers) {
+    try {
+        $origemEndereco = geocodeAddress($startLat, $startLng);
+        $destinoEndereco = geocodeAddress($endLat, $endLng);
+        
+        $custo = $simulation['total_energy_kwh'] * TARIFA_MEDIA_KWH;
 
-// Salvar no histórico
-$vehicleIdForHistory = !empty($_POST['vehicle_id']) && $_POST['vehicle_id'] !== 'default' 
-                       ? intval($_POST['vehicle_id']) 
-                       : null;
+        $allStops = [
+            'manual_stops' => $manualStopovers,
+            'charge_stops' => $simulation['charge_stops']
+        ];
+        
+        $stmt = $pdo->prepare("
+            INSERT INTO historico_rota (
+                FK_USUARIO, FK_VEICULO, ORIGEM_LAT, ORIGEM_LNG, ORIGEM_ENDERECO,
+                DESTINO_LAT, DESTINO_LNG, DESTINO_ENDERECO, DISTANCIA_TOTAL_KM,
+                TEMPO_CONDUCAO_MIN, TEMPO_CARREGAMENTO_MIN, PARADAS_TOTAIS,
+                ENERGIA_CONSUMIDA_KWH, CUSTO_TOTAL, CARGA_FINAL_PCT,
+                MODO_OTIMISTA, DADOS_PARADAS, POLYLINE
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        
+        $stmt->execute([
+            $userId,
+            $vehicleId,
+            $startLat,
+            $startLng,
+            $origemEndereco,
+            $endLat,
+            $endLng,
+            $destinoEndereco,
+            round($totalDistanceFromApi, 2),
+            round($drivingTimeSec / 60),
+            round($simulation['total_charging_time_sec'] / 60),
+            count($simulation['charge_stops']) + count($manualStopovers),
+            $simulation['total_energy_kwh'],
+            round($custo, 2),
+            $simulation['final_charge_pct'],
+            $optimisticMode ? 1 : 0,
+            json_encode($allStops, JSON_UNESCAPED_UNICODE),
+            $polyline
+        ]);
+        
+        return true;
+    } catch (PDOException $e) {
+        error_log("Erro ao salvar histórico: " . $e->getMessage());
+        return false;
+    }
+}
 
-salvarNoHistorico(
-    $pdo, 
-    $_SESSION['usuario_id'], 
-    $vehicleIdForHistory,
-    $startLat, 
-    $startLng, 
-    $endLat, 
-    $endLng, 
-    $simulation, 
-    $optimisticMode,
-    $routeData['overview_polyline']['points']
-);
-
-// ====================================================================================
-// EXEMPLO DE IMPLEMENTAÇÃO COMPLETA NO FINAL DO ARQUIVO:
-// ====================================================================================
-
-/*
+// ===== PROCESSAMENTO PRINCIPAL (CORRIGIDO) =====
 try {
-    // ... código existente de simulação ...
+    if (empty($_POST['start_coords']) || empty($_POST['end_coords'])) {
+        throw new Exception('Coordenadas de origem ou destino não fornecidas.');
+    }
+
+    list($startLat, $startLng) = array_map('floatval', explode(',', str_replace(' ', '', $_POST['start_coords'])));
+    list($endLat, $endLng) = array_map('floatval', explode(',', str_replace(' ', '', $_POST['end_coords'])));
+
+    $optimisticMode = isset($_POST['optimistic_mode']) && $_POST['optimistic_mode'] === 'true';
+
+    // *** COLETAR E PARSEAR MÚLTIPLAS PARADAS MANUAIS ***
+    $manualStopovers = [];
+    if (!empty($_POST['stopover_coords_list'])) {
+        $stopoverStrings = explode(';', $_POST['stopover_coords_list']);
+        foreach ($stopoverStrings as $index => $stopCoordString) {
+            $coords = array_map('floatval', explode(',', trim($stopCoordString)));
+            if (count($coords) === 2) {
+                $manualStopovers[] = [
+                    'lat' => $coords[0], 
+                    'lng' => $coords[1], 
+                    'type' => 'manual',
+                    'name' => 'Parada Manual #' . ($index + 1)
+                ];
+            }
+        }
+    }
+
+    // Seleção e Configuração do Veículo
+    $vehicleIdForHistory = null;
+    $vehicle = [
+        'name' => 'Tesla Model 3 (Pré-definido)',
+        'battery_capacity' => 75.0,
+        'initial_charge' => 95.0,
+        'consumption' => 17.0,
+        'min_charge_stop' => 8.0,
+        'max_charge_stop' => 100.0,
+        'min_charge_dest' => 10.0,
+        'charging_power' => 50.0,
+        'connector_types' => [1036, 33]
+    ];
+
+    if (!empty($_POST['vehicle_id']) && $_POST['vehicle_id'] !== 'default') {
+        $vehicleId = intval($_POST['vehicle_id']);
+        $sql = "SELECT 
+                    v.NIVEL_BATERIA,
+                    m.CAPACIDADE_BATERIA,
+                    m.CONSUMO_MEDIO,
+                    m.NOME as MODELO_NOME,
+                    ma.NOME as MARCA_NOME
+                FROM veiculo v
+                INNER JOIN modelo m ON v.MODELO = m.ID_MODELO
+                INNER JOIN marca ma ON m.FK_MARCA = ma.ID_MARCA
+                WHERE v.ID_VEICULO = ?";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$vehicleId]);
+        $vehicleData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($vehicleData) {
+            $vehicleIdForHistory = $vehicleId;
+            $vehicle['name'] = $vehicleData['MARCA_NOME'] . ' ' . $vehicleData['MODELO_NOME'];
+            $vehicle['battery_capacity'] = floatval($vehicleData['CAPACIDADE_BATERIA']);
+            $vehicle['initial_charge'] = floatval($vehicleData['NIVEL_BATERIA']);
+            $vehicle['consumption'] = floatval($vehicleData['CONSUMO_MEDIO']);
+            error_log("Usando veículo do usuário: {$vehicle['name']}");
+        } else {
+            error_log("Veículo ID {$vehicleId} não encontrado. Usando padrão.");
+        }
+    } else {
+        error_log("Usando veículo padrão: Tesla Model 3");
+    }
+
+    // Executar simulação
+    $simulation = simulateEVRoute($pdo, $startLat, $startLng, $endLat, $endLng, $vehicle, $optimisticMode);
+
+    // *** MONTAR WAYPOINTS ORDENADOS POR DISTÂNCIA PROGRESSIVA ***
+    $allWaypoints = [];
     
-    // Preparar resposta
-    ob_end_clean();
+    // Adicionar paradas manuais com tipo e coordenadas
+    foreach ($manualStopovers as $stop) {
+        $allWaypoints[] = [
+            'lat' => $stop['lat'],
+            'lng' => $stop['lng'],
+            'type' => 'manual',
+            'data' => $stop,
+            'distance_from_start' => calculateDistance($startLat, $startLng, $stop['lat'], $stop['lng'])
+        ];
+    }
     
-    // Salvar no histórico ANTES de enviar resposta
-    $vehicleIdForHistory = !empty($_POST['vehicle_id']) && $_POST['vehicle_id'] !== 'default' 
-                           ? intval($_POST['vehicle_id']) 
-                           : null;
+    // Adicionar paradas de recarga
+    if (isset($simulation['charge_stops']) && is_array($simulation['charge_stops'])) {
+        foreach ($simulation['charge_stops'] as $stop) {
+            $allWaypoints[] = [
+                'lat' => $stop['latitude'],
+                'lng' => $stop['longitude'],
+                'type' => 'charge',
+                'data' => $stop,
+                'distance_from_start' => calculateDistance($startLat, $startLng, $stop['latitude'], $stop['longitude'])
+            ];
+        }
+    }
     
+    // *** ORDENAR TODAS AS PARADAS PELA DISTÂNCIA DA ORIGEM ***
+    usort($allWaypoints, function($a, $b) {
+        return $a['distance_from_start'] <=> $b['distance_from_start'];
+    });
+    
+    // Montar lista final de waypoints na ordem correta
+    $waypointsList = [];
+    $waypointsList[] = "{$startLat},{$startLng}"; // Origem
+    
+    foreach ($allWaypoints as $waypoint) {
+        $waypointsList[] = "{$waypoint['lat']},{$waypoint['lng']}";
+    }
+    
+    $waypointsList[] = "{$endLat},{$endLng}"; // Destino
+
+    // *** OBTER GEOMETRIA COMPLETA DA ROTA (optimize:false forçado) ***
+    $routeData = getGoogleDirections($startLat, $startLng, $endLat, $endLng, $waypointsList);
+
+    if ($routeData === null) {
+        throw new Exception('Erro ao obter geometria da rota final.');
+    }
+
+    // Preparar dados para resposta
+    $drivingTime = 0;
+    $totalDistanceFromApi = 0;
+    foreach ($routeData['legs'] as $leg) {
+        $drivingTime += $leg['duration']['value'];
+        $totalDistanceFromApi += $leg['distance']['value'];
+    }
+    $totalDistanceFromApi /= 1000;
+
+    $totalChargingTimeSec = $simulation['total_charging_time_sec'];
+    $chargeStopsDetails = $simulation['charge_stops'];
+    $finalChargePct = $simulation['final_charge_pct'];
+    $totalEnergyKwh = $simulation['total_energy_kwh'];
+    $custo = $totalEnergyKwh * TARIFA_MEDIA_KWH;
+
+    // *** CRIAR LISTA FINAL DE PARADAS (Manuais + Recarga) ***
+    $allStopsForFrontend = [];
+    
+    // Adicionar paradas manuais primeiro
+    foreach ($manualStopovers as $stop) {
+        $allStopsForFrontend[] = [
+            'latitude' => $stop['lat'],
+            'longitude' => $stop['lng'],
+            'is_manual_stop' => true,
+            'name' => $stop['name']
+        ];
+    }
+    
+    // Adicionar paradas de recarga
+    foreach ($chargeStopsDetails as $stop) {
+        $allStopsForFrontend[] = $stop;
+    }
+    
+    // Salvar no histórico
     salvarNoHistorico(
         $pdo, 
         $_SESSION['usuario_id'], 
@@ -878,37 +910,13 @@ try {
         $endLng, 
         $simulation, 
         $optimisticMode,
-        $routeData['overview_polyline']['points']
+        $routeData['overview_polyline']['points'],
+        $drivingTime,
+        $totalDistanceFromApi,
+        $manualStopovers
     );
     
-    // Enviar resposta JSON
-    echo json_encode([
-        'success' => true,
-        'geometry_polyline' => $routeData['overview_polyline']['points'],
-        'bounds' => $routeData['bounds'],
-        'vehicle_info' => [
-            'name' => $vehicle['name'],
-            'battery_capacity' => $vehicle['battery_capacity'],
-            'consumption' => $vehicle['consumption'],
-            'initial_charge' => $vehicle['initial_charge']
-        ],
-        'report' => [
-            'distancia_total_km' => round($totalDistanceFromApi, 2),
-            'tempo_conducao_min' => round($drivingTime / 60),
-            'tempo_carregamento_min' => round($totalChargingTimeSec / 60),
-            'paradas_totais' => count($chargeStopsDetails),
-            'energia_consumida_total_kwh' => round($totalEnergyKwh, 2),
-            'custo_total_estimado' => number_format($custo, 2, ',', '.'),
-            'carga_final_pct' => round($finalChargePct, 1),
-            'charge_stops_details' => $chargeStopsDetails
-        ]
-    ], JSON_UNESCAPED_UNICODE);
-    
-} catch (EVSimulationException $e) {
-    // ... tratamento de erro ...
-}
-*/
-
+    // *** PREPARAR E ENVIAR RESPOSTA JSON ***
     ob_end_clean();
     echo json_encode([
         'success' => true,
@@ -924,11 +932,11 @@ try {
             'distancia_total_km' => round($totalDistanceFromApi, 2),
             'tempo_conducao_min' => round($drivingTime / 60),
             'tempo_carregamento_min' => round($totalChargingTimeSec / 60),
-            'paradas_totais' => count($chargeStopsDetails),
+            'paradas_totais' => count($allStopsForFrontend),
             'energia_consumida_total_kwh' => round($totalEnergyKwh, 2),
             'custo_total_estimado' => number_format($custo, 2, ',', '.'),
             'carga_final_pct' => round($finalChargePct, 1),
-            'charge_stops_details' => $chargeStopsDetails
+            'charge_stops_details' => $allStopsForFrontend
         ]
     ], JSON_UNESCAPED_UNICODE);
 

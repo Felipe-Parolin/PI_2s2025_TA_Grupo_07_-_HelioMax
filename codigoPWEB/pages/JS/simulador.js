@@ -1,4 +1,4 @@
-// simulador.js - Versão Completa com Pontos do Banco de Dados + OCM + Seleção de Veículos
+// simulador.js - Versão Completa com Múltiplas Paradas (CORRIGIDO)
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -21,16 +21,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let geocoder;
     let cachedFavorites = [];
 
-    // NOVAS VARIÁVEIS PARA VEÍCULOS
-    let userVehicles = []; // Array para armazenar veículos do usuário
-    let selectedVehicle = null; // Veículo atualmente selecionado
+    // VARIÁVEIS PARA VEÍCULOS
+    let userVehicles = [];
+    let selectedVehicle = null;
+
+    // VARIÁVEIS PARA MÚLTIPLAS PARADAS
+    let stopovers = [];
+    let stopoverCounter = 0;
+    let stopoverAutocompletes = {};
 
     // --- Elementos do DOM ---
     const startInput = document.getElementById('start-point');
     const endInput = document.getElementById('end-point');
     const simulateBtn = document.getElementById('simulate-button');
     const clearBtn = document.getElementById('clear-button');
-    const reportContent = document.getElementById('report-content');
     const loadingSpinner = document.getElementById('loading-spinner');
     const downloadBtn = document.getElementById('download-pdf-button');
     const optimisticModeCheck = document.getElementById('optimistic-mode');
@@ -40,10 +44,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const startFavoriteSelect = document.getElementById('start-favorite-select');
     const endFavoriteSelect = document.getElementById('end-favorite-select');
 
-    // NOVOS ELEMENTOS DOM DE VEÍCULOS
+    // ELEMENTOS DOM DE VEÍCULOS
     const vehicleSelect = document.getElementById('vehicle-select');
     const vehicleDisplayText = document.getElementById('vehicle-display-text');
     const vehicleInfo = document.getElementById('vehicle-info');
+
+    // ELEMENTOS DOM DAS PARADAS
+    const stopoversContainer = document.getElementById('stopovers-container');
+    const addStopoverBtn = document.getElementById('add-stopover-btn');
+
+    // ELEMENTOS DOM DO RELATÓRIO
+    const reportSummary = document.getElementById('report-summary');
+    const chargingStopsList = document.getElementById('charging-stops-list');
+    const stopsTitle = document.getElementById('stops-title');
+
+    // Verificação de elementos críticos
+    if (!reportSummary) console.error('❌ ERRO: #report-summary não encontrado!');
+    if (!chargingStopsList) console.error('❌ ERRO: #charging-stops-list não encontrado!');
+    if (!stopsTitle) console.error('❌ ERRO: #stops-title não encontrado!');
 
     // Inicializa o Geocoder e o Autocomplete 
     if (window.google && window.google.maps) {
@@ -57,7 +75,183 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn("API do Google Maps não está carregada.");
     }
 
-    // 2. Geocoder Reverso (Lat/Lng -> Endereço)
+    // ==================== FUNÇÕES DE MÚLTIPLAS PARADAS ====================
+
+    function addStopover() {
+        const stopoverId = `stopover-${stopoverCounter++}`;
+        const stopoverNumber = stopovers.length + 1;
+
+        const stopoverElement = document.createElement('div');
+        stopoverElement.className = 'stopover-item bg-slate-900/50 p-3 rounded-lg border border-yellow-500/20';
+        stopoverElement.dataset.stopoverId = stopoverId;
+
+        stopoverElement.innerHTML = `
+            <div class="flex items-center gap-2 mb-2">
+                <span class="bg-yellow-500 text-slate-900 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    ${stopoverNumber}
+                </span>
+                <input 
+                    type="text" 
+                    id="${stopoverId}-input"
+                    placeholder="Parada ${stopoverNumber}"
+                    class="flex-1 px-3 py-2 bg-slate-800 border border-yellow-500/30 rounded-lg text-white text-sm placeholder-gray-500 focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all"
+                >
+                <button class="remove-stopover-btn text-red-400 hover:text-red-300 transition-colors" data-stopover-id="${stopoverId}">
+                    <i data-lucide="x-circle" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="text-xs text-gray-500 hidden ml-8" id="${stopoverId}-coords">
+                <i data-lucide="check-circle" class="w-3 h-3 inline text-green-400"></i>
+                <span id="${stopoverId}-coords-text"></span>
+            </div>
+        `;
+
+        stopoversContainer.appendChild(stopoverElement);
+
+        setupStopoverAutocomplete(stopoverId);
+
+        const removeBtn = stopoverElement.querySelector('.remove-stopover-btn');
+        removeBtn.addEventListener('click', () => removeStopover(stopoverId));
+
+        stopovers.push({
+            id: stopoverId,
+            number: stopoverNumber,
+            element: stopoverElement,
+            coords: null,
+            address: null,
+            marker: null
+        });
+
+        lucide.createIcons();
+        updateStopoverNumbers();
+    }
+
+    function removeStopover(stopoverId) {
+        const index = stopovers.findIndex(s => s.id === stopoverId);
+        if (index !== -1) {
+            if (stopovers[index].marker) {
+                map.removeLayer(stopovers[index].marker);
+            }
+
+            stopovers[index].element.remove();
+            
+            if (stopoverAutocompletes[stopoverId]) {
+                delete stopoverAutocompletes[stopoverId];
+            }
+            
+            stopovers.splice(index, 1);
+            updateStopoverNumbers();
+        }
+    }
+
+    function updateStopoverNumbers() {
+        stopovers.forEach((stopover, index) => {
+            const stopoverNumber = index + 1;
+            stopover.number = stopoverNumber;
+
+            const numberBadge = stopover.element.querySelector('.bg-yellow-500');
+            if (numberBadge) numberBadge.textContent = stopoverNumber;
+
+            const input = stopover.element.querySelector('input');
+            if (input) input.placeholder = `Parada ${stopoverNumber}`;
+        });
+    }
+
+    function setupStopoverAutocomplete(stopoverId) {
+        const input = document.getElementById(`${stopoverId}-input`);
+        if (!input) return;
+
+        const autocomplete = new google.maps.places.Autocomplete(input, {
+            componentRestrictions: { country: "br" },
+            fields: ["formatted_address", "geometry.location", "name"]
+        });
+
+        stopoverAutocompletes[stopoverId] = autocomplete;
+
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+
+            if (!place.geometry || !place.geometry.location) {
+                console.warn('Local sem geometria:', place);
+                return;
+            }
+
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            const latlng = { lat, lng };
+            const address = place.formatted_address || place.name;
+
+            const stopover = stopovers.find(s => s.id === stopoverId);
+            if (stopover) {
+                stopover.coords = latlng;
+                stopover.address = address;
+
+                if (stopover.marker) {
+                    map.removeLayer(stopover.marker);
+                }
+
+                const starIcon = L.divIcon({
+                    className: 'custom-stopover-icon',
+                    html: `
+                        <div style="background: white; border-radius: 50%; padding: 3px; border: 3px solid #eab308; box-shadow: 0 4px 8px rgba(0,0,0, 0.3);">
+                            <div style="background: #eab308; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #1e293b; font-size: 12px;">
+                                ${stopover.number}
+                            </div>
+                        </div>
+                    `,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15],
+                    popupAnchor: [0, -15]
+                });
+
+                stopover.marker = L.marker(latlng, { 
+                    icon: starIcon,
+                    draggable: true 
+                })
+                .addTo(map)
+                .bindPopup(`<strong>Parada ${stopover.number}</strong><br>${address}`);
+
+                stopover.marker.on('dragend', (e) => {
+                    const newLatLng = e.target.getLatLng();
+                    stopover.coords = newLatLng;
+                    reverseGeocode(newLatLng, input);
+                });
+
+                const coordsDiv = document.getElementById(`${stopoverId}-coords`);
+                const coordsText = document.getElementById(`${stopoverId}-coords-text`);
+                
+                if (coordsDiv && coordsText) {
+                    coordsDiv.classList.remove('hidden');
+                    coordsText.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                }
+
+                map.setView(latlng, 13);
+                console.log(`✓ Parada ${stopover.number} configurada:`, address);
+            }
+        });
+    }
+
+    function getStopoverCoords() {
+        return stopovers
+            .filter(s => s.coords !== null)
+            .map(s => s.coords);
+    }
+
+    function clearAllStopovers() {
+        stopovers.forEach(stopover => {
+            if (stopover.marker) {
+                map.removeLayer(stopover.marker);
+            }
+        });
+
+        stopoversContainer.innerHTML = '';
+        stopovers = [];
+        stopoverAutocompletes = {};
+        stopoverCounter = 0;
+    }
+
+    // ==================== FUNÇÕES BÁSICAS ====================
+
     function reverseGeocode(latlng, inputElement) {
         geocoder.geocode({ 'location': latlng }, (results, status) => {
             if (status === 'OK') {
@@ -73,7 +267,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 3. Lógica de arrastar o marcador
     function handleMarkerDrag(event, type) {
         const latlng = event.target.getLatLng();
         if (type === 'start') {
@@ -87,7 +280,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectElement) selectElement.value = '';
     }
 
-    // 4. Lidar com cliques no mapa
     map.on('click', (e) => {
         const latlng = e.latlng;
         if (!startMarker) {
@@ -99,7 +291,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 5. Lógica do Autocomplete 
     function initAutocomplete() {
         const options = {
             componentRestrictions: { country: "br" },
@@ -118,10 +309,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 6. Função chamada quando um local é selecionado no Autocomplete 
     function handlePlaceSelect(autocomplete, type) {
         const place = autocomplete.getPlace();
-
         if (!place.geometry || !place.geometry.location) return;
 
         const lat = place.geometry.location.lat();
@@ -133,20 +322,60 @@ document.addEventListener('DOMContentLoaded', () => {
         map.setView(latlng, 15);
     }
 
-    // 7. Botão de Simular
+    function setRoutePoint(latlng, name, type, isFavorite = false) {
+        const inputElement = type === 'start' ? startInput : endInput;
+        let marker = type === 'start' ? startMarker : endMarker;
+        const setCoords = type === 'start' ? (c) => startCoords = c : (c) => endCoords = c;
+        const setMarker = type === 'start' ? (m) => startMarker = m : (m) => endMarker = m;
+        const selectElement = type === 'start' ? startFavoriteSelect : endFavoriteSelect;
+
+        setCoords(latlng);
+        inputElement.value = name;
+
+        if (marker) map.removeLayer(marker);
+
+        marker = L.marker(latlng, { draggable: true }).addTo(map).bindPopup(type === 'start' ? 'Origem' : 'Destino');
+        marker.on('dragend', (ev) => handleMarkerDrag(ev, type));
+        setMarker(marker);
+
+        map.setView(latlng, 15);
+
+        if (selectElement) {
+            if (isFavorite) {
+                const selectValue = `${latlng.lat},${latlng.lng}|${name}`;
+                selectElement.value = selectValue;
+            } else {
+                selectElement.value = '';
+            }
+        }
+    }
+
+// ==================== BOTÃO DE SIMULAR ====================
+
     simulateBtn.addEventListener('click', () => {
         if (!startCoords || !endCoords) {
             alert("Por favor, defina um ponto de Origem e um de Destino.");
             return;
         }
 
+        // Limpar mapa
         if (routeLayer) map.removeLayer(routeLayer);
         chargeStopMarkers.forEach(marker => map.removeLayer(marker));
         chargeStopMarkers = [];
         currentReportData = null;
 
+        // Mostrar loading
         loadingSpinner.style.display = 'block';
-        reportContent.innerHTML = '<p class="text-gray-400">Calculando...</p>';
+        
+        if (reportSummary) {
+            reportSummary.innerHTML = '<p class="text-gray-400">Calculando...</p>';
+        }
+        if (chargingStopsList) {
+            chargingStopsList.innerHTML = '';
+        }
+        if (stopsTitle) {
+            stopsTitle.classList.add('hidden');
+        }
         downloadBtn.style.display = 'none';
 
         const formData = new FormData();
@@ -158,9 +387,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const vehicleId = vehicleSelect ? vehicleSelect.value : 'default';
         formData.append('vehicle_id', vehicleId);
 
+        // *** ADICIONAR PARADAS MÚLTIPLAS ***
+        const stopoverCoordsList = getStopoverCoords();
+        
+        if (stopoverCoordsList.length > 0) {
+            const stopoverCoordsString = stopoverCoordsList
+                .map(coords => `${coords.lat},${coords.lng}`)
+                .join(';');
+            
+            formData.append('stopover_coords_list', stopoverCoordsString);
+            
+            console.log(`🛑 ${stopoverCoordsList.length} parada(s) adicionada(s) à simulação`);
+        }
+
         fetch('../PHP/simulate_route.php', { method: 'POST', body: formData })
             .then(res => {
-                if (!res.ok) { throw new Error(`Erro de Servidor: ${res.status} ${res.statusText}`); }
+                if (!res.ok) { 
+                    throw new Error(`Erro de Servidor: ${res.status} ${res.statusText}`); 
+                }
                 const contentType = res.headers.get("content-type");
 
                 if (!contentType || !contentType.includes("application/json")) {
@@ -193,10 +437,47 @@ document.addEventListener('DOMContentLoaded', () => {
                     downloadBtn.style.display = 'flex';
                     displayReport(currentReportData, data.vehicle_info);
 
-                    // Lógica de mapeamento de marcadores de parada
-                    const chargeStops = currentReportData.charge_stops_details;
-                    if (chargeStops && chargeStops.length > 0) {
-                        chargeStops.forEach((stop, index) => {
+                    // Adicionar marcadores de parada
+                    const allStops = currentReportData.charge_stops_details;
+                    if (allStops && allStops.length > 0) {
+                        allStops.forEach((stop, index) => {
+                            // *** VERIFICAR SE É PARADA MANUAL ***
+                            if (stop.is_manual_stop === true) {
+                                // Marcador para parada manual (amarelo)
+                                const manualIcon = L.divIcon({
+                                    className: 'custom-stopover-icon',
+                                    html: `
+                                        <div style="background: white; border-radius: 50%; padding: 3px; border: 3px solid #eab308; box-shadow: 0 4px 8px rgba(0,0,0, 0.3);">
+                                            <div style="background: #eab308; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                                <i data-lucide="coffee" style="width: 20px; height: 20px; color: #1e293b;"></i>
+                                            </div>
+                                        </div>
+                                    `,
+                                    iconSize: [40, 40],
+                                    iconAnchor: [20, 20],
+                                    popupAnchor: [0, -20]
+                                });
+
+                                const popupContent = `
+                                    <div style="min-width: 200px;">
+                                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                            <strong style="color: #eab308; font-size: 1.1em;">☕ Parada de Descanso</strong>
+                                        </div>
+                                        <div style="background: rgba(234, 179, 8, 0.1); padding: 8px; border-radius: 6px;">
+                                            <strong style="color: #eab308;">${stop.name || 'Parada Manual'}</strong>
+                                        </div>
+                                    </div>
+                                `;
+
+                                const marker = L.marker([stop.latitude, stop.longitude], { icon: manualIcon })
+                                    .bindPopup(popupContent)
+                                    .addTo(map);
+
+                                chargeStopMarkers.push(marker);
+                                return; // Pula para próxima iteração
+                            }
+
+                            // *** PARADA DE RECARGA (código original) ***
                             let lat, lng;
                             try {
                                 lat = stop.latitude;
@@ -212,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const isEstimated = stop.is_estimated === true;
                             const isFromDatabase = stop.is_from_database === true;
 
-                            let iconColor, iconBg, popupTitle, badgeColor, badgeText;
+                            let iconColor, iconBg, popupTitle, badgeText;
 
                             if (isEstimated) {
                                 iconColor = '#64748b';
@@ -243,7 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 className: 'custom-charge-stop-icon',
                                 html: `
                                 <div style="background: white; border-radius: 50%; padding: 4px; border: 3px solid ${iconBg}; box-shadow: 0 4px 12px rgba(0,0,0, 0.4);">
-                                    <div style="background: ${iconBg}; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                    <div style="background: ${iconBg}; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-center;">
                                         ${iconSVG}
                                     </div>
                                 </div>
@@ -296,17 +577,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                 } else {
-                    reportContent.innerHTML = `<p style="color: #ef4444;">Erro: ${data.message}</p>`;
+                    if (reportSummary) {
+                        reportSummary.innerHTML = `<p style="color: #ef4444;">Erro: ${data.message}</p>`;
+                    }
                 }
             })
             .catch(err => {
                 loadingSpinner.style.display = 'none';
-                reportContent.innerHTML = `<p style="color: #ef4444;">Erro de conexão: ${err.message}</p>`;
+                if (reportSummary) {
+                    reportSummary.innerHTML = `<p style="color: #ef4444;">Erro de conexão: ${err.message}</p>`;
+                }
                 console.error('Erro na requisição:', err);
             });
     });
 
-    // 8. Botão de Limpar
+    // ==================== BOTÃO DE LIMPAR ====================
+
     clearBtn.addEventListener('click', () => {
         if (startMarker) map.removeLayer(startMarker);
         if (endMarker) map.removeLayer(endMarker);
@@ -329,11 +615,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (vehicleSelect) vehicleSelect.value = 'default';
         updateSelectedVehicle(null);
 
-        reportContent.innerHTML = '<p class="text-gray-400">Aguardando simulação...</p>';
+        // LIMPAR PARADAS
+        clearAllStopovers();
+
+        if (reportSummary) {
+            reportSummary.innerHTML = '<p class="text-gray-400">Aguardando simulação...</p>';
+        }
+        if (chargingStopsList) {
+            chargingStopsList.innerHTML = '';
+        }
+        if (stopsTitle) {
+            stopsTitle.classList.add('hidden');
+        }
         downloadBtn.style.display = 'none';
     });
 
-    // 9. Função de Carregar Favoritos da API
+    // ==================== FAVORITOS ====================
+
     function loadFavoritesFromApi() {
         if (cachedFavorites.length > 0) {
             if (startFavoriteControl) startFavoriteControl.style.display = 'block';
@@ -350,9 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return res.json();
             })
             .then(data => {
-
                 if (data.success && data.data && Array.isArray(data.data) && data.data.length > 0) {
-
                     cachedFavorites = data.data;
 
                     if (startFavoriteControl) startFavoriteControl.style.display = 'block';
@@ -377,11 +673,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             if (startFavoriteSelect) startFavoriteSelect.appendChild(option.cloneNode(true));
                             if (endFavoriteSelect) endFavoriteSelect.appendChild(option.cloneNode(true));
-                        } else {
-                            console.warn("Ponto favorito ignorado (dados incompletos ou inválidos):", fav);
                         }
                     });
-
                 } else {
                     if (startFavoriteControl) startFavoriteControl.style.display = 'none';
                     if (endFavoriteControl) endFavoriteControl.style.display = 'none';
@@ -394,9 +687,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    // ==================== SEÇÃO DE VEÍCULOS ====================
+    // ==================== VEÍCULOS ====================
 
-    // Carregar veículos do usuário
     async function loadUserVehicles() {
         if (!vehicleSelect) {
             console.error('❌ Elemento #vehicle-select não encontrado no DOM.');
@@ -404,77 +696,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            console.log('🚗 Iniciando carregamento de veículos...');
-
             const response = await fetch('../PHP/get_user_vehicles.php');
-            console.log('📡 Response status:', response.status);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
-            console.log('📦 Dados recebidos:', data);
 
             if (data.success && data.veiculos && Array.isArray(data.veiculos)) {
                 if (data.veiculos.length > 0) {
-                    console.log(`✅ ${data.veiculos.length} veículo(s) encontrado(s)`);
                     userVehicles = data.veiculos;
                     populateVehicleSelect();
 
-                    // Selecionar automaticamente o primeiro veículo
                     if (userVehicles.length > 0) {
                         const firstVehicle = userVehicles[0];
                         vehicleSelect.value = firstVehicle.id;
                         updateSelectedVehicle(firstVehicle);
                     }
                 } else {
-                    console.warn('⚠️ Nenhum veículo cadastrado para este usuário.');
                     showDefaultVehicleOnly();
                 }
             } else {
-                console.error('❌ Erro na resposta:', data.message || 'Formato inválido');
                 showDefaultVehicleOnly();
             }
         } catch (error) {
-            console.error('💥 Erro ao carregar veículos:', error);
-            console.error('🔍 Stack trace:', error.stack);
+            console.error('Erro ao carregar veículos:', error);
             showDefaultVehicleOnly();
         }
     }
 
-    // Popular Select de Veículos
     function populateVehicleSelect() {
-        if (!vehicleSelect) {
-            console.error('❌ vehicleSelect não está definido');
-            return;
-        }
+        if (!vehicleSelect) return;
 
-        console.log('🔄 Populando select com', userVehicles.length, 'veículos');
-
-        // Limpar todas as opções EXCETO a primeira (Padrão)
         while (vehicleSelect.options.length > 1) {
             vehicleSelect.remove(1);
         }
 
-        // Adicionar veículos do usuário
-        userVehicles.forEach((vehicle, index) => {
+        userVehicles.forEach((vehicle) => {
             const option = document.createElement('option');
-            // Corrigido: o value precisa ser o ID para a seleção automática funcionar
             option.value = vehicle.id;
             option.textContent = `${vehicle.nome_completo} - ${vehicle.placa} (${vehicle.ano})`;
             option.dataset.vehicleData = JSON.stringify(vehicle);
             vehicleSelect.appendChild(option);
-
-            console.log(`✅ Veículo ${index + 1} adicionado:`, vehicle.nome_completo);
         });
-
-        console.log('✅ Select populado! Total de opções:', vehicleSelect.options.length);
     }
 
-    // Mostrar apenas o veículo padrão
     function showDefaultVehicleOnly() {
-        console.log('ℹ️ Mantendo apenas veículo padrão');
         while (vehicleSelect.options.length > 1) {
             vehicleSelect.remove(1);
         }
@@ -482,24 +750,17 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSelectedVehicle(null);
     }
 
-    // Atualizar informações do veículo selecionado na tela
     function updateSelectedVehicle(vehicle) {
         selectedVehicle = vehicle;
-
         const vehicleInfoDiv = document.getElementById('vehicle-info');
 
         if (vehicle) {
-            // Calcular autonomia atual
             const autonomiaAtual = (vehicle.nivel_bateria / 100) * vehicle.capacidade_bateria / vehicle.consumo_medio * 100;
 
-            // Atualizar texto principal
             if (vehicleDisplayText) {
-                vehicleDisplayText.innerHTML = `
-                    <strong class="text-cyan-300">${vehicle.nome_completo}</strong>
-                `;
+                vehicleDisplayText.innerHTML = `<strong class="text-cyan-300">${vehicle.nome_completo}</strong>`;
             }
 
-            // Mostrar informações detalhadas
             if (vehicleInfoDiv) {
                 vehicleInfoDiv.classList.remove('hidden');
                 document.getElementById('vehicle-battery').textContent = `${vehicle.capacidade_bateria} kWh`;
@@ -507,80 +768,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('vehicle-charge').textContent = `${vehicle.nivel_bateria}%`;
                 document.getElementById('vehicle-range').textContent = `~${Math.round(autonomiaAtual)} km`;
             }
-
-            console.log('✅ Veículo selecionado:', vehicle.nome_completo);
         } else {
-            // Veículo padrão
             if (vehicleDisplayText) {
                 vehicleDisplayText.textContent = 'Tesla Model 3 (Padrão)';
             }
-
             if (vehicleInfoDiv) {
                 vehicleInfoDiv.classList.add('hidden');
             }
-
-            console.log('ℹ️ Usando veículo padrão');
         }
     }
 
-    // Listener para mudança de veículo
     if (vehicleSelect) {
         vehicleSelect.addEventListener('change', function () {
             const value = this.value;
-            console.log('🔄 Veículo alterado para:', value);
 
             if (value === 'default' || !value) {
                 updateSelectedVehicle(null);
             } else {
                 const selectedOption = this.options[this.selectedIndex];
                 try {
-                    // O data-vehicle-data deve conter os dados completos do veículo
                     const vehicleData = JSON.parse(selectedOption.dataset.vehicleData);
                     updateSelectedVehicle(vehicleData);
                 } catch (e) {
-                    console.error("❌ Erro ao parsear dados do veículo:", e);
-                    // Procura o veículo no array userVehicles como fallback
                     const fallbackVehicle = userVehicles.find(v => String(v.id) === value);
                     updateSelectedVehicle(fallbackVehicle || null);
                 }
             }
         });
-
-        console.log('✅ Event listener do select configurado');
-    } else {
-        console.error('❌ Elemento vehicleSelect não encontrado no carregamento');
     }
 
-    // 10. Função para configurar Origem/Destino (unificada)
-    function setRoutePoint(latlng, name, type, isFavorite = false) {
-        const inputElement = type === 'start' ? startInput : endInput;
-        let marker = type === 'start' ? startMarker : endMarker;
-        const setCoords = type === 'start' ? (c) => startCoords = c : (c) => endCoords = c;
-        const setMarker = type === 'start' ? (m) => startMarker = m : (m) => endMarker = m;
-        const selectElement = type === 'start' ? startFavoriteSelect : endFavoriteSelect;
+    // ==================== FAVORITOS EVENT LISTENERS ====================
 
-        setCoords(latlng);
-        inputElement.value = name;
-
-        if (marker) map.removeLayer(marker);
-
-        marker = L.marker(latlng, { draggable: true }).addTo(map).bindPopup(type === 'start' ? 'Origem' : 'Destino');
-        marker.on('dragend', (ev) => handleMarkerDrag(ev, type));
-        setMarker(marker);
-
-        map.setView(latlng, 15);
-
-        if (selectElement) {
-            if (isFavorite) {
-                const selectValue = `${latlng.lat},${latlng.lng}|${name}`;
-                selectElement.value = selectValue;
-            } else {
-                selectElement.value = '';
-            }
-        }
-    }
-
-    // Event Listeners para os Dropdowns de Favoritos
     if (startFavoriteSelect) {
         startFavoriteSelect.addEventListener('change', (e) => {
             const value = e.target.value;
@@ -617,8 +835,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 11. Função de Relatório
+    // ==================== EVENT LISTENER PARA ADICIONAR PARADA ====================
+
+    if (addStopoverBtn) {
+        addStopoverBtn.addEventListener('click', () => {
+            addStopover();
+        });
+    }
+
+    // ==================== DISPLAY REPORT & PDF ====================
     function displayReport(report, vehicleInfo = null) {
+        if (!reportSummary) {
+            console.error('Elemento report-summary não encontrado!');
+            return;
+        }
+
         let vehicleInfoHTML = '';
         if (vehicleInfo && vehicleInfo.name) {
             vehicleInfoHTML = `
@@ -641,7 +872,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
-        let html = `
+        let summaryHTML = `
             ${vehicleInfoHTML}
             <div class="space-y-2 mb-4 text-sm">
                 <div class="flex justify-between items-center">
@@ -679,260 +910,126 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         `;
+        
+        reportSummary.innerHTML = summaryHTML;
 
-        if (report.charge_stops_details && report.charge_stops_details.length > 0) {
-            html += `
-                <hr class="border-cyan-500/20 my-3">
-                <h4 class="text-cyan-400 font-bold text-sm mb-3 flex items-center gap-2">
-                    <i data-lucide="map-pin" class="w-4 h-4"></i>
-                    Detalhes das Paradas
-                </h4>
-                <div class="space-y-3 max-h-60 overflow-y-auto pr-2">
-            `;
+        // Renderizar lista de paradas
+        if (chargingStopsList && stopsTitle) {
+            chargingStopsList.innerHTML = '';
+            const allStops = report.charge_stops_details;
 
-            report.charge_stops_details.forEach((stop, index) => {
-                const isEstimated = stop.is_estimated === true;
-                const isFromDatabase = stop.is_from_database === true;
+            if (allStops && allStops.length > 0) {
+                stopsTitle.classList.remove('hidden');
 
-                let borderColor, iconBg, textColor, icon, badgeColor, badgeText;
-
-                if (isEstimated) {
-                    borderColor = 'border-slate-500/30';
-                    iconBg = 'bg-slate-500';
-                    textColor = 'text-slate-400';
-                    icon = `<i data-lucide="brain-circuit" class="w-4 h-4 text-white"></i>`;
-                    badgeColor = 'bg-slate-500';
-                    badgeText = 'Simulada';
-                } else if (isFromDatabase) {
-                    borderColor = 'border-green-500/30';
-                    iconBg = 'bg-green-500';
-                    textColor = 'text-green-400';
-                    icon = `${stop.stop_number}`;
-                    badgeColor = 'bg-green-500';
-                    badgeText = 'HelioMax';
-                } else {
-                    borderColor = 'border-cyan-500/30';
-                    iconBg = 'bg-cyan-500';
-                    textColor = 'text-cyan-400';
-                    icon = `${stop.stop_number}`;
-                    badgeColor = 'bg-red-500';
-                    badgeText = 'OCM';
-                }
-
-                const ratingText = isEstimated ? 'Parada Simulada' :
-                    isFromDatabase ? `HelioMax • ${stop.station.connector_type}` :
-                        `⭐ ${stop.station.rating || 'N/A'} • ${stop.station.connector_type}`;
-
-                html += `
-                    <div class="bg-slate-900/50 p-3 rounded-lg border ${borderColor}">
-                        <div class="flex items-start gap-2 mb-2">
-                            <span class="${iconBg} text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">
-                                ${icon}
-                            </span>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center justify-between gap-2">
-                                    <div class="font-bold ${textColor} text-xs truncate">${stop.station.name}</div>
-                                    <span class="${badgeColor} text-white text-xs px-2 py-0.5 rounded-full font-bold">${badgeText}</span>
+                allStops.forEach((stop) => {
+                    // *** VERIFICAR SE É PARADA MANUAL ***
+                    if (stop.is_manual_stop === true) {
+                        const stopHTML = `
+                            <div class="bg-slate-900/50 p-3 rounded-lg border border-yellow-500/30">
+                                <div class="flex items-start gap-2 mb-2">
+                                    <span class="bg-yellow-500 text-slate-900 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                                        <i data-lucide="coffee" class="w-3 h-3"></i>
+                                    </span>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <div class="font-bold text-yellow-400 text-sm truncate">${stop.name || 'Parada Manual'}</div>
+                                            <span class="bg-yellow-500 text-slate-900 text-xs px-2 py-0.5 rounded-full font-bold">Descanso</span>
+                                        </div>
+                                        <div class="text-gray-400 text-xs mt-1">Parada de descanso programada</div>
+                                    </div>
                                 </div>
-                                <div class="text-gray-400 text-xs line-clamp-2">${stop.station.address}</div>
                             </div>
-                        </div>
-                        
-                        <div class="mt-2 pt-2 border-t border-slate-700 space-y-1.5 text-xs">
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400">Distância:</span>
-                                <strong class="text-white">${stop.distance_traveled_km} km</strong>
-                            </div>
-                            
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400">Tempo Carga:</span>
-                                <strong class="text-white">${Math.round(stop.charge_time / 60)} min</strong>
-                            </div>
+                        `;
+                        chargingStopsList.insertAdjacentHTML('beforeend', stopHTML);
+                        return; // Pula para próxima iteração
+                    }
 
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400">Chegada/Saída:</span>
-                                <strong class="text-white">${stop.charge_at_arrival}% / ${stop.charge_at_departure}%</strong>
-                            </div>
-
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400">Energia:</span>
-                                <strong class="text-white">${stop.energy_charged_kwh} kWh</strong>
-                            </div>
-
-                            <div class="text-gray-500 pt-1.5 border-t border-slate-700/50 text-xs">
-                                ${ratingText}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            html += `</div>`;
-        }
-
-        reportContent.innerHTML = html;
-        lucide.createIcons();
-    }
-
-    // 12. Função de Download PDF
-    downloadBtn.addEventListener('click', () => {
-        if (!currentReportData) {
-            alert("Não há dados de relatório para baixar. Por favor, simule uma rota primeiro.");
-            return;
-        }
-
-        loadingSpinner.style.display = 'block';
-
-        try {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'mm', 'a4');
-            const pageHeight = doc.internal.pageSize.getHeight();
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const margin = 15;
-            let y = 20;
-
-            const checkPageBreak = (spaceNeeded = 20) => {
-                if (y + spaceNeeded > pageHeight - margin) {
-                    doc.addPage();
-                    y = 20;
-                }
-            };
-
-            doc.setFontSize(18);
-            doc.setTextColor('#22d3ee');
-            doc.setFont('helvetica', 'bold');
-            doc.text('Relatório de Rota - Simulador EV', margin, y);
-            y += 12;
-
-            doc.setFontSize(11);
-            doc.setTextColor(40, 40, 40);
-
-            const summary = [
-                [`Distância Total:`, `${currentReportData.distancia_total_km} km`],
-                [`Tempo de Condução:`, `${currentReportData.tempo_conducao_min} min`],
-                [`Paradas para Recarga:`, `${currentReportData.paradas_totais}`],
-                [`Tempo Total Carregando:`, `${currentReportData.tempo_carregamento_min} min`],
-                [`Energia Consumida:`, `${currentReportData.energia_consumida_total_kwh} kWh`],
-                [`Custo Estimado:`, `R$ ${currentReportData.custo_total_estimado}`],
-                [`Carga na Chegada:`, `${currentReportData.carga_final_pct}%`]
-            ];
-
-            doc.setFont('helvetica', 'bold');
-            for (const [label, value] of summary) {
-                doc.setTextColor(80, 80, 80);
-                doc.text(label, margin, y);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(40, 40, 40);
-                doc.text(value, margin + 60, y);
-                doc.setFont('helvetica', 'bold');
-                y += 7;
-            }
-            y += 5;
-
-            if (currentReportData.charge_stops_details && currentReportData.charge_stops_details.length > 0) {
-                checkPageBreak(30);
-                doc.setDrawColor('#22d3ee');
-                doc.line(margin, y, pageWidth - margin, y);
-                y += 10;
-
-                checkPageBreak();
-                doc.setFontSize(14);
-                doc.setTextColor('#22d3ee');
-                doc.text('Paradas de Recarga', margin, y);
-                y += 8;
-
-                const lineSpacing = 6;
-                const col2X = 100;
-                const valueX1 = margin + 45;
-                const valueX2 = col2X + 35;
-
-                for (const stop of currentReportData.charge_stops_details) {
-                    checkPageBreak(50);
-
+                    // *** PARADA DE RECARGA (código original) ***
                     const isEstimated = stop.is_estimated === true;
                     const isFromDatabase = stop.is_from_database === true;
 
-                    let titleColor, title;
+                    let borderColor, iconBg, icon, badgeColor, badgeText;
+
                     if (isEstimated) {
-                        titleColor = '#64748b';
-                        title = `Parada Simulada (Planejamento)`;
+                        borderColor = 'border-slate-500/30';
+                        iconBg = 'bg-slate-500';
+                        icon = `<i data-lucide="brain-circuit" class="w-4 h-4 text-white"></i>`;
+                        badgeColor = 'bg-slate-500';
+                        badgeText = 'Simulada';
                     } else if (isFromDatabase) {
-                        titleColor = '#10b981';
-                        title = `Parada ${stop.stop_number} (HelioMax)`;
+                        borderColor = 'border-green-500/30';
+                        iconBg = 'bg-green-500';
+                        icon = `${stop.stop_number}`;
+                        badgeColor = 'bg-green-500';
+                        badgeText = 'HelioMax';
                     } else {
-                        titleColor = '#000000';
-                        title = `Parada ${stop.stop_number} (OCM)`;
+                        borderColor = 'border-red-500/30';
+                        iconBg = 'bg-red-500';
+                        icon = `${stop.stop_number}`;
+                        badgeColor = 'bg-red-500';
+                        badgeText = 'OCM';
                     }
 
-                    doc.setFontSize(12);
-                    doc.setTextColor(titleColor);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(title, margin, y);
-                    y += 6;
+                    const ratingText = isEstimated ? 'Parada Simulada' :
+                        isFromDatabase ? `HelioMax • ${stop.station.connector_type}` :
+                            `⭐ ${stop.station.rating || 'N/A'} • ${stop.station.connector_type}`;
 
-                    doc.setFontSize(10);
-                    doc.setTextColor(50, 50, 50);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(stop.station.name, margin + 5, y);
-                    y += 5;
+                    const stopHTML = `
+                        <div class="bg-slate-900/50 p-3 rounded-lg border ${borderColor}">
+                            <div class="flex items-start gap-2 mb-2">
+                                <span class="${iconBg} text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                                    ${icon}
+                                </span>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="font-bold text-cyan-400 text-sm truncate">${stop.station.name}</div>
+                                        <span class="${badgeColor} text-white text-xs px-2 py-0.5 rounded-full font-bold">${badgeText}</span>
+                                    </div>
+                                    <div class="text-gray-400 text-xs line-clamp-2">${stop.station.address}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-2 pt-2 border-t border-slate-700 space-y-1.5 text-xs">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-400">Distância Acumulada:</span>
+                                    <strong class="text-white">${stop.distance_traveled_km} km</strong>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-400">Tempo Carga:</span>
+                                    <strong class="text-white">${Math.round(stop.charge_time / 60)} min</strong>
+                                </div>
 
-                    doc.setTextColor(120, 120, 120);
-                    doc.setFont('helvetica', 'normal');
-                    doc.text(stop.station.address, margin + 5, y);
-                    y += 5;
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-400">Chegada/Saída (%):</span>
+                                    <strong class="text-white">${stop.charge_at_arrival}% / ${stop.charge_at_departure}%</strong>
+                                </div>
 
-                    let ratingText = isEstimated ? `Conector: Simulado • Potência: ${stop.charging_power_kw} kW (Estimada)`
-                        : `Conector: ${stop.station.connector_type} • Potência: ${stop.charging_power_kw} kW`;
-                    doc.text(ratingText, margin + 5, y);
-                    y += 7;
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-400">Potência/Energia:</span>
+                                    <strong class="text-white">${stop.charging_power_kw} kW / ${stop.energy_charged_kwh} kWh</strong>
+                                </div>
 
-                    doc.setTextColor(80, 80, 80);
-                    let currentRowY = y;
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('Distância percorrida:', margin + 5, currentRowY);
-                    doc.setFont('helvetica', 'normal');
-                    doc.text(`${stop.distance_traveled_km} km`, valueX1, currentRowY);
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('Tempo de carga:', col2X, currentRowY);
-                    doc.setFont('helvetica', 'normal');
-                    doc.text(`${Math.round(stop.charge_time / 60)} min`, valueX2, currentRowY);
-
-                    currentRowY += lineSpacing;
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('Carga ao chegar:', margin + 5, currentRowY);
-                    doc.setFont('helvetica', 'normal');
-                    doc.text(`${stop.charge_at_arrival}%`, valueX1, currentRowY);
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('Carga ao sair:', col2X, currentRowY);
-                    doc.setFont('helvetica', 'normal');
-                    doc.text(`${stop.charge_at_departure}%`, valueX2, currentRowY);
-
-                    y = currentRowY + 10;
-
-                    doc.setDrawColor(220, 220, 220);
-                    doc.line(margin, y - 4, pageWidth - margin, y - 4);
-                }
+                                <div class="text-gray-500 pt-1.5 border-t border-slate-700/50 text-xs">
+                                    ${ratingText}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    chargingStopsList.insertAdjacentHTML('beforeend', stopHTML);
+                });
+            } else {
+                stopsTitle.classList.add('hidden');
             }
-
-            doc.save('relatorio-rota-ev.pdf');
-
-        } catch (err) {
-            alert("Erro ao gerar PDF:" + err.message);
-            console.error(err);
-        } finally {
-            loadingSpinner.style.display = 'none';
         }
-    });
+
+        lucide.createIcons();
+    }
 
     // ==================== INICIALIZAÇÃO ====================
 
-    // Carregar dados ao iniciar
     loadFavoritesFromApi();
-    loadUserVehicles(); // CARREGA OS VEÍCULOS
+    loadUserVehicles();
 
-    console.log('🚀 Simulador inicializado');
+    console.log('🚀 Simulador inicializado com múltiplas paradas');
 });
