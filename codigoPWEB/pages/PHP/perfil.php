@@ -1,11 +1,6 @@
 <?php
 require_once 'protectuser.php'; // verifica login
 
-// Verificação de tipo (permissão)
-if ($_SESSION['tipo'] !== 'usuario') {
-    header("Location: sem_permissao.php");
-    exit;
-}
 $host = '127.0.0.1';
 $dbname = 'heliomax';
 $username = 'root';
