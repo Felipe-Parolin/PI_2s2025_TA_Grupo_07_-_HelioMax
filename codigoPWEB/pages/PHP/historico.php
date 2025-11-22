@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once 'protectuser.php';
 
 // Verifica se o usuário está logado
 if (!isset($_SESSION['usuario_id'])) {

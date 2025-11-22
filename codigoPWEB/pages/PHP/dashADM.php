@@ -1,10 +1,5 @@
 <?php
-session_start();
-
-if (!isset($_SESSION['usuario_id'])) {
-  header('Location: login.php');
-  exit;
-}
+require_once 'protectadmin.php';
 
 // Configuração do banco de dados
 $host = '127.0.0.1';
@@ -19,11 +14,13 @@ try {
   die("Erro na conexão: " . $e->getMessage());
 }
 
+// Define o ID do admin logado
 $admin_id = $_SESSION['usuario_id'];
 
 // Processar ações do CRUD
 $mensagem = '';
 $tipo_mensagem = '';
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $action = $_POST['action'] ?? '';

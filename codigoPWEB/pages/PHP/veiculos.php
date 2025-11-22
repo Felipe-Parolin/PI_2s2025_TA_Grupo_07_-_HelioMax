@@ -1,11 +1,5 @@
 <?php
-session_start();
-
-// Verifica se o usuário está logado
-if (!isset($_SESSION['usuario_id'])) {
-    header('Location: login.php');
-    exit;
-}
+require_once 'protectuser.php';
 
 // Configuração do banco de dados
 $host = '127.0.0.1';

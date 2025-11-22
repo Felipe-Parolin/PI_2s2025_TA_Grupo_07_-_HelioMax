@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once 'protectuser.php';
 
 // Configuração do banco de dados
 $host = '127.0.0.1';

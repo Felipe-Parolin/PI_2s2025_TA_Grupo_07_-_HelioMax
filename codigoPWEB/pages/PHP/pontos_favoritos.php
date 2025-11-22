@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once 'protectuser.php';
 
 // Início do código PHP (Conexão com o Banco de Dados)
 $host = '127.0.0.1';
