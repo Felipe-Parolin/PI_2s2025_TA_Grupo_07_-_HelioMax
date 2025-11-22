@@ -227,9 +227,9 @@ $historico_recargas = [
             </a>
             <a href="../PHP/avaliacoes.php"
                 class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-cyan-600/50 transition-colors sidebar-item mt-2"
-                title="Avaliação">
+                title="Avaliações">
                 <i data-lucide="star" class="flex-shrink-0"></i>
-                <span class="sidebar-text">Avaliação</span>
+                <span class="sidebar-text">Avaliações</span>
             </a>
 
             <a href="pontos_favoritos.php"
@@ -419,12 +419,12 @@ $historico_recargas = [
 
             sidebar.classList.toggle('sidebar-mobile-hidden');
             overlay.classList.toggle('hidden');
-            
+
             // Alterna o ícone entre menu e X
             const toggleBtn = document.getElementById('toggle-sidebar-btn');
-            if(toggleBtn) {
-                toggleBtn.innerHTML = sidebar.classList.contains('sidebar-mobile-hidden') 
-                    ? '<i data-lucide="menu" class="w-7 h-7"></i>' 
+            if (toggleBtn) {
+                toggleBtn.innerHTML = sidebar.classList.contains('sidebar-mobile-hidden')
+                    ? '<i data-lucide="menu" class="w-7 h-7"></i>'
                     : '<i data-lucide="x" class="w-7 h-7"></i>';
                 lucide.createIcons();
             }
