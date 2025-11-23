@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
           });
      });
 
-     setInterval(nextSlide, 5000);
+     setInterval(nextSlide, 15000);
 
      const fadeElements = document.querySelectorAll('.fade-in');
      const observer = new IntersectionObserver((entries) => {
