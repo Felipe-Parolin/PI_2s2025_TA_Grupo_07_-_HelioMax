@@ -373,6 +373,26 @@ if (!isset($_SESSION['usuario_id'])) {
         <div id="map" class="flex-1 h-full rounded-l-none rounded-2xl"></div>
     </div>
 
+    <div id="loading-overlay"
+        class="hidden fixed inset-0 bg-gray-900/80 backdrop-blur-md z-[99999] flex items-center justify-center transition-opacity duration-300">
+        <div
+            class="bg-slate-800 p-8 rounded-2xl border border-cyan-500/30 shadow-2xl shadow-cyan-500/20 flex flex-col items-center gap-6 max-w-sm w-full mx-4 transform transition-all scale-100">
+
+            <div class="relative">
+                <div class="w-16 h-16 border-4 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <i data-lucide="zap" class="w-6 h-6 text-cyan-400 fill-cyan-400 animate-pulse"></i>
+                </div>
+            </div>
+
+            <div class="text-center space-y-2">
+                <h3 class="text-xl font-bold text-white">Calculando Rota</h3>
+                <p class="text-sm text-cyan-300 animate-pulse" id="loading-text">Analisando carregadores...</p>
+                <p class="text-xs text-gray-500 mt-2">Isso pode levar alguns segundos</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         lucide.createIcons();
     </script>

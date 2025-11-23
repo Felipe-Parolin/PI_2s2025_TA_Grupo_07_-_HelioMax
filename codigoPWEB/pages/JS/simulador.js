@@ -1,4 +1,4 @@
-// simulador.js - Versão com envio correto de nomes de paradas para o backend
+// simulador.js - Versão com envio correto de nomes de paradas para o backend e Overlay de Carregamento
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -61,6 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const reportSummary = document.getElementById('report-summary');
     const chargingStopsList = document.getElementById('charging-stops-list');
     const stopsTitle = document.getElementById('stops-title');
+
+    // ELEMENTOS DO OVERLAY DE CARREGAMENTO (NOVO)
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingText = document.getElementById('loading-text');
 
     // Verificação de elementos críticos
     if (!reportSummary) console.error('❌ ERRO: #report-summary não encontrado!');
@@ -376,12 +380,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ==================== BOTÃO DE SIMULAR ====================
+    // ==================== BOTÃO DE SIMULAR (COM LOADING) ====================
 
     simulateBtn.addEventListener('click', () => {
         if (!startCoords || !endCoords) {
             alert("Por favor, defina um ponto de Origem e um de Destino.");
             return;
+        }
+
+        // 1. Mostrar o Overlay de Carregamento
+        if (loadingOverlay) {
+            loadingOverlay.classList.remove('hidden');
+            // Pequena animação de texto opcional
+            const texts = ["Analisando trajeto...", "Buscando estações...", "Otimizando paradas...", "Calculando consumo..."];
+            let textIndex = 0;
+            const textInterval = setInterval(() => {
+                if (loadingText) loadingText.textContent = texts[textIndex++ % texts.length];
+            }, 800);
+
+            // Guardamos o intervalo no elemento para limpar depois
+            loadingOverlay.dataset.intervalId = textInterval;
         }
 
         // Limpar mapa
@@ -393,8 +411,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Desabilitar botão
         simulateBtn.disabled = true;
-        simulateBtn.innerHTML = '<i data-lucide="play" class="w-5 h-5"></i><span>Calculando...</span>';
-        lucide.createIcons();
 
         if (reportSummary) {
             reportSummary.innerHTML = '<p class="text-gray-400">Calculando...</p>';
@@ -444,7 +460,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Reabilitar botão
                 simulateBtn.disabled = false;
                 simulateBtn.innerHTML = '<i data-lucide="play" class="w-5 h-5"></i><span>Simular Rota</span>';
-                lucide.createIcons();
 
                 if (data.success) {
                     currentReportData = data.report;
@@ -623,12 +638,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Reabilitar botão
                 simulateBtn.disabled = false;
                 simulateBtn.innerHTML = '<i data-lucide="play" class="w-5 h-5"></i><span>Simular Rota</span>';
-                lucide.createIcons();
 
                 if (reportSummary) {
                     reportSummary.innerHTML = `<p style="color: #ef4444;">Erro de conexão: ${err.message}</p>`;
                 }
                 console.error('Erro na requisição:', err);
+            })
+            .finally(() => {
+                // 2. Esconder o Overlay de Carregamento (SEMPRE executa)
+                if (loadingOverlay) {
+                    loadingOverlay.classList.add('hidden');
+
+                    // Limpar intervalo de texto
+                    const intervalId = loadingOverlay.dataset.intervalId;
+                    if (intervalId) clearInterval(intervalId);
+                    if (loadingText) loadingText.textContent = "Finalizando...";
+                }
+                lucide.createIcons();
             });
     });
 
@@ -1264,5 +1290,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    console.log('🚀 Simulador inicializado com múltiplas paradas');
+    console.log('🚀 Simulador inicializado com Overlay de Carregamento');
 });
