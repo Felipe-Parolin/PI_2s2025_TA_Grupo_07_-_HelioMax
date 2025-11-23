@@ -128,7 +128,7 @@ if (!$usuario_logado) {
         <header class="flex justify-between items-center mb-6 lg:mb-8 flex-wrap gap-4">
             <div class="flex-1 min-w-0">
                 <h1 class="text-2xl sm:text-3xl font-bold text-white">Histórico de Rotas</h1>
-                <p class="text-gray-400 text-sm sm:text-base">Visualize todas as rotas que você simulou.</p>
+                <p class="text-gray-400 text-sm sm:text-base">Visualize todas as rotas que você simulou</p>
             </div>
 
             <div class="flex items-center gap-3">

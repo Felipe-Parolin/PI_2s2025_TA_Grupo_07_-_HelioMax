@@ -221,7 +221,7 @@ if (!$usuario_logado) {
         <header class="flex justify-between items-center mb-6 lg:mb-8 flex-wrap gap-4">
             <div class="flex-1 min-w-0">
                 <h1 class="text-2xl sm:text-3xl font-bold text-white">Meus Veículos</h1>
-                <p class="text-gray-400 text-sm sm:text-base">Gerencie seus veículos elétricos cadastrados.</p>
+                <p class="text-gray-400 text-sm sm:text-base">Gerencie seus veículos elétricos cadastrados</p>
             </div>
 
             <div class="flex items-center gap-3">
