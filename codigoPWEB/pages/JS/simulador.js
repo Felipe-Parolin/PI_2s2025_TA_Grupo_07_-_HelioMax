@@ -1,4 +1,4 @@
-// simulador.js - Versão Completa com Múltiplas Paradas (CORRIGIDO)
+// simulador.js - Versão com envio correto de nomes de paradas para o backend
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let routeLayer = null;
     let chargeStopMarkers = [];
     let currentReportData = null;
+    let currentVehicleInfo = null;
 
     let startCoords = null;
     let endCoords = null;
@@ -29,6 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let stopovers = [];
     let stopoverCounter = 0;
     let stopoverAutocompletes = {};
+
+    // CONSTANTE DO SEPARADOR
+    const SEPARATOR = '|~|';
 
     // --- Elementos do DOM ---
     const startInput = document.getElementById('start-point');
@@ -73,6 +77,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     } else {
         console.warn("API do Google Maps não está carregada.");
+    }
+
+    // ==================== FUNÇÕES AUXILIARES ====================
+
+    // Função para encontrar o endereço original de uma parada manual baseada nas coordenadas
+    function findOriginalStopoverAddress(lat, lng) {
+        if (!stopovers || stopovers.length === 0) return null;
+
+        // Tolerância para comparação de float (coordenadas)
+        const epsilon = 0.0001;
+
+        const match = stopovers.find(s =>
+            s.coords &&
+            Math.abs(s.coords.lat - lat) < epsilon &&
+            Math.abs(s.coords.lng - lng) < epsilon
+        );
+
+        return match ? match.address : null;
     }
 
     // ==================== FUNÇÕES DE MÚLTIPLAS PARADAS ====================
@@ -134,11 +156,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             stopovers[index].element.remove();
-            
+
             if (stopoverAutocompletes[stopoverId]) {
                 delete stopoverAutocompletes[stopoverId];
             }
-            
+
             stopovers.splice(index, 1);
             updateStopoverNumbers();
         }
@@ -204,12 +226,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     popupAnchor: [0, -15]
                 });
 
-                stopover.marker = L.marker(latlng, { 
+                stopover.marker = L.marker(latlng, {
                     icon: starIcon,
-                    draggable: true 
+                    draggable: true
                 })
-                .addTo(map)
-                .bindPopup(`<strong>Parada ${stopover.number}</strong><br>${address}`);
+                    .addTo(map)
+                    .bindPopup(`<strong>Parada ${stopover.number}</strong><br>${address}`);
 
                 stopover.marker.on('dragend', (e) => {
                     const newLatLng = e.target.getLatLng();
@@ -219,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const coordsDiv = document.getElementById(`${stopoverId}-coords`);
                 const coordsText = document.getElementById(`${stopoverId}-coords-text`);
-                
+
                 if (coordsDiv && coordsText) {
                     coordsDiv.classList.remove('hidden');
                     coordsText.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
@@ -231,10 +253,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function getStopoverCoords() {
+    function getStopoversData() {
         return stopovers
             .filter(s => s.coords !== null)
-            .map(s => s.coords);
+            .map(s => ({
+                lat: s.coords.lat,
+                lng: s.coords.lng,
+                name: s.address || `Parada Manual ${s.number}`
+            }));
     }
 
     function clearAllStopovers() {
@@ -350,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-// ==================== BOTÃO DE SIMULAR ====================
+    // ==================== BOTÃO DE SIMULAR ====================
 
     simulateBtn.addEventListener('click', () => {
         if (!startCoords || !endCoords) {
@@ -363,10 +389,13 @@ document.addEventListener('DOMContentLoaded', () => {
         chargeStopMarkers.forEach(marker => map.removeLayer(marker));
         chargeStopMarkers = [];
         currentReportData = null;
+        currentVehicleInfo = null;
 
-        // Mostrar loading
-        loadingSpinner.style.display = 'block';
-        
+        // Desabilitar botão
+        simulateBtn.disabled = true;
+        simulateBtn.innerHTML = '<i data-lucide="play" class="w-5 h-5"></i><span>Calculando...</span>';
+        lucide.createIcons();
+
         if (reportSummary) {
             reportSummary.innerHTML = '<p class="text-gray-400">Calculando...</p>';
         }
@@ -387,23 +416,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const vehicleId = vehicleSelect ? vehicleSelect.value : 'default';
         formData.append('vehicle_id', vehicleId);
 
-        // *** ADICIONAR PARADAS MÚLTIPLAS ***
-        const stopoverCoordsList = getStopoverCoords();
-        
-        if (stopoverCoordsList.length > 0) {
-            const stopoverCoordsString = stopoverCoordsList
-                .map(coords => `${coords.lat},${coords.lng}`)
-                .join(';');
-            
-            formData.append('stopover_coords_list', stopoverCoordsString);
-            
-            console.log(`🛑 ${stopoverCoordsList.length} parada(s) adicionada(s) à simulação`);
+        // *** ADICIONAR PARADAS MÚLTIPLAS COM NOMES ***
+        const stopoversData = getStopoversData();
+
+        if (stopoversData.length > 0) {
+            // Envia o JSON completo com nomes e coordenadas
+            formData.append('stopovers_data', JSON.stringify(stopoversData));
+            console.log(`🛑 ${stopoversData.length} parada(s) adicionada(s) à simulação com nomes.`);
         }
 
         fetch('../PHP/simulate_route.php', { method: 'POST', body: formData })
             .then(res => {
-                if (!res.ok) { 
-                    throw new Error(`Erro de Servidor: ${res.status} ${res.statusText}`); 
+                if (!res.ok) {
+                    throw new Error(`Erro de Servidor: ${res.status} ${res.statusText}`);
                 }
                 const contentType = res.headers.get("content-type");
 
@@ -416,10 +441,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 return res.json();
             })
             .then(data => {
-                loadingSpinner.style.display = 'none';
+                // Reabilitar botão
+                simulateBtn.disabled = false;
+                simulateBtn.innerHTML = '<i data-lucide="play" class="w-5 h-5"></i><span>Simular Rota</span>';
+                lucide.createIcons();
 
                 if (data.success) {
                     currentReportData = data.report;
+                    currentVehicleInfo = data.vehicle_info;
+
                     const decodedPath = polyline.decode(data.geometry_polyline);
 
                     routeLayer = L.polyline(decodedPath, {
@@ -443,11 +473,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         allStops.forEach((stop, index) => {
                             // *** VERIFICAR SE É PARADA MANUAL ***
                             if (stop.is_manual_stop === true) {
+                                // O backend já devolve o nome salvo, mas garantimos o fallback
+                                const displayName = stop.name || findOriginalStopoverAddress(stop.latitude, stop.longitude) || 'Parada Manual';
+
                                 // Marcador para parada manual (amarelo)
                                 const manualIcon = L.divIcon({
                                     className: 'custom-stopover-icon',
                                     html: `
-                                        <div style="background: white; border-radius: 50%; padding: 3px; border: 3px solid #eab308; box-shadow: 0 4px 8px rgba(0,0,0, 0.3);">
+                                        <div style="background: white; border-radius: 50%; padding: 3px; border: 3px solid #eab308; box-shadow: 0 4px 8px rgba(0,0,0, 0.3); display: flex; align-items: center; justify-content: center;">
                                             <div style="background: #eab308; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
                                                 <i data-lucide="coffee" style="width: 20px; height: 20px; color: #1e293b;"></i>
                                             </div>
@@ -464,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <strong style="color: #eab308; font-size: 1.1em;">☕ Parada de Descanso</strong>
                                         </div>
                                         <div style="background: rgba(234, 179, 8, 0.1); padding: 8px; border-radius: 6px;">
-                                            <strong style="color: #eab308;">${stop.name || 'Parada Manual'}</strong>
+                                            <strong style="color: #eab308;">${displayName}</strong>
                                         </div>
                                     </div>
                                 `;
@@ -477,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 return; // Pula para próxima iteração
                             }
 
-                            // *** PARADA DE RECARGA (código original) ***
+                            // ... (resto do código de marcadores de recarga igual)
                             let lat, lng;
                             try {
                                 lat = stop.latitude;
@@ -523,8 +556,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             const chargeStopIcon = L.divIcon({
                                 className: 'custom-charge-stop-icon',
                                 html: `
-                                <div style="background: white; border-radius: 50%; padding: 4px; border: 3px solid ${iconBg}; box-shadow: 0 4px 12px rgba(0,0,0, 0.4);">
-                                    <div style="background: ${iconBg}; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-center;">
+                                <div style="background: white; border-radius: 50%; padding: 4px; border: 3px solid ${iconBg}; box-shadow: 0 4px 12px rgba(0,0,0, 0.4); display: flex; align-items: center; justify-content: center;">
+                                    <div style="background: ${iconBg}; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
                                         ${iconSVG}
                                     </div>
                                 </div>
@@ -533,6 +566,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 iconAnchor: [20, 20],
                                 popupAnchor: [0, -20]
                             });
+
+                            const ratingPopup = isFromDatabase && stop.station.rating
+                                ? `<em style="color: #10b981;">⭐ Avaliação Média: ${parseFloat(stop.station.rating).toFixed(1)}/5.0</em>`
+                                : '';
 
                             let popupContent = `
                             <div style="min-width: 280px;">
@@ -546,7 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <strong style="color: #22d3ee;">📍 ${stop.station.name}</strong><br>
                                     <span style="font-size: 0.85em; color: #94a3b8;">
                                         ${stop.station.address}<br>
-                                        ${!isEstimated ? `<em>Avaliação: ${stop.station.rating}</em>` : ''}
+                                        ${ratingPopup}
                                     </span>
                                 </div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.9em;">
@@ -583,7 +620,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             })
             .catch(err => {
-                loadingSpinner.style.display = 'none';
+                // Reabilitar botão
+                simulateBtn.disabled = false;
+                simulateBtn.innerHTML = '<i data-lucide="play" class="w-5 h-5"></i><span>Simular Rota</span>';
+                lucide.createIcons();
+
                 if (reportSummary) {
                     reportSummary.innerHTML = `<p style="color: #ef4444;">Erro de conexão: ${err.message}</p>`;
                 }
@@ -664,7 +705,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     data.data.forEach(fav => {
                         const lat = parseFloat(fav.LATITUDE);
                         const lng = parseFloat(fav.LONGITUDE);
-                        const name = fav.NOME;
+                        let name = fav.NOME;
+
+                        // Remove o ícone do nome se existir o separador
+                        if (name && name.includes(SEPARATOR)) {
+                            const parts = name.split(SEPARATOR);
+                            name = parts[0].trim();
+                        }
 
                         if (!isNaN(lat) && !isNaN(lng) && name) {
                             const option = document.createElement('option');
@@ -910,7 +957,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         `;
-        
+
         reportSummary.innerHTML = summaryHTML;
 
         // Renderizar lista de paradas
@@ -924,6 +971,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 allStops.forEach((stop) => {
                     // *** VERIFICAR SE É PARADA MANUAL ***
                     if (stop.is_manual_stop === true) {
+                        // O nome já vem correto do backend agora
+                        const addressText = stop.name || findOriginalStopoverAddress(stop.latitude, stop.longitude) || 'Localização personalizada';
+
                         const stopHTML = `
                             <div class="bg-slate-900/50 p-3 rounded-lg border border-yellow-500/30">
                                 <div class="flex items-start gap-2 mb-2">
@@ -932,10 +982,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </span>
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center justify-between gap-2">
-                                            <div class="font-bold text-yellow-400 text-sm truncate">${stop.name || 'Parada Manual'}</div>
+                                            <div class="font-bold text-yellow-400 text-sm truncate">Parada Manual</div>
                                             <span class="bg-yellow-500 text-slate-900 text-xs px-2 py-0.5 rounded-full font-bold">Descanso</span>
                                         </div>
-                                        <div class="text-gray-400 text-xs mt-1">Parada de descanso programada</div>
+                                        <div class="text-gray-400 text-xs mt-1 font-medium text-yellow-100/80">${addressText}</div>
                                     </div>
                                 </div>
                             </div>
@@ -970,9 +1020,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         badgeText = 'OCM';
                     }
 
+                    // Formatar a avaliação média (rating)
+                    const ratingDisplay = isFromDatabase && stop.station.rating
+                        ? `⭐ ${parseFloat(stop.station.rating).toFixed(1)}/5.0`
+                        : '';
+
                     const ratingText = isEstimated ? 'Parada Simulada' :
-                        isFromDatabase ? `HelioMax • ${stop.station.connector_type}` :
-                            `⭐ ${stop.station.rating || 'N/A'} • ${stop.station.connector_type}`;
+                        isFromDatabase ? `${ratingDisplay} • HelioMax • ${stop.station.connector_type}` :
+                            `${stop.station.connector_type}`;
 
                     const stopHTML = `
                         <div class="bg-slate-900/50 p-3 rounded-lg border ${borderColor}">
@@ -1030,6 +1085,184 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadFavoritesFromApi();
     loadUserVehicles();
+
+    // ==================== DOWNLOAD PDF (VERSÃO NATIVA/ECONÔMICA) ====================
+
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+            if (!currentReportData) {
+                alert('Nenhum relatório disponível para download.');
+                return;
+            }
+
+            // Inicializa o PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const margin = 15;
+
+            // --- CABEÇALHO ---
+            // Adicionar Logo/Texto HelioMax (Barra Cyan)
+            doc.setFillColor(6, 182, 212); // Cor #06b6d4 (Cyan)
+            doc.rect(0, 0, 210, 20, 'F'); // Barra superior colorida
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont("helvetica", "bold");
+            doc.text("HelioMax", margin, 13);
+
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "normal");
+            doc.text("Relatório de Planejamento de Rota", 210 - margin, 13, { align: 'right' });
+
+            // Data e Hora de Geração
+            const now = new Date();
+            const dataFormatada = now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR');
+
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(10);
+            doc.text(`Gerado em: ${dataFormatada}`, margin, 28);
+
+            let currentY = 35;
+
+            // --- INFORMAÇÕES DO VEÍCULO ---
+            if (currentVehicleInfo) {
+                doc.setDrawColor(200, 200, 200);
+                doc.line(margin, currentY, 210 - margin, currentY);
+                currentY += 7;
+
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(14);
+                doc.setFont("helvetica", "bold");
+                doc.text("Veículo Utilizado", margin, currentY);
+                currentY += 7;
+
+                doc.setFontSize(11);
+                doc.setFont("helvetica", "normal");
+                doc.text(`Modelo: ${currentVehicleInfo.name}`, margin, currentY);
+                currentY += 5;
+                doc.text(`Bateria: ${currentVehicleInfo.battery_capacity} kWh`, margin, currentY);
+                doc.text(`Consumo Médio: ${currentVehicleInfo.consumption} kWh/100km`, 110, currentY);
+
+                currentY += 8;
+            }
+
+            // --- RESUMO DA VIAGEM ---
+            doc.setDrawColor(200, 200, 200);
+            doc.line(margin, currentY, 210 - margin, currentY);
+            currentY += 7;
+
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text("Resumo da Viagem", margin, currentY);
+            currentY += 7;
+
+            // Criar uma tabela simples para o resumo
+            doc.autoTable({
+                startY: currentY,
+                head: [['Distância Total', 'Tempo Estimado', 'Paradas', 'Custo Estimado']],
+                body: [[
+                    `${currentReportData.distancia_total_km} km`,
+                    `${Math.floor(currentReportData.tempo_conducao_min / 60)}h ${currentReportData.tempo_conducao_min % 60}m`,
+                    `${currentReportData.paradas_totais}`,
+                    `R$ ${currentReportData.custo_total_estimado}`
+                ]],
+                theme: 'plain',
+                headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+                styles: { fontSize: 11, cellPadding: 3 },
+                margin: { left: margin, right: margin }
+            });
+
+            currentY = doc.lastAutoTable.finalY + 10;
+
+            // --- DETALHES DAS PARADAS ---
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text("Itinerário e Paradas de Recarga", margin, currentY);
+            currentY += 4;
+
+            // Preparar dados para a tabela de paradas
+            const tableRows = [];
+
+            // Adicionar Origem
+            const startAddress = document.getElementById('start-point').value || "Origem";
+            tableRows.push(['Início', 'Origem', startAddress, '-', '-', '-']);
+
+            // Processar paradas
+            if (currentReportData.charge_stops_details && currentReportData.charge_stops_details.length > 0) {
+                currentReportData.charge_stops_details.forEach((stop, index) => {
+                    if (stop.is_manual_stop) {
+                        // Recuperar o endereço original para o PDF
+                        const originalAddress = stop.name || findOriginalStopoverAddress(stop.latitude, stop.longitude);
+
+                        tableRows.push([
+                            `Parada #${index + 1}`,
+                            'Descanso (Manual)',
+                            originalAddress || 'Parada Manual',
+                            '-',
+                            '-',
+                            '-'
+                        ]);
+                    } else {
+                        const isSimulated = stop.is_estimated;
+                        const typeStr = isSimulated ? 'Simulada' : (stop.is_from_database ? 'HelioMax' : 'Pública (OCM)');
+
+                        tableRows.push([
+                            `Parada #${stop.stop_number || index + 1}`,
+                            typeStr,
+                            stop.station.name,
+                            `${stop.distance_traveled_km} km`,
+                            `${stop.charge_at_arrival}% -> ${stop.charge_at_departure}%`,
+                            `${Math.round(stop.charge_time / 60)} min`
+                        ]);
+                    }
+                });
+            }
+
+            // Adicionar Destino
+            const endAddress = document.getElementById('end-point').value || "Destino";
+            tableRows.push(['Fim', 'Destino', endAddress, `${currentReportData.distancia_total_km} km`, `${currentReportData.carga_final_pct}%`, '-']);
+
+            doc.autoTable({
+                startY: currentY,
+                head: [['Tipo', 'Fonte/Status', 'Local / Endereço', 'Dist. Acum.', 'Carga (E/S)', 'Tempo']],
+                body: tableRows,
+                theme: 'striped', // Listras cinzas claras e brancas (economiza tinta)
+                headStyles: { fillColor: [6, 182, 212], textColor: [255, 255, 255], fontStyle: 'bold' },
+                styles: { fontSize: 9, cellPadding: 3, valign: 'middle' },
+                columnStyles: {
+                    0: { cellWidth: 20, fontStyle: 'bold' }, // Tipo
+                    2: { cellWidth: 'auto' }, // Endereço (estica)
+                    3: { cellWidth: 20, halign: 'center' }, // Dist
+                    4: { cellWidth: 25, halign: 'center' }, // Carga
+                    5: { cellWidth: 15, halign: 'center' }  // Tempo
+                },
+                margin: { left: margin, right: margin },
+                didParseCell: function (data) {
+                    // Destacar linhas de Início e Fim
+                    if (data.row.raw[0] === 'Início' || data.row.raw[0] === 'Fim') {
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                    // Destacar paradas manuais
+                    if (data.row.raw[1] === 'Descanso (Manual)') {
+                        data.cell.styles.textColor = [202, 138, 4]; // Amarelo escuro
+                    }
+                }
+            });
+
+            // --- RODAPÉ ---
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Página ${i} de ${pageCount} - HelioMax EVSimulator`, 105, 290, { align: 'center' });
+            }
+
+            // Salvar o arquivo
+            const fileName = `Rota_HelioMax_${new Date().toISOString().slice(0, 10)}.pdf`;
+            doc.save(fileName);
+        });
+    }
 
     console.log('🚀 Simulador inicializado com múltiplas paradas');
 });

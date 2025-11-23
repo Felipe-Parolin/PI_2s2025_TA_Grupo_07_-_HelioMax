@@ -10,13 +10,10 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../../styles/style_landpage.css" />
-    <script src="../JS/script.js"></script>
   </head>
   <body>
-    <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
 
-    <!-- Mobile Menu -->
     <div class="mobile-menu" id="mobileMenu">
       <button class="mobile-menu-close" id="mobileMenuClose">×</button>
       <ul class="mobile-nav-links">
@@ -27,7 +24,50 @@
       </ul>
     </div>
 
-    <!-- Header -->
+    <div class="qr-popup-overlay" id="qrPopupOverlay">
+      <div class="qr-popup" id="qrPopup">
+        <button class="qr-popup-close" id="qrPopupClose">×</button>
+        <div class="qr-popup-content">
+          <div class="qr-popup-brand">
+            <span class="qr-brand-icon">⚡</span>
+            <h1 class="qr-brand-name">HelioMax</h1>
+          </div>
+          <h2 class="qr-popup-title">Teste Nossa Plataforma!</h2>
+          <p class="qr-popup-subtitle">
+            Escaneie o QR Code ou acesse pelo navegador
+          </p>
+          <div class="qr-code-container">
+            <img
+              src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://heliomaxapp.com/"
+              alt="QR Code HelioMax"
+              class="qr-code-image"
+            />
+            <div class="qr-code-glow"></div>
+          </div>
+          <div class="qr-features">
+            <div class="qr-feature">
+              <span class="qr-feature-icon">🗺️</span>
+              <span class="qr-feature-text">Rotas Otimizadas</span>
+            </div>
+            <div class="qr-feature">
+              <span class="qr-feature-icon">💻</span>
+              <span class="qr-feature-text">Web & Mobile</span>
+            </div>
+            <div class="qr-feature">
+              <span class="qr-feature-icon">⚡</span>
+              <span class="qr-feature-text">Pontos de Recarga</span>
+            </div>
+          </div>
+          <a
+            href="https://heliomaxapp.com/"
+            target="_blank"
+            class="qr-popup-link"
+            >heliomaxapp.com</a
+          >
+        </div>
+      </div>
+    </div>
+
     <header class="header">
       <nav class="nav">
         <div class="logo">⚡ HelioMax</div>
@@ -41,9 +81,12 @@
           <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
         </div>
       </nav>
+      <button class="qr-button-fixed" id="qrButton" title="Teste o Sistema">
+        <span class="qr-button-icon">🚀</span>
+        <span class="qr-button-text">Testar Sistema</span>
+      </button>
     </header>
 
-    <!-- Hero Section -->
     <section class="hero">
       <div class="hero-content">
         <div class="hero-text">
@@ -81,7 +124,6 @@
       </div>
     </section>
 
-    <!-- Features Section - CARROSSEL -->
     <section class="features" id="funcionalidades">
       <div class="container">
         <h2 class="section-title">Funcionalidades Completas</h2>
@@ -212,7 +254,6 @@
       </div>
     </section>
 
-    <!-- CTA Section -->
     <section class="cta-section" id="demo">
       <div class="cta-content">
         <h2 class="fade-in">
@@ -230,7 +271,6 @@
       </div>
     </section>
 
-    <!-- Footer -->
     <footer class="footer" id="contato">
       <div class="footer-content">
         <div class="logo" style="font-size: 1.8rem; margin-bottom: 1rem">
@@ -244,6 +284,6 @@
       </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="../JS/landpage_script.js"></script>
   </body>
 </html>

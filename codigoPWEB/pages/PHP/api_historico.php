@@ -35,12 +35,12 @@ try {
                 ");
                 $stmt->execute([$id_usuario_logado]);
                 $rotas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                
+
                 $response = ['success' => true, 'routes' => $rotas];
-                
+
             } elseif ($action === 'details' && isset($_GET['id'])) {
-                $id_historico = (int)$_GET['id'];
-                
+                $id_historico = (int) $_GET['id'];
+
                 $stmt = $pdo->prepare("
                     SELECT 
                         h.*,
@@ -53,7 +53,7 @@ try {
                 ");
                 $stmt->execute([$id_historico, $id_usuario_logado]);
                 $rota = $stmt->fetch(PDO::FETCH_ASSOC);
-                
+
                 if ($rota) {
                     $response = ['success' => true, 'route' => $rota];
                 } else {
@@ -67,13 +67,22 @@ try {
         // Adicionar ao histórico
         case 'POST':
             $dados = json_decode(file_get_contents('php://input'), true);
-            
-            if (!isset($dados['origem_lat'], $dados['origem_lng'], $dados['origem_endereco'],
-                       $dados['destino_lat'], $dados['destino_lng'], $dados['destino_endereco'],
-                       $dados['distancia_total_km'], $dados['tempo_conducao_min'])) {
+
+            if (
+                !isset(
+                $dados['origem_lat'],
+                $dados['origem_lng'],
+                $dados['origem_endereco'],
+                $dados['destino_lat'],
+                $dados['destino_lng'],
+                $dados['destino_endereco'],
+                $dados['distancia_total_km'],
+                $dados['tempo_conducao_min']
+            )
+            ) {
                 throw new Exception('Dados incompletos.');
             }
-            
+
             $stmt = $pdo->prepare("
                 INSERT INTO historico_rota (
                     FK_USUARIO, FK_VEICULO, ORIGEM_LAT, ORIGEM_LNG, ORIGEM_ENDERECO,
@@ -83,7 +92,7 @@ try {
                     MODO_OTIMISTA, DADOS_PARADAS, POLYLINE
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
-            
+
             $stmt->execute([
                 $id_usuario_logado,
                 $dados['veiculo_id'] ?? null,
@@ -104,7 +113,7 @@ try {
                 isset($dados['dados_paradas']) ? json_encode($dados['dados_paradas']) : null,
                 $dados['polyline'] ?? null
             ]);
-            
+
             $response = [
                 'success' => true,
                 'message' => 'Rota salva no histórico!',
@@ -117,17 +126,17 @@ try {
         case 'DELETE':
             $dados = json_decode(file_get_contents('php://input'), true);
             $id_historico = $dados['id'] ?? null;
-            
+
             if (!$id_historico) {
                 throw new Exception('ID não fornecido.');
             }
-            
+
             $stmt = $pdo->prepare("
                 DELETE FROM historico_rota 
                 WHERE ID_HISTORICO = ? AND FK_USUARIO = ?
             ");
             $stmt->execute([$id_historico, $id_usuario_logado]);
-            
+
             if ($stmt->rowCount() > 0) {
                 $response = ['success' => true, 'message' => 'Rota excluída do histórico.'];
             } else {

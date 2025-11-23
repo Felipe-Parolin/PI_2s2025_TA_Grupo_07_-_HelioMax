@@ -7,7 +7,7 @@ if (!isset($_SESSION['usuario_id'])) {
     die('<script>alert("Você precisa estar logado para acessar o simulador!"); window.location.href = "../index.php";</script>');
 }
 
-// simulate_route.php - Versão CORRIGIDA com Múltiplas Paradas
+// simulate_route.php - Versão CORRIGIDA para Salvar Nomes de Paradas e PDF Igual
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
@@ -145,24 +145,23 @@ function google_api_request($url, $params, $timeout = 15)
     return $data;
 }
 
-// *** CORREÇÃO: Waypoints agora sempre usa optimize:false para respeitar a ordem ***
 function getGoogleDirections($originLat, $originLng, $destLat, $destLng, $waypointsList = [])
 {
     $url = "https://maps.googleapis.com/maps/api/directions/json";
     $params = [
-        'origin' => "{$originLat},{$originLng}", 
-        'destination' => "{$destLat},{$destLng}", 
+        'origin' => "{$originLat},{$originLng}",
+        'destination' => "{$destLat},{$destLng}",
         'units' => 'metric'
     ];
-    
+
     if (!empty($waypointsList)) {
         $midpoints = array_slice($waypointsList, 1, -1);
         if (!empty($midpoints)) {
-            // *** SEMPRE FORÇA A ORDEM (optimize:false) ***
+            // optimize:false para respeitar a ordem
             $params['waypoints'] = 'optimize:false|' . implode('|', $midpoints);
         }
     }
-    
+
     $data = google_api_request($url, $params, 30);
     if (empty($data['routes'][0])) {
         error_log("Google Directions falhou: Nenhuma rota encontrada.");
@@ -248,7 +247,8 @@ function findDatabaseStations($pdo, $lat, $lng, $radius_km = 100)
                     ci.NOME as CIDADE,
                     e.UF,
                     sp.DESCRICAO as STATUS,
-                    u.NOME as CADASTRADO_POR
+                    u.NOME as CADASTRADO_POR,
+                    COALESCE(AVG(a.NOTA), 0) as MEDIA_NOTA
                 FROM ponto_carregamento pc
                 LEFT JOIN cep c ON pc.LOCALIZACAO = c.ID_CEP
                 LEFT JOIN bairro b ON c.FK_BAIRRO = b.ID_BAIRRO
@@ -256,9 +256,11 @@ function findDatabaseStations($pdo, $lat, $lng, $radius_km = 100)
                 LEFT JOIN estado e ON ci.FK_ESTADO = e.ID_ESTADO
                 LEFT JOIN status_ponto sp ON pc.FK_STATUS_PONTO = sp.ID_STATUS_PONTO
                 LEFT JOIN usuario u ON pc.FK_ID_USUARIO_CADASTRO = u.ID_USER
+                LEFT JOIN avaliacao a ON a.FK_PONTO_CARRRGAMENTO = pc.ID_PONTO 
                 WHERE pc.LATITUDE IS NOT NULL 
                 AND pc.LONGITUDE IS NOT NULL
-                AND pc.FK_STATUS_PONTO = 1";
+                AND pc.FK_STATUS_PONTO = 1
+                GROUP BY pc.ID_PONTO";
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
@@ -281,6 +283,10 @@ function findDatabaseStations($pdo, $lat, $lng, $radius_km = 100)
                     $endereco .= ', ' . $ponto['CIDADE'] . ' - ' . $ponto['UF'];
                 }
 
+                $notaFormatada = (floatval($ponto['MEDIA_NOTA']) > 0)
+                    ? number_format($ponto['MEDIA_NOTA'], 1) . ' / 5.0'
+                    : 'Sem avaliações';
+
                 $pontosNoRaio[] = [
                     'id' => 'db_' . $ponto['ID_PONTO'],
                     'latitude' => floatval($ponto['LATITUDE']),
@@ -289,15 +295,13 @@ function findDatabaseStations($pdo, $lat, $lng, $radius_km = 100)
                     'address' => $endereco,
                     'power_kw' => 50.0,
                     'connector_type' => 'CCS Type 2',
-                    'rating' => 'Cadastrado por: ' . ($ponto['CADASTRADO_POR'] ?? 'Administrador'),
+                    'rating' => $notaFormatada,
                     'distance_km' => $distancia,
                     'valor_kwh' => floatval($ponto['VALOR_KWH']),
                     'source' => 'database'
                 ];
             }
         }
-
-        error_log("Encontrados " . count($pontosNoRaio) . " pontos do banco de dados no raio de {$radius_km}km");
         return $pontosNoRaio;
 
     } catch (PDOException $e) {
@@ -312,8 +316,6 @@ function findBestChargingStation($pdo, $currentLat, $currentLng, $destLat, $dest
     $searchRadius = $maxRange_km;
     $ocmStations = findOCMStations($currentLat, $currentLng, $searchRadius, $vehicle['connector_types']);
     $dbStations = findDatabaseStations($pdo, $currentLat, $currentLng, $searchRadius);
-
-    error_log("Total de estações: " . count($ocmStations) . " (OCM) + " . count($dbStations) . " (Banco)");
 
     $candidates = [];
 
@@ -409,7 +411,6 @@ function findBestChargingStation($pdo, $currentLat, $currentLng, $destLat, $dest
     }
 
     if (empty($candidates)) {
-        error_log("Nenhum candidato válido após filtragem Haversine");
         return null;
     }
 
@@ -431,7 +432,7 @@ function findBestChargingStation($pdo, $currentLat, $currentLng, $destLat, $dest
             continue;
 
         if ($realDistToStation <= $maxRange_km * 0.90) {
-            $routeToDest = getGoogleDirections($candidate['lat'], $candidate['lng'], $destLat, $destLng); 
+            $routeToDest = getGoogleDirections($candidate['lat'], $candidate['lng'], $destLat, $destLng);
             $realDistToDest = $routeToDest ? ($routeToDest['legs'][0]['distance']['value'] / 1000) : $candidate['haversine_dist_to_dest'];
 
             return [
@@ -447,8 +448,6 @@ function findBestChargingStation($pdo, $currentLat, $currentLng, $destLat, $dest
             ];
         }
     }
-
-    error_log("Nenhum posto dos top 15 está dentro da autonomia real");
     return null;
 }
 
@@ -657,21 +656,22 @@ function simulateEVRoute($pdo, $startLat, $startLng, $endLat, $endLng, $vehicle,
 
 // ==================== FUNÇÕES DE HISTÓRICO ====================
 
-function geocodeAddress($lat, $lng) {
+function geocodeAddress($lat, $lng)
+{
     if (!defined('GOOGLE_MAPS_API_KEY')) {
         return "Lat: $lat, Lng: $lng (API Key não definida)";
     }
-    
+
     $url = "https://maps.googleapis.com/maps/api/geocode/json";
     $params = [
         'latlng' => "$lat,$lng",
         'key' => GOOGLE_MAPS_API_KEY,
         'language' => 'pt-BR'
     ];
-    
+
     $queryString = http_build_query($params);
     $apiUrl = $url . '?' . $queryString;
-    
+
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $apiUrl);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -679,30 +679,43 @@ function geocodeAddress($lat, $lng) {
     $response = curl_exec($ch);
     $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
-    
+
     if ($response && $httpcode === 200) {
         $data = json_decode($response, true);
         if ($data['status'] === 'OK' && !empty($data['results'][0])) {
             return $data['results'][0]['formatted_address'];
         }
     }
-    
+
     return "Lat: $lat, Lng: $lng";
 }
 
-function salvarNoHistorico($pdo, $userId, $vehicleId, $startLat, $startLng, $endLat, $endLng, 
-                          $simulation, $optimisticMode, $polyline, $drivingTimeSec, $totalDistanceFromApi, $manualStopovers) {
+function salvarNoHistorico(
+    $pdo,
+    $userId,
+    $vehicleId,
+    $startLat,
+    $startLng,
+    $endLat,
+    $endLng,
+    $simulation,
+    $optimisticMode,
+    $polyline,
+    $drivingTimeSec,
+    $totalDistanceFromApi,
+    $manualStopovers
+) {
     try {
         $origemEndereco = geocodeAddress($startLat, $startLng);
         $destinoEndereco = geocodeAddress($endLat, $endLng);
-        
+
         $custo = $simulation['total_energy_kwh'] * TARIFA_MEDIA_KWH;
 
         $allStops = [
             'manual_stops' => $manualStopovers,
             'charge_stops' => $simulation['charge_stops']
         ];
-        
+
         $stmt = $pdo->prepare("
             INSERT INTO historico_rota (
                 FK_USUARIO, FK_VEICULO, ORIGEM_LAT, ORIGEM_LNG, ORIGEM_ENDERECO,
@@ -712,7 +725,7 @@ function salvarNoHistorico($pdo, $userId, $vehicleId, $startLat, $startLng, $end
                 MODO_OTIMISTA, DADOS_PARADAS, POLYLINE
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        
+
         $stmt->execute([
             $userId,
             $vehicleId,
@@ -733,7 +746,7 @@ function salvarNoHistorico($pdo, $userId, $vehicleId, $startLat, $startLng, $end
             json_encode($allStops, JSON_UNESCAPED_UNICODE),
             $polyline
         ]);
-        
+
         return true;
     } catch (PDOException $e) {
         error_log("Erro ao salvar histórico: " . $e->getMessage());
@@ -741,7 +754,7 @@ function salvarNoHistorico($pdo, $userId, $vehicleId, $startLat, $startLng, $end
     }
 }
 
-// ===== PROCESSAMENTO PRINCIPAL (CORRIGIDO) =====
+// ===== PROCESSAMENTO PRINCIPAL =====
 try {
     if (empty($_POST['start_coords']) || empty($_POST['end_coords'])) {
         throw new Exception('Coordenadas de origem ou destino não fornecidas.');
@@ -752,16 +765,36 @@ try {
 
     $optimisticMode = isset($_POST['optimistic_mode']) && $_POST['optimistic_mode'] === 'true';
 
-    // *** COLETAR E PARSEAR MÚLTIPLAS PARADAS MANUAIS ***
+    // *** COLETAR E PARSEAR MÚLTIPLAS PARADAS MANUAIS COM NOME/ENDEREÇO ***
     $manualStopovers = [];
-    if (!empty($_POST['stopover_coords_list'])) {
+    if (!empty($_POST['stopovers_data'])) {
+        // Agora espera um JSON String completo: [{lat, lng, name}, ...]
+        $decodedStops = json_decode($_POST['stopovers_data'], true);
+
+        if (is_array($decodedStops)) {
+            foreach ($decodedStops as $index => $stop) {
+                if (isset($stop['lat']) && isset($stop['lng'])) {
+                    // Se o nome não vier do front, faz um fallback
+                    $name = !empty($stop['name']) ? $stop['name'] : geocodeAddress($stop['lat'], $stop['lng']);
+
+                    $manualStopovers[] = [
+                        'lat' => floatval($stop['lat']),
+                        'lng' => floatval($stop['lng']),
+                        'type' => 'manual',
+                        'name' => $name
+                    ];
+                }
+            }
+        }
+    } elseif (!empty($_POST['stopover_coords_list'])) {
+        // Fallback para o método antigo (apenas coordenadas)
         $stopoverStrings = explode(';', $_POST['stopover_coords_list']);
         foreach ($stopoverStrings as $index => $stopCoordString) {
             $coords = array_map('floatval', explode(',', trim($stopCoordString)));
             if (count($coords) === 2) {
                 $manualStopovers[] = [
-                    'lat' => $coords[0], 
-                    'lng' => $coords[1], 
+                    'lat' => $coords[0],
+                    'lng' => $coords[1],
                     'type' => 'manual',
                     'name' => 'Parada Manual #' . ($index + 1)
                 ];
@@ -819,7 +852,7 @@ try {
 
     // *** MONTAR WAYPOINTS ORDENADOS POR DISTÂNCIA PROGRESSIVA ***
     $allWaypoints = [];
-    
+
     // Adicionar paradas manuais com tipo e coordenadas
     foreach ($manualStopovers as $stop) {
         $allWaypoints[] = [
@@ -830,7 +863,7 @@ try {
             'distance_from_start' => calculateDistance($startLat, $startLng, $stop['lat'], $stop['lng'])
         ];
     }
-    
+
     // Adicionar paradas de recarga
     if (isset($simulation['charge_stops']) && is_array($simulation['charge_stops'])) {
         foreach ($simulation['charge_stops'] as $stop) {
@@ -843,20 +876,20 @@ try {
             ];
         }
     }
-    
+
     // *** ORDENAR TODAS AS PARADAS PELA DISTÂNCIA DA ORIGEM ***
-    usort($allWaypoints, function($a, $b) {
+    usort($allWaypoints, function ($a, $b) {
         return $a['distance_from_start'] <=> $b['distance_from_start'];
     });
-    
+
     // Montar lista final de waypoints na ordem correta
     $waypointsList = [];
     $waypointsList[] = "{$startLat},{$startLng}"; // Origem
-    
+
     foreach ($allWaypoints as $waypoint) {
         $waypointsList[] = "{$waypoint['lat']},{$waypoint['lng']}";
     }
-    
+
     $waypointsList[] = "{$endLat},{$endLng}"; // Destino
 
     // *** OBTER GEOMETRIA COMPLETA DA ROTA (optimize:false forçado) ***
@@ -883,8 +916,8 @@ try {
 
     // *** CRIAR LISTA FINAL DE PARADAS (Manuais + Recarga) ***
     $allStopsForFrontend = [];
-    
-    // Adicionar paradas manuais primeiro
+
+    // Adicionar paradas manuais
     foreach ($manualStopovers as $stop) {
         $allStopsForFrontend[] = [
             'latitude' => $stop['lat'],
@@ -893,29 +926,29 @@ try {
             'name' => $stop['name']
         ];
     }
-    
+
     // Adicionar paradas de recarga
     foreach ($chargeStopsDetails as $stop) {
         $allStopsForFrontend[] = $stop;
     }
-    
+
     // Salvar no histórico
     salvarNoHistorico(
-        $pdo, 
-        $_SESSION['usuario_id'], 
+        $pdo,
+        $_SESSION['usuario_id'],
         $vehicleIdForHistory,
-        $startLat, 
-        $startLng, 
-        $endLat, 
-        $endLng, 
-        $simulation, 
+        $startLat,
+        $startLng,
+        $endLat,
+        $endLng,
+        $simulation,
         $optimisticMode,
         $routeData['overview_polyline']['points'],
         $drivingTime,
         $totalDistanceFromApi,
         $manualStopovers
     );
-    
+
     // *** PREPARAR E ENVIAR RESPOSTA JSON ***
     ob_end_clean();
     echo json_encode([

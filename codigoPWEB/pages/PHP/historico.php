@@ -44,6 +44,10 @@ if (!$usuario_logado) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - Histórico de Rotas</title>
     <link rel="icon" type="image/png" href="../../images/icon.png">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="../../styles/style_historico.css">
@@ -58,7 +62,8 @@ if (!$usuario_logado) {
                transition-all duration-300 sidebar-mobile-hidden">
 
         <div class="flex items-center gap-3 mb-10">
-            <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div
+                class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
                 <i data-lucide="zap" class="w-7 h-7 text-white"></i>
             </div>
             <div class="sidebar-text">
@@ -133,7 +138,8 @@ if (!$usuario_logado) {
 
                 <!-- Filtros -->
                 <div class="hidden sm:flex items-center gap-2">
-                    <select id="filter-period" class="bg-slate-800 border border-cyan-500/20 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                    <select id="filter-period"
+                        class="bg-slate-800 border border-cyan-500/20 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
                         <option value="all">Todos os períodos</option>
                         <option value="today">Hoje</option>
                         <option value="week">Última semana</option>
@@ -145,7 +151,8 @@ if (!$usuario_logado) {
 
         <!-- Estatísticas Rápidas -->
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl border border-cyan-500/20 p-4">
+            <div
+                class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl border border-cyan-500/20 p-4">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-400 text-xs sm:text-sm mb-1">Total de Rotas</p>
@@ -157,7 +164,8 @@ if (!$usuario_logado) {
                 </div>
             </div>
 
-            <div class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl border border-cyan-500/20 p-4">
+            <div
+                class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl border border-cyan-500/20 p-4">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-400 text-xs sm:text-sm mb-1">Distância Total</p>
@@ -169,7 +177,8 @@ if (!$usuario_logado) {
                 </div>
             </div>
 
-            <div class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl border border-cyan-500/20 p-4">
+            <div
+                class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl border border-cyan-500/20 p-4">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-400 text-xs sm:text-sm mb-1">Energia Consumida</p>
@@ -181,7 +190,8 @@ if (!$usuario_logado) {
                 </div>
             </div>
 
-            <div class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl border border-cyan-500/20 p-4">
+            <div
+                class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl border border-cyan-500/20 p-4">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-400 text-xs sm:text-sm mb-1">Custo Total</p>
@@ -195,12 +205,14 @@ if (!$usuario_logado) {
         </section>
 
         <!-- Lista de Histórico -->
-        <section class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 sm:p-6">
+        <section
+            class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-cyan-500/20 p-4 sm:p-6">
             <div class="flex justify-between items-center mb-4 border-b border-cyan-500/10 pb-3">
                 <h2 class="text-xl sm:text-2xl font-semibold">Rotas Simuladas</h2>
-                
+
                 <!-- Filtro mobile -->
-                <select id="filter-period-mobile" class="sm:hidden bg-slate-800 border border-cyan-500/20 rounded-lg px-2 py-1 text-xs text-white">
+                <select id="filter-period-mobile"
+                    class="sm:hidden bg-slate-800 border border-cyan-500/20 rounded-lg px-2 py-1 text-xs text-white">
                     <option value="all">Todos</option>
                     <option value="today">Hoje</option>
                     <option value="week">Semana</option>
@@ -223,7 +235,8 @@ if (!$usuario_logado) {
                 <i data-lucide="map-pin-off" class="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-gray-600"></i>
                 <p class="mt-4 text-lg sm:text-xl text-gray-400">Você ainda não possui histórico de rotas.</p>
                 <p class="text-sm sm:text-base text-gray-500 mb-4">Faça sua primeira simulação no Dashboard.</p>
-                <a href="../PHP/dashUSER.php" class="inline-flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-6 rounded-xl transition-colors">
+                <a href="../PHP/dashUSER.php"
+                    class="inline-flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-6 rounded-xl transition-colors">
                     <i data-lucide="play" class="w-4 h-4"></i>
                     Simular Rota
                 </a>
@@ -232,10 +245,13 @@ if (!$usuario_logado) {
     </main>
 
     <!-- Modal de Detalhes da Rota -->
-    <div id="modal-details" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[99] hidden transition-opacity duration-300">
-        <div id="modal-content" class="bg-slate-800 border border-cyan-500/30 rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto transition-all duration-300 opacity-0 scale-95 transform">
-            
-            <header class="flex justify-between items-center p-4 sm:p-5 border-b border-slate-700 sticky top-0 bg-slate-800 z-10">
+    <div id="modal-details"
+        class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[99] hidden transition-opacity duration-300">
+        <div id="modal-content"
+            class="bg-slate-800 border border-cyan-500/30 rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto transition-all duration-300 opacity-0 scale-95 transform">
+
+            <header
+                class="flex justify-between items-center p-4 sm:p-5 border-b border-slate-700 sticky top-0 bg-slate-800 z-10">
                 <h2 class="text-lg sm:text-xl font-bold text-white">Detalhes da Rota</h2>
                 <button id="btn-close-modal" class="text-gray-400 hover:text-white transition-colors">
                     <i data-lucide="x" class="w-6 h-6"></i>
@@ -258,11 +274,11 @@ if (!$usuario_logado) {
             const overlay = document.getElementById('sidebar-overlay');
             sidebar.classList.toggle('sidebar-mobile-hidden');
             overlay.classList.toggle('hidden');
-            
+
             const toggleBtn = document.getElementById('toggle-sidebar-btn');
-            if(toggleBtn) {
-                toggleBtn.innerHTML = sidebar.classList.contains('sidebar-mobile-hidden') 
-                    ? '<i data-lucide="menu" class="w-7 h-7"></i>' 
+            if (toggleBtn) {
+                toggleBtn.innerHTML = sidebar.classList.contains('sidebar-mobile-hidden')
+                    ? '<i data-lucide="menu" class="w-7 h-7"></i>'
                     : '<i data-lucide="x" class="w-7 h-7"></i>';
                 lucide.createIcons();
             }
