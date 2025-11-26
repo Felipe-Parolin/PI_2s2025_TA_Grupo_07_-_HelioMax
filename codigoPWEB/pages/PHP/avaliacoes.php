@@ -324,6 +324,8 @@ foreach ($avaliacoes as $av) {
     </style>
 </head>
 
+<link rel="icon" type="image/png" href="../../images/icon.png" />
+
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex">
 
     <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900/50 backdrop-blur-xl border-r border-cyan-500/20 p-4 
