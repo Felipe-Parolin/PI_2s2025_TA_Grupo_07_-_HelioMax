@@ -27,7 +27,11 @@ $nome = trim($data["name"] ?? "");
 $cpf = preg_replace('/[^0-9]/', '', trim($data["cpf"] ?? ""));
 $email = strtolower(trim($data["email"] ?? ""));
 $senha_plana = trim($data["password"] ?? "");
-$cep = preg_replace('/[^0-9]/', '', trim($data["cep"] ?? "")); // Número real do CEP (ex: 01310100)
+// Formata o CEP para garantir consistência (apenas números)
+$cep_numeros = preg_replace('/[^0-9]/', '', trim($data["cep"] ?? ""));
+// Se quiseres salvar com traço no banco, usa esta linha abaixo (opcional, dependendo de como o dashADM salva):
+$cep_formatado = strlen($cep_numeros) == 8 ? substr($cep_numeros, 0, 5) . '-' . substr($cep_numeros, 5, 3) : $cep_numeros;
+
 $logradouro = trim($data["street"] ?? "");
 $bairro_nome = trim($data["neighborhood"] ?? "");
 $numero_residencia = trim($data["number"] ?? "");
@@ -48,18 +52,19 @@ if (!validarCPF($cpf)) {
 // -------- Criptografa senha --------
 $senha_hash = password_hash($senha_plana, PASSWORD_DEFAULT);
 
-// -------- Verifica se CPF ou Email já existem --------
-$stmt = $pdo->prepare("SELECT ID_USER FROM usuario WHERE CPF = ? OR EMAIL = ?");
-$stmt->execute([$cpf, $email]);
-if ($stmt->fetch()) {
-    echo json_encode(["success" => false, "message" => "CPF ou E-mail já cadastrado."]);
-    exit;
-}
-
-// -------- Início da transação --------
-$pdo->beginTransaction();
-
 try {
+    // Conexão e verificação inicial
+    // Verifica se CPF ou Email já existem
+    $stmt = $pdo->prepare("SELECT ID_USER FROM usuario WHERE CPF = ? OR EMAIL = ?");
+    $stmt->execute([$cpf, $email]);
+    if ($stmt->fetch()) {
+        echo json_encode(["success" => false, "message" => "CPF ou E-mail já cadastrado."]);
+        exit;
+    }
+
+    // -------- Início da transação --------
+    $pdo->beginTransaction();
+
     // 1️⃣ ESTADO
     $stmt = $pdo->prepare("SELECT ID_ESTADO FROM estado WHERE UF = ?");
     $stmt->execute([$estado_uf]);
@@ -90,23 +95,23 @@ try {
         $id_bairro = $pdo->lastInsertId();
     }
 
-    // 4️⃣ CEP - **CORRIGIDO: Usa o número do CEP como ID_CEP**
-    // Verifica se o CEP já existe (usando o número real do CEP como chave primária)
-    $stmt = $pdo->prepare("SELECT ID_CEP FROM cep WHERE ID_CEP = ?");
-    $stmt->execute([$cep]);
-    $cep_existente = $stmt->fetchColumn();
+    // 4️⃣ CEP (Corrigido para usar a coluna CEP e ID Auto Increment)
+    // Tenta encontrar o CEP usando o formato string (ex: '12345678' ou '12345-678')
+    // Nota: O ideal é padronizar. Aqui buscamos pelo CEP numérico OU formatado para garantir.
+    $stmt = $pdo->prepare("SELECT ID_CEP FROM cep WHERE (CEP = ? OR CEP = ?) AND FK_BAIRRO = ?");
+    $stmt->execute([$cep_numeros, $cep_formatado, $id_bairro]);
+    $id_cep = $stmt->fetchColumn();
 
-    if ($cep_existente) {
-        // CEP já existe, usa o existente
-        $id_cep = $cep_existente;
-    } else {
-        // CEP não existe, insere novo usando o número do CEP como ID
-        $stmt = $pdo->prepare("INSERT INTO cep (ID_CEP, LOGRADOURO, FK_BAIRRO) VALUES (?, ?, ?)");
-        $stmt->execute([$cep, $logradouro, $id_bairro]);
-        $id_cep = $cep; // Usa o próprio número do CEP como ID
+    if (!$id_cep) {
+        // Se não existe, inserimos. Deixamos o ID_CEP ser gerado automaticamente (AUTO_INCREMENT)
+        // Optamos por salvar formatado (com traço) para alinhar com o DashADM, ou sem traço se preferir.
+        // Aqui usarei $cep_formatado para ficar bonito no banco.
+        $stmt = $pdo->prepare("INSERT INTO cep (CEP, LOGRADOURO, FK_BAIRRO) VALUES (?, ?, ?)");
+        $stmt->execute([$cep_formatado, $logradouro, $id_bairro]);
+        $id_cep = $pdo->lastInsertId();
     }
 
-    // 5️⃣ USUÁRIO (TIPO_USUARIO = 0 fixo)
+    // 5️⃣ USUÁRIO
     $stmt = $pdo->prepare("
         INSERT INTO usuario 
         (NOME, CPF, EMAIL, SENHA, NUMERO_RESIDENCIA, COMPLEMENTO_ENDERECO, FK_ID_CEP, TIPO_USUARIO)
@@ -126,7 +131,11 @@ try {
     echo json_encode(["success" => true, "message" => "Usuário cadastrado com sucesso!"]);
 
 } catch (Exception $e) {
-    $pdo->rollBack();
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     error_log("Erro cadastro: " . $e->getMessage());
-    echo json_encode(["success" => false, "message" => "Erro ao cadastrar usuário: " . $e->getMessage()]);
+    // Retorna mensagem amigável, mas mantém o erro técnico no log
+    echo json_encode(["success" => false, "message" => "Erro ao processar cadastro. Tente novamente."]);
 }
+?>
